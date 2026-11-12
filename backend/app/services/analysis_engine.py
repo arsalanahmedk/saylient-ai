@@ -343,8 +343,8 @@ def _draft_core(intent: str, facts: dict) -> str:
     if intent == "request_payment":
         if facts["invoice"]:
             return (
-                f"I wanted to check in on invoice {facts['invoice']}, which is "
-                "now overdue. Could you let me know when the payment will be sent?"
+                f"I wanted to check in on invoice {facts['invoice']}. "
+                "Could you let me know when the payment will be sent?"
             )
         return (
             "I wanted to check in on the outstanding payment. "
@@ -401,6 +401,15 @@ _CLOSES = {
     "bald_on_record": "Thanks — let me know once it's done.",
     "off_record": "Just let me know what you think.",
     "avoidance": "I'll check back later this week.",
+}
+
+# Goal-specific closes (FR-09): the strategy close is generic, and for
+# some goals it misfires — a payment chase is not a scheduling request,
+# so "what works for you" is the wrong ending. When the goal has its own
+# close it wins over the strategy close; the close is still only wording,
+# never a new fact.
+_INTENT_CLOSES = {
+    "request_payment": "Thank you — please let me know once the payment is on its way.",
 }
 
 # Draft tone + directness (FR-09): the tone selector and the directness
@@ -585,9 +594,10 @@ def analyze(
     )
 
     facts = extract_facts(text)
+    close = _INTENT_CLOSES.get(intent, _CLOSES[strategy_label])
     draft = _style_draft(
         _draft_core(intent, facts),
-        _CLOSES[strategy_label],
+        close,
         draft_tone,
         draft_directness,
     )

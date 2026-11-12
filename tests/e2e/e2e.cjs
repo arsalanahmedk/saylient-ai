@@ -16,7 +16,10 @@
    Flows: landing (incl. demo output, no mock score) -> login form ->
    workspace dashboard (stats endpoint) -> assistant real analysis ->
    tone/directness selectors -> save draft -> regenerate (API) ->
-   PATCH /auth/me (API) -> history. Exits non-zero if any check fails. */
+   PATCH /auth/me (API) -> history. Fix round: gauge renders visibly,
+   no stray "}" on the dashboard, unique chart y-axis ticks, payment
+   draft has no invented "overdue", landing Run button visibly
+   re-renders the selected demo scenario. Exits non-zero if any check fails. */
 const { JSDOM } = require("jsdom");
 
 const BASE = "http://127.0.0.1:5173";
@@ -50,6 +53,15 @@ function rootText(doc) {
 }
 
 let bundleCache = null;
+let cssCache = null;
+async function getCss() {
+  if (cssCache) return cssCache;
+  const html = await (await fetch(BASE + "/")).text();
+  const m = html.match(/href="([^"]+\.css)"/);
+  cssCache = m ? await (await fetch(BASE + m[1])).text() : "";
+  return cssCache;
+}
+
 async function loadPage(url, { token } = {}) {
   const html = await (await fetch(BASE + "/")).text();
   if (!bundleCache) {
@@ -106,9 +118,37 @@ function findButton(doc, text) {
     const demoBtn = findButton(landingDoc, "Run demo analysis");
     check("demo run button present (signed out)", !!demoBtn);
     if (demoBtn) {
+      const outputBefore = landingDoc.querySelector(".hero-output");
       demoBtn.click();
-      await waitFor(dom, (d) => rootText(d).includes("Demo output"));
-      check("demo output renders for visitors", true);
+      // A click must do something VISIBLE: a loading state first, then
+      // the output re-renders (it is keyed so it remounts).
+      try {
+        await waitFor(dom, (d) => rootText(d).includes("Running demo analysis"));
+        check("Run shows a visible loading state", true);
+      } catch { check("Run shows a visible loading state", false); }
+      await waitFor(dom, (d) => d.querySelector(".hero-output:not(.hero-output-loading)"));
+      const outputAfter = landingDoc.querySelector(".hero-output");
+      check("Run visibly re-renders the demo output", !!outputAfter && outputAfter !== outputBefore);
+      // Switching the scenario pill and running again must show THAT
+      // scenario's output (payment chase: invoice #1048, and the fixed
+      // draft — no invented "overdue", payment close).
+      const payPill = [...landingDoc.querySelectorAll(".preset-pills button")].find((b) => (b.textContent || "").includes("Chase a payment"));
+      if (payPill) {
+        payPill.click();
+        // Wait until the pill's state has flushed into the displayed
+        // message before running, or Run would analyse the old preset.
+        await waitFor(dom, (d) => (d.querySelector(".hero-message")?.textContent || "").includes("invoice #1048"));
+        const runBtn = findButton(landingDoc, "Run demo analysis");
+        runBtn.click();
+        await waitFor(dom, (d) => rootText(d).includes("Running demo analysis"));
+        await waitFor(dom, (d) => d.querySelector(".hero-output:not(.hero-output-loading)"));
+        const outText = (landingDoc.querySelector(".hero-output")?.textContent || "");
+        check("Run shows the selected scenario output", outText.includes("invoice #1048"));
+        check("demo payment draft has no invented overdue", !outText.toLowerCase().includes("overdue"));
+        check("demo payment draft closes on the payment", outText.includes("once the payment is on its way"));
+      } else {
+        check("Run shows the selected scenario output", false, "no Chase a payment pill");
+      }
     }
   } catch { check("demo output renders for visitors", false); }
 
@@ -140,6 +180,10 @@ function findButton(doc, text) {
     const text = rootText(dom.window.document);
     check("dashboard renders real stats", text.includes("Messages analyzed") && text.includes("E2E"));
     check("dashboard shows activity chart + insights", text.includes("Communication activity") && text.includes("Recent AI insights"));
+    const yLabels = [...dom.window.document.querySelectorAll(".chart-y span")].map((s) => s.textContent);
+    check("chart y-axis labels are unique integers", yLabels.length >= 2 && new Set(yLabels).size === yLabels.length, yLabels.join(","));
+    const insights = dom.window.document.querySelector(".insights-panel");
+    check("no stray } on the dashboard insights", !!insights && !insights.textContent.includes("}"));
   } catch { check("dashboard renders real stats", false); }
 
   // --- E. Assistant: real analysis, tone/directness, save draft ---------
@@ -169,6 +213,33 @@ function findButton(doc, text) {
     const list = await (await fetch(API + "/analyses?limit=1", { headers: { Authorization: `Bearer ${token}` } })).json();
     analysisId = list.items?.[0]?.id || null;
     check("analysis persisted (API list)", !!analysisId);
+    // --- Fix round: gauge renders visibly (ring + number, not a disc) ---
+    const ring = doc.querySelector(".score-ring");
+    const track = doc.querySelector(".score-ring svg circle.ring-track");
+    const valueArc = doc.querySelector(".score-ring svg circle.ring-value");
+    check("gauge ring + number render", !!ring && !!track && !!valueArc && /(\d+)%/.test(ring.textContent || ""));
+    check("gauge arc has a visible dash", !!valueArc && !!valueArc.getAttribute("stroke-dasharray"));
+    const builtCss = await getCss();
+    check("gauge track is transparent (not a black disc)", /\.ring-track\{[^}]*fill\s*:\s*none/.test(builtCss));
+    check("gauge value arc has a stroke colour", /\.ring-value\{[^}]*stroke\s*:/.test(builtCss));
+    check("confidence note sits below the ring, not inside it", !!doc.querySelector(".ring-caption") && !doc.querySelector(".ring-label small"));
+    // --- Fix round: payment draft invents no facts (UI-level) -----------
+    const paymentMsg = "Hi, I still haven't received the payment for invoice #1048. Could you please let me know when it will be sent?";
+    const msgBox = doc.querySelector(".assistant-form textarea");
+    const setter = Object.getOwnPropertyDescriptor(dom.window.HTMLTextAreaElement.prototype, "value").set;
+    setter.call(msgBox, paymentMsg);
+    msgBox.dispatchEvent(new dom.window.Event("input", { bubbles: true }));
+    findButton(doc, "Analyze conversation").click();
+    await waitFor(dom, (d) => (d.querySelector(".draft-editor")?.value || "").includes("invoice #1048"));
+    const paymentDraft = doc.querySelector(".draft-editor").value;
+    check("payment draft has no invented overdue", !paymentDraft.toLowerCase().includes("overdue"));
+    check("payment draft closes on the payment", paymentDraft.trimEnd().endsWith("once the payment is on its way."));
+    // Remove the payment analysis so the totals in section F stay at 1.
+    const afterList = await (await fetch(API + "/analyses?limit=5", { headers: { Authorization: `Bearer ${token}` } })).json();
+    const paymentRow = (afterList.items || []).find((a) => (a.message || "").includes("still haven't received"));
+    if (paymentRow) await fetch(API + `/analyses/${paymentRow.id}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+    const cleaned = await (await fetch(API + "/analyses?limit=10", { headers: { Authorization: `Bearer ${token}` } })).json();
+    check("payment analysis cleaned up (total stays 1)", cleaned.total === 1);
   } catch (e) {
     check("assistant runs a real analysis", false, String(e.message || e).slice(0, 120));
   }

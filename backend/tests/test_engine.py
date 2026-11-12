@@ -344,6 +344,24 @@ def test_draft_directness_changes_hedging():
     assert gentle["draft"].rstrip().endswith("Whenever you have a moment.")
 
 
+def test_payment_draft_invents_nothing_and_closes_on_payment():
+    # Walkthrough defect (live site, commit 192e1d87): for a payment
+    # chase with no "overdue" in the input, the draft said the invoice
+    # was "now overdue" and closed with a scheduling line ("what works
+    # for you"), which fits a meeting request, not a payment chase.
+    # The draft must reuse only extracted facts and close on the goal.
+    result = analyze(
+        "Hi, I still haven't received the payment for invoice #1048. "
+        "Could you please let me know when it will be sent?",
+        "request_payment",
+        {},
+    )
+    assert result["intent"]["label"] == "request_payment"
+    assert "#1048" in result["draft"]
+    assert "overdue" not in result["draft"].lower()
+    assert result["draft"].rstrip().endswith("once the payment is on its way.")
+
+
 def test_invalid_tone_or_directness_raises():
     with pytest.raises(ValueError):
         analyze("Please pay invoice #1.", "request_payment", {}, draft_tone="Sarcastic")

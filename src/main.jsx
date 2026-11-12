@@ -77,7 +77,7 @@ const DEMO_PRESETS = [
       intent: { label: "request_payment", confidence: 0.87 },
       tone: { label: "diplomatic", confidence: 0.64 },
       strategy: { label: "negative_politeness", rationale: "Payment and deadline pressure constrain the recipient's time, so the response hedges and leaves room to respond." },
-      draft: "Hi,\n\nI wanted to check in on invoice #1048, which is now overdue. Could you let me know when the payment will be sent?\n\nPlease let me know what works for you.",
+      draft: "Hi,\n\nI wanted to check in on invoice #1048. Could you let me know when the payment will be sent?\n\nThank you — please let me know once the payment is on its way.",
       model_version: "prototype-0.1",
     },
   },
@@ -138,7 +138,7 @@ function ScoreRing({ value, size = 132 }) {
         transition={{ duration: reduce ? 0 : 0.8, ease: "easeOut" }}
       />
     </svg>
-    <div className="ring-label"><strong>{percent}%</strong><span>intent confidence</span><small>{CONFIDENCE_NOTE}</small></div>
+    <div className="ring-label"><strong>{percent}%</strong><span>intent confidence</span></div>
   </div>;
 }
 
@@ -299,11 +299,24 @@ function HeroAnalysisWindow({ go, user }) {
   const [running, setRunning] = useState(false);
   const [live, setLive] = useState(null);
   const [error, setError] = useState("");
+  // Bumps every time a demo run finishes, so the output block remounts
+  // and visibly re-renders for the currently selected scenario.
+  const [demoTick, setDemoTick] = useState(0);
+  const demoTimerRef = useRef(null);
   const chosen = DEMO_PRESETS[preset];
+
+  useEffect(() => () => { if (demoTimerRef.current) clearTimeout(demoTimerRef.current); }, []);
 
   const run = async () => {
     if (!user) {
-      setLive(null); // demo output is shown below instead
+      // Demo run: show a brief loading state, then re-render the output
+      // for the SELECTED scenario pill (previously the output was already
+      // on screen, so the click did nothing visible).
+      setRunning(true); setError("");
+      demoTimerRef.current = setTimeout(() => {
+        setRunning(false);
+        setDemoTick(t => t + 1);
+      }, 700);
       return;
     }
     setRunning(true); setError(""); setLive(null);
@@ -333,7 +346,8 @@ function HeroAnalysisWindow({ go, user }) {
         <span className="hero-run-note">{user ? "Live analysis · your account" : "Demo output below is precomputed — sign in for a live one"}</span>
       </div>
       {error && <div className="form-error">{error}</div>}
-      {shown && <div className="hero-output">
+      {running && !user && <div className="hero-output hero-output-loading" aria-live="polite"><div className="hero-shimmer"><i /><i /><i /></div><span><LoaderCircle size={14} className="spin" /> Running demo analysis…</span></div>}
+      {!(running && !user) && shown && <div className="hero-output" key={demoTick}>
         <div className="hero-output-head">
           <span className="ai-icon"><Sparkles size={14} /></span>
           <strong>{isDemo ? "Demo output" : "Live analysis"} · {shown.model_version}</strong>
@@ -464,6 +478,9 @@ function Dashboard({ go, user, onOpen }) {
   const today = new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
   const buckets = stats?.buckets_30d || [0, 0, 0, 0, 0];
   const maxBucket = Math.max(1, ...buckets);
+  // Y-axis ticks must be unique integers: with maxBucket 1 the naive
+  // [max, ceil(max/2), 0] renders "1, 1, 0".
+  const yTicks = [...new Set([maxBucket, Math.ceil(maxBucket / 2), 0])];
   const points = buckets.map((v, i) => [i * 150, 160 - (v / maxBucket) * 140]);
   const line = points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x} ${y}`).join(" ");
   const area = `${line} L600 170 L0 170 Z`;
@@ -480,7 +497,7 @@ function Dashboard({ go, user, onOpen }) {
       </div>
       <div className="dashboard-grid">
         <section className="panel activity-panel"><div className="panel-heading"><div><h3>Communication activity</h3><p>Your analyses over the last 30 days</p></div></div>
-          <div className="fake-chart"><div className="chart-y"><span>{maxBucket}</span><span>{Math.ceil(maxBucket / 2)}</span><span>0</span></div><div className="chart-area"><div className="grid-lines"><i /><i /><i /><i /><i /></div>
+          <div className="fake-chart"><div className="chart-y">{yTicks.map(t => <span key={t}>{t}</span>)}</div><div className="chart-area"><div className="grid-lines"><i /><i /><i /><i /><i /></div>
             <svg viewBox="0 0 600 170" preserveAspectRatio="none"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#8b5cf6" stopOpacity=".3" /><stop offset="1" stopColor="#8b5cf6" stopOpacity="0" /></linearGradient></defs>
               {(stats?.total || 0) > 0 ? <><path d={area} fill="url(#chartFill)" /><path d={line} fill="none" stroke="#a78bfa" strokeWidth="3" /></> : <text x="300" y="85" textAnchor="middle" fill="#94a3b8" fontSize="13">No analyses yet — try the assistant.</text>}
             </svg><div className="chart-x"><span>30 days ago</span><span>24 days</span><span>18 days</span><span>12 days</span><span>Today</span></div></div></div>
@@ -489,7 +506,7 @@ function Dashboard({ go, user, onOpen }) {
           {(stats?.total || 0) > 0 ? <>
             {stats.top_intent && <Insight icon={Target} title={`Most often: ${prettyLabel(stats.top_intent)}`} text="Your most common intent across all analyses." />}
             {stats.top_strategy && <Insight icon={Lightbulb} title={`Usual strategy: ${prettyLabel(stats.top_strategy)}`} text="The strategy the engine recommends most for you." />}
-            <Insight icon={Zap} title={stats.fta_count ? `${stats.fta_count} message${stats.fta_count === 1 ? "" : "s"} flagged a face concern` : "No face concerns flagged"} text={stats.fta_count ? "Review the breakdown before you send." : "Keep it up — or analyze a trickier message."} />}
+            <Insight icon={Zap} title={stats.fta_count ? `${stats.fta_count} message${stats.fta_count === 1 ? "" : "s"} flagged a face concern` : "No face concerns flagged"} text={stats.fta_count ? "Review the breakdown before you send." : "Keep it up — or analyze a trickier message."} />
           </> : <Insight icon={Lightbulb} title="Nothing analyzed yet" text="Analyze a message and your patterns will show up here." />}
         </section>
       </div>
@@ -662,7 +679,7 @@ function Assistant({ go, openAnalysis, clearOpen }) {
               </div>)}
             </div>
             <div className="pipeline-side">
-              {loading ? <div className="pipeline-spinner"><LoaderCircle size={26} className="spin" /><span>Analyzing…</span></div> : <ScoreRing value={analysis.intent?.confidence || 0} />}
+              {loading ? <div className="pipeline-spinner"><LoaderCircle size={26} className="spin" /><span>Analyzing…</span></div> : <><ScoreRing value={analysis.intent?.confidence || 0} /><div className="ring-caption">{CONFIDENCE_NOTE}</div></>}
               <div className="pipeline-log" aria-live="polite">
                 {log.map((line, i) => <div key={i} className="log-line"><span>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>{line}</div>)}
               </div>
