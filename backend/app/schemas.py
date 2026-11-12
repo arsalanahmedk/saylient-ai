@@ -97,6 +97,30 @@ class ForgotPasswordResponse(BaseModel):
     reset_token: str | None = None
 
 
+class ProfilePatchRequest(BaseModel):
+    """PATCH /auth/me: display name and/or password change.
+
+    Changing the password requires the current password and revokes
+    every other session (see app/services/auth.py ``update_profile``).
+    """
+
+    display_name: str | None = Field(default=None, min_length=1, max_length=100)
+    current_password: str | None = Field(default=None, min_length=1, max_length=128)
+    new_password: str | None = Field(default=None, min_length=8, max_length=128)
+
+    @model_validator(mode="after")
+    def check_password_change(self) -> "ProfilePatchRequest":
+        if self.new_password is not None and not self.current_password:
+            raise ValueError("current_password is required to change the password.")
+        if (
+            self.current_password is not None
+            and self.new_password is None
+            and self.display_name is None
+        ):
+            raise ValueError("Nothing to update.")
+        return self
+
+
 class GenericMessageResponse(BaseModel):
     message: str
 
@@ -115,11 +139,35 @@ class ContextFactors(BaseModel):
     imposition: ContextLevel = "unknown"
 
 
+TONE_OPTIONS = ("Professional", "Friendly", "Diplomatic", "Assertive", "Empathetic")
+DIRECTNESS_OPTIONS = ("direct", "balanced", "gentle")
+
+
 class AnalysisCreateRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000)
     conversation_context: list[Union[str, ContextMessage]] = Field(default_factory=list)
     goal: Goal
     context: ContextFactors = Field(default_factory=ContextFactors)
+    # Draft styling (FR-09): tone + directness change the draft text the
+    # engine returns; they never change intent/tone/strategy.
+    tone: str = "Diplomatic"
+    directness: str = "balanced"
+
+    @field_validator("tone")
+    @classmethod
+    def check_tone(cls, value: str) -> str:
+        if value not in TONE_OPTIONS:
+            raise ValueError(f"tone must be one of {', '.join(TONE_OPTIONS)}.")
+        return value
+
+    @field_validator("directness")
+    @classmethod
+    def check_directness(cls, value: str) -> str:
+        if value not in DIRECTNESS_OPTIONS:
+            raise ValueError(
+                f"directness must be one of {', '.join(DIRECTNESS_OPTIONS)}."
+            )
+        return value
 
     @model_validator(mode="before")
     @classmethod
@@ -189,6 +237,46 @@ class AnalysisListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class AnalysisStatsOut(BaseModel):
+    """GET /analyses/stats: dashboard aggregates, computed server-side
+    so the dashboard is right beyond the first 100 analyses."""
+
+    total: int
+    this_week: int
+    avg_intent_confidence: float | None
+    fta_count: int
+    top_intent: str | None
+    top_strategy: str | None
+    # 30-day activity in 5 buckets of 6 days, oldest first (matches the
+    # dashboard chart).
+    buckets_30d: list[int]
+
+
+class RegenerateRequest(BaseModel):
+    """POST /analyses/{id}/regenerate: re-run the engine on the same
+    analysis with optional new tone/directness. Defaults keep the
+    current styling."""
+
+    tone: str | None = None
+    directness: str | None = None
+
+    @field_validator("tone")
+    @classmethod
+    def check_tone(cls, value: str | None) -> str | None:
+        if value is not None and value not in TONE_OPTIONS:
+            raise ValueError(f"tone must be one of {', '.join(TONE_OPTIONS)}.")
+        return value
+
+    @field_validator("directness")
+    @classmethod
+    def check_directness(cls, value: str | None) -> str | None:
+        if value is not None and value not in DIRECTNESS_OPTIONS:
+            raise ValueError(
+                f"directness must be one of {', '.join(DIRECTNESS_OPTIONS)}."
+            )
+        return value
 
 
 # ---------------------------------------------------------------- drafts

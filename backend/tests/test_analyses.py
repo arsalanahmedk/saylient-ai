@@ -257,3 +257,88 @@ def test_delete_account(client):
     )
     assert login.status_code == 401
     assert client.get(f"/api/v1/analyses/{analysis['id']}", headers=headers).status_code == 401
+
+
+# ---------------------------------------------------------------- regenerate + stats + tone/directness
+
+
+def test_regenerate_updates_in_place_without_new_row(client):
+    user = make_user(client, tag="regen")
+    headers = auth_headers(user["token"])
+    body = _create_analysis(client, headers)
+    original_draft = body["draft"]
+
+    resp = client.post(
+        f"/api/v1/analyses/{body['id']}/regenerate",
+        json={"tone": "Friendly", "directness": "gentle"},
+        headers=headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["id"] == body["id"]
+    assert resp.json()["draft"] != original_draft
+    assert resp.json()["draft"].startswith("Hi there,")
+    assert resp.json()["draft"].rstrip().endswith("Whenever you have a moment.")
+
+    listed = client.get("/api/v1/analyses?limit=50&offset=0", headers=headers).json()
+    assert listed["total"] == 1, "regenerate must not create a duplicate history row"
+
+
+def test_regenerate_other_users_analysis_is_404(client):
+    user = make_user(client, tag="regenother")
+    headers = auth_headers(user["token"])
+    body = _create_analysis(client, headers)
+    other = make_user(client, tag="regenother2")
+    resp = client.post(
+        f"/api/v1/analyses/{body['id']}/regenerate",
+        json={},
+        headers=auth_headers(other["token"]),
+    )
+    assert resp.status_code == 404
+
+
+def test_create_analysis_with_tone_and_directness(client):
+    user = make_user(client, tag="tonedirect")
+    headers = auth_headers(user["token"])
+    resp = client.post(
+        "/api/v1/analyses",
+        json={
+            "message": PAYMENT_MESSAGE,
+            "goal": "request_payment",
+            "tone": "Friendly",
+            "directness": "direct",
+        },
+        headers=headers,
+    )
+    assert resp.status_code == 201, resp.text
+    assert resp.json()["draft"].startswith("Hi there,")
+    assert "Would it be possible" not in resp.json()["draft"]
+
+
+def test_create_analysis_rejects_bad_tone(client):
+    user = make_user(client, tag="badtonedirect")
+    headers = auth_headers(user["token"])
+    resp = client.post(
+        "/api/v1/analyses",
+        json={"message": PAYMENT_MESSAGE, "goal": "request_payment", "tone": "Sarcastic"},
+        headers=headers,
+    )
+    assert resp.status_code == 422
+
+
+def test_analyses_stats_endpoint(client):
+    user = make_user(client, tag="stats")
+    headers = auth_headers(user["token"])
+    _create_analysis(client, headers)
+    _create_analysis(client, headers, message="Could we move the deadline to Friday?", goal="negotiate_deadline")
+    resp = client.get("/api/v1/analyses/stats", headers=headers)
+    assert resp.status_code == 200, resp.text
+    body = resp.json()
+    assert body["total"] == 2
+    assert body["this_week"] == 2
+    assert body["fta_count"] == 2
+    assert body["top_intent"] == "request_payment"
+    assert body["top_strategy"] == "negative_politeness"
+    assert body["avg_intent_confidence"] is not None
+    assert len(body["buckets_30d"]) == 5
+    assert body["buckets_30d"][-1] == 2, "both analyses are from today (last bucket)"
+    assert sum(body["buckets_30d"]) == 2

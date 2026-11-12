@@ -166,3 +166,52 @@ def test_unknown_route_is_envelope_404(client):
     resp = client.get("/api/v1/nope")
     assert resp.status_code == 404
     assert resp.json()["error"]["code"] == "NOT_FOUND"
+
+
+# ---------------------------------------------------------------- security headers + CSRF
+
+
+def test_security_headers_present(client):
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.headers["x-content-type-options"] == "nosniff"
+    assert resp.headers["x-frame-options"] == "DENY"
+    assert "strict-origin-when-cross-origin" in resp.headers["referrer-policy"]
+    assert "max-age=31536000" in resp.headers["strict-transport-security"]
+    csp = resp.headers["content-security-policy"]
+    assert "frame-ancestors 'none'" in csp
+    assert "https://cdn.21st.dev" in csp
+
+
+def test_security_headers_on_error_responses(client):
+    resp = client.get("/api/v1/analyses/does-not-exist")
+    assert resp.status_code == 401  # no auth at all
+    assert resp.headers["x-content-type-options"] == "nosniff"
+
+
+def test_cookie_csrf_blocks_foreign_origin():
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    fresh = TestClient(app)
+    email = "csrf-user@example.com"
+    password = "csrf-pass-123"
+    reg = fresh.post(
+        "/api/v1/auth/register",
+        json={"email": email, "password": password, "display_name": "CSRF"},
+    )
+    assert reg.status_code == 201, reg.text
+    # The fresh client holds the session cookie from register.
+    foreign = fresh.post(
+        "/api/v1/analyses",
+        json={"message": "Please pay invoice #1.", "goal": "request_payment"},
+        headers={"Origin": "https://evil.example.com"},
+    )
+    assert foreign.status_code == 403
+    allowed = fresh.post(
+        "/api/v1/analyses",
+        json={"message": "Please pay invoice #1.", "goal": "request_payment"},
+        headers={"Origin": "http://localhost:5173"},
+    )
+    assert allowed.status_code == 201, allowed.text

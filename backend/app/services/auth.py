@@ -70,7 +70,9 @@ def register_user(
 ) -> tuple[User, str]:
     existing = db.query(User).filter(User.email == email).first()
     if existing is not None:
-        raise ConflictError(f"An account already exists for {email}.")
+        # Generic on purpose: the response must not confirm that this
+        # email is registered (see the security audit, register leak).
+        raise ConflictError("An account with these details already exists.")
     user = User(
         email=email,
         password_hash=hash_password(password),
@@ -114,6 +116,9 @@ def authenticate_user(
         db, user_id=user.id, event_type="login", result="success", request_id=request_id
     )
     db.commit()
+    # Login creates a new session; earlier sessions stay valid until they
+    # expire or are revoked (logout, password change/reset). Revoking
+    # other sessions on login would sign the user out of other devices.
     token = _create_session(db, user, ttl_days=ttl_days)
     return user, token
 
@@ -146,13 +151,60 @@ def revoke_token(db: DbSession, token: str) -> bool:
     return True
 
 
-def revoke_all_sessions(db: DbSession, user: User) -> None:
+def revoke_all_sessions(
+    db: DbSession, user: User, *, except_token: str | None = None
+) -> None:
+    """Revoke every live session for the user, optionally keeping the
+    session identified by its raw token (the current sign-in)."""
     now = utcnow()
-    for session in db.query(SessionModel).filter(
+    query = db.query(SessionModel).filter(
         SessionModel.user_id == user.id, SessionModel.revoked_at.is_(None)
-    ):
+    )
+    if except_token:
+        query = query.filter(SessionModel.token_hash != hash_token(except_token))
+    for session in query:
         session.revoked_at = now
     db.commit()
+
+
+def update_profile(
+    db: DbSession,
+    *,
+    user: User,
+    display_name: str | None = None,
+    current_password: str | None = None,
+    new_password: str | None = None,
+    except_token: str | None = None,
+    request_id: str | None = None,
+) -> User:
+    """Update the display name and/or change the password (FR-01).
+
+    A password change requires the current password and revokes every
+    other session, so a compromised session cannot survive the change.
+    The current session (``except_token``) keeps working.
+    """
+    if display_name is not None:
+        user.display_name = display_name.strip()[:100]
+    if new_password is not None:
+        if not current_password or not verify_password(
+            current_password, user.password_hash
+        ):
+            raise UnauthenticatedError("Your current password is incorrect.")
+        user.password_hash = hash_password(new_password)
+        user.reset_token_hash = None
+        user.reset_token_expires_at = None
+        _record_event(
+            db,
+            user_id=user.id,
+            event_type="password_change",
+            result="success",
+            request_id=request_id,
+        )
+    db.commit()
+    if new_password is not None:
+        revoke_all_sessions(db, user, except_token=except_token)
+    db.refresh(user)
+    return user
 
 
 def request_password_reset(

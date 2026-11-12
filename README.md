@@ -15,12 +15,12 @@ Built on **Brown & Levinson's Politeness Theory (1987)**. Final-year project
 
 - **Web app** (`src/`, Vite + React 18 + Framer Motion) — landing page,
   workspace dashboard, message assistant, communication analysis, conversation
-  history (saved in your browser), saved templates, politeness theory, and a
+  history (saved in your account), saved templates, politeness theory, and a
   local demo chat.
 - **Browser extension** (`extension/`, Manifest V3) — a floating assistant
-  for the demo chat page. It reads the local demo conversation, prepares a
-  response for review, and can copy it or insert it into the composer.
-  It never sends messages on its own.
+  for the demo chat page. Sign in from the popup, pick a message, and it
+  calls the real backend for a live analysis (intent, strategy, draft).
+  It never sends messages on its own, and it never monitors the page.
 - **Docs** (`freelancer_communication_assistant_docs/`) — PRD/SRS, architecture,
   UX spec, data design, AI/ML plan, API spec and engineering guides.
 
@@ -77,17 +77,25 @@ backend (terminal 1) is not running.
    **Load unpacked** and select `extension/dist`.
 3. Start the web app (`npm run dev`), open
    http://127.0.0.1:5173/#demo-chat — the Saylient AI button appears on the
-   page. Click it to open the floating assistant; use **Copy response** or
-   **Insert into composer**. The demo Send button is the only way a message
-   is added. Pause/resume monitoring from the extension popup.
+   page. Click it, **pick which message** to analyze, choose a goal, and
+   click **Analyze message**. The extension calls the real backend
+   (you must be signed in from the extension popup first) and shows the
+   real intent, strategy and draft. Use **Copy response** or
+   **Insert into composer** — insert only happens when you click it.
+   The demo Send button is the only way a message is added.
 
-The extension only runs on local pages (`localhost` / `127.0.0.1`) and uses
-`activeTab` + local storage. No conversation data is sent to a server.
+The extension only runs on the app origins (`localhost` / `127.0.0.1` /
+`https://saylient-ai.vercel.app`) and uses `activeTab` + local storage.
+It never monitors the page: analysis runs only when you click
+**Analyze message**, on the message you selected. The selected message
+is sent to the Saylient AI backend for analysis (and stored in your
+account like any other analysis); nothing else is sent anywhere.
 
 ## Tech
 
 React 18, Vite 6, Framer Motion, Lucide icons. **Backend:** FastAPI +
-SQLAlchemy + SQLite (`backend/`, 24 endpoints under `/api/v1`, rule-based
+SQLAlchemy + SQLite (`backend/`, 24 endpoints under `/api/v1` + `/health`,
+rule-based
 analysis engine `prototype-0.1`, pytest suite). The frontend talks to it
 through `src/api.js`; the old in-browser demo analysis is gone.
 

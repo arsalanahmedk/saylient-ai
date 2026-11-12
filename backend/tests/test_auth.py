@@ -120,3 +120,99 @@ def test_me_without_token_is_401(client):
     resp = client.get("/api/v1/auth/me")
     assert resp.status_code == 401
     assert resp.json()["error"]["code"] == "UNAUTHENTICATED"
+
+
+# ---------------------------------------------------------------- cookie sessions + PATCH /me
+
+
+def test_login_sets_httponly_session_cookie(client):
+    user = make_user(client, tag="cookie")
+    resp = client.post(
+        "/api/v1/auth/login",
+        json={"email": user["email"], "password": user["password"]},
+    )
+    assert resp.status_code == 200
+    set_cookie = resp.headers.get("set-cookie", "")
+    assert "saylient_session=" in set_cookie
+    assert "HttpOnly" in set_cookie
+    # The token must not be readable from the cookie by JavaScript; the
+    # JSON body still carries it for Bearer clients (the extension).
+    assert resp.json()["token"]
+
+
+def test_cookie_authenticates_without_bearer_header(client):
+    # Register via the shared client: the Set-Cookie lands in its jar.
+    user = make_user(client, tag="cookieauth")
+    me = client.get("/api/v1/auth/me")
+    assert me.status_code == 200
+    assert me.json()["email"] == user["email"]
+
+
+def test_register_conflict_does_not_leak_email(client):
+    user = make_user(client, tag="noleak")
+    resp = client.post(
+        "/api/v1/auth/register",
+        json={"email": user["email"], "password": "another-pass-123", "display_name": "X"},
+    )
+    assert resp.status_code == 409
+    assert user["email"] not in resp.json()["error"]["message"]
+
+
+def test_patch_me_display_name(client):
+    user = make_user(client, tag="patchme")
+    headers = auth_headers(user["token"])
+    resp = client.patch(
+        "/api/v1/auth/me",
+        json={"display_name": "New Name"},
+        headers=headers,
+    )
+    assert resp.status_code == 200, resp.text
+    assert resp.json()["display_name"] == "New Name"
+    me = client.get("/api/v1/auth/me", headers=headers)
+    assert me.json()["display_name"] == "New Name"
+
+
+def test_patch_me_password_change_revokes_other_sessions(client):
+    user = make_user(client, tag="patchpw")
+    first = auth_headers(user["token"])
+    # A second session (another device): log in again.
+    login = client.post(
+        "/api/v1/auth/login",
+        json={"email": user["email"], "password": user["password"]},
+    )
+    assert login.status_code == 200
+    second_token = login.json()["token"]
+    second = auth_headers(second_token)
+
+    # Change the password from the second session.
+    resp = client.patch(
+        "/api/v1/auth/me",
+        json={"current_password": user["password"], "new_password": "brand-new-pass-123"},
+        headers=second,
+    )
+    assert resp.status_code == 200, resp.text
+
+    # The first session is revoked; the session that changed the
+    # password keeps working.
+    assert client.get("/api/v1/auth/me", headers=first).status_code == 401
+    assert client.get("/api/v1/auth/me", headers=second).status_code == 200
+    # Old password no longer works; new one does.
+    assert client.post(
+        "/api/v1/auth/login",
+        json={"email": user["email"], "password": user["password"]},
+    ).status_code == 401
+    assert client.post(
+        "/api/v1/auth/login",
+        json={"email": user["email"], "password": "brand-new-pass-123"},
+    ).status_code == 200
+
+
+def test_patch_me_password_change_needs_current_password(client):
+    user = make_user(client, tag="patchpw2")
+    headers = auth_headers(user["token"])
+    resp = client.patch(
+        "/api/v1/auth/me",
+        json={"current_password": "wrong-password", "new_password": "brand-new-pass-123"},
+        headers=headers,
+    )
+    assert resp.status_code == 401

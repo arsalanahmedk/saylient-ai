@@ -11,17 +11,21 @@ from app.schemas import (
     AnalysisCreateRequest,
     AnalysisListResponse,
     AnalysisOut,
+    AnalysisStatsOut,
     DraftCreateRequest,
     DraftListResponse,
     DraftOut,
     DraftPatchRequest,
     GenericMessageResponse,
+    RegenerateRequest,
 )
 from app.services.analyses import (
     create_analysis,
     delete_analysis,
     get_analysis,
+    get_analysis_stats,
     list_analyses,
+    regenerate_analysis,
 )
 from app.services.drafts import create_draft, delete_draft, list_drafts, update_draft
 
@@ -43,8 +47,24 @@ def create(
         ],
         goal=payload.goal.value,
         context=payload.context,
+        tone=payload.tone,
+        directness=payload.directness,
     )
     return AnalysisOut.model_validate(result)
+
+
+@router.get("/analyses/stats", response_model=AnalysisStatsOut)
+def stats(
+    user: User = Depends(get_current_user),
+    db: DbSession = Depends(get_db),
+) -> AnalysisStatsOut:
+    """Dashboard aggregates (total, this-week, avg confidence, FTA count,
+    top intent/strategy, 30-day buckets), computed server-side.
+
+    Registered before /analyses/{analysis_id} so "stats" is not matched
+    as an analysis id.
+    """
+    return AnalysisStatsOut.model_validate(get_analysis_stats(db, user=user))
 
 
 @router.get("/analyses", response_model=AnalysisListResponse)
@@ -71,6 +91,30 @@ def read(
 ) -> AnalysisOut:
     return AnalysisOut.model_validate(
         get_analysis(db, user=user, analysis_id=analysis_id)
+    )
+
+
+@router.post("/analyses/{analysis_id}/regenerate", response_model=AnalysisOut)
+def regenerate(
+    analysis_id: str,
+    payload: RegenerateRequest,
+    user: User = Depends(get_rate_limited_user),
+    db: DbSession = Depends(get_db),
+) -> AnalysisOut:
+    """Re-run the engine on an existing analysis, in place (FR-09).
+
+    Updates the stored row and returns it; no new analysis is created,
+    so history does not gain a duplicate row. Tone/directness only
+    restyle the draft.
+    """
+    return AnalysisOut.model_validate(
+        regenerate_analysis(
+            db,
+            user=user,
+            analysis_id=analysis_id,
+            tone=payload.tone,
+            directness=payload.directness,
+        )
     )
 
 

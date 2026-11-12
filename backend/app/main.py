@@ -72,6 +72,34 @@ _HTTP_STATUS_TO_CODE = {
 }
 
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Set the security headers on every response (SECURITY_ARCHITECTURE
+    §4). The API serves JSON only, so the policy is restrictive by
+    default; the image/font allowances cover what the web app actually
+    loads (the Perspective Tunnel hero images on cdn.21st.dev and the
+    Inter/JetBrains Mono fonts from Google Fonts)."""
+
+    _CSP = (
+        "default-src 'none'; "
+        "img-src 'self' https://cdn.21st.dev data:; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "script-src 'self'; connect-src 'self'; "
+        "frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+    )
+
+    async def dispatch(self, request: Request, call_next):  # noqa: ANN001, ANN201
+        response = await call_next(request)
+        response.headers["Content-Security-Policy"] = self._CSP
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
+        return response
+
+
 class RequestIdMiddleware(BaseHTTPMiddleware):
     """Assign a uuid4 request ID, echo it in the X-Request-Id header, and
     write one structured log line per request (method/path/status only)."""
@@ -146,7 +174,9 @@ def create_app() -> FastAPI:
     app.state.session_factory = create_session_factory(engine)
 
     # Middleware: added last runs first. Desired execution order is
-    # RequestId -> BodySize -> AuthRateLimit -> CORS -> routes.
+    # SecurityHeaders -> RequestId -> BodySize -> AuthRateLimit -> CORS
+    # -> routes. SecurityHeaders is outermost so headers land on every
+    # response, including errors produced by the inner middleware.
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.allowed_origins),
@@ -157,6 +187,7 @@ def create_app() -> FastAPI:
     app.add_middleware(AuthRateLimitMiddleware)
     app.add_middleware(BodySizeMiddleware)
     app.add_middleware(RequestIdMiddleware)
+    app.add_middleware(SecurityHeadersMiddleware)
 
     @app.exception_handler(AppError)
     async def app_error_handler(request: Request, exc: AppError) -> JSONResponse:

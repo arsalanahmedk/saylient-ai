@@ -1,10 +1,84 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@500;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Space+Grotesk:wght@600;700&display=swap');
-*{box-sizing:border-box}
-body{margin:0;width:360px;background:#e8ebea;color:#111313;font-family:"DM Sans",Arial,sans-serif;animation:popupIn .5s ease both}
-.utility{height:29px;padding:0 20px;display:flex;align-items:center;gap:8px;background:#202321;color:#f4f4ef;font:9px "DM Mono",monospace;letter-spacing:.08em}.utility span{color:#1f55e7}
-main{padding:22px}header{display:flex;align-items:center;gap:11px}header strong{display:block;font:700 19px "Space Grotesk";letter-spacing:-.7px}header strong span{color:#1f55e7}header small{display:block;color:#68736e;font-size:10px;margin-top:3px}header i{margin-left:auto;width:8px;height:8px;border-radius:50%;background:#1f55e7;box-shadow:0 0 0 4px #1f55e733}
-.brand-mark{width:37px;height:37px;border-radius:50%;display:grid;place-items:center;background:#111313;color:#c8f36a;font-size:20px}.rule{height:1px;background:#cfd6d2;margin:19px 0}.eyebrow,.card-label{color:#1f55e7;font:500 9px "DM Mono";letter-spacing:.1em}.status{display:flex;align-items:center;gap:11px;margin:17px 0 15px}.status-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#1f55e7;color:#fff;font-size:16px}.status b,.status small{display:block}.status b{font:700 12px "Space Grotesk"}.status small{font-size:10px;color:#68736e;margin-top:4px}.status button{margin-left:auto;width:38px;height:22px;border:0;border-radius:2px;background:#111313;padding:2px}.status button span{display:block;width:18px;height:18px;border-radius:1px;background:#1f55e7;margin-left:16px}.status button[aria-pressed=false]{background:#bcc5c0}.status button[aria-pressed=false] span{margin-left:0;background:#fff}
-.monitor-card{padding:16px;background:#f4f6f4;border:1px solid #cfd6d2;border-radius:1px;box-shadow:6px 6px 0 #d5dcda;animation:cardIn .7s .15s both}.monitor-card p{color:#59655f;font:12px/1.65 "Libre Baskerville",serif;margin:9px 0 13px}.signal-grid{height:31px;display:flex;align-items:end;gap:4px;border-top:1px solid #d8dfdc;padding-top:8px;margin-bottom:12px}.signal-grid span{width:8px;background:#1f55e7;animation:signal 1.8s ease-in-out infinite alternate}.signal-grid span:nth-child(1){height:9px}.signal-grid span:nth-child(2){height:19px;animation-delay:.15s}.signal-grid span:nth-child(3){height:14px;animation-delay:.3s}.signal-grid span:nth-child(4){height:25px;animation-delay:.45s}.signal-grid span:nth-child(5){height:17px;animation-delay:.6s}.signal-grid span:nth-child(6){height:11px;animation-delay:.75s}
-.privacy{padding-top:11px;border-top:1px solid #deded5;color:#687168;font:9px "DM Mono"}.privacy span{color:#1f55e7;margin-right:5px}.primary,.secondary{position:relative;isolation:isolate;overflow:hidden;width:100%;padding:12px 40px 12px 12px;border-radius:2px;font:600 11px "DM Sans";cursor:pointer;transition:.25s}.primary:before,.secondary:before{content:"";position:absolute;z-index:-1;inset:-80% 42% -80% -42%;background:linear-gradient(105deg,transparent 35%,#fff8 47%,#c8f36a 51%,transparent 62%);transform:translateX(-150%) rotate(8deg);transition:transform .7s ease}.primary:hover:before,.secondary:hover:before{transform:translateX(320%) rotate(8deg)}.primary:after,.secondary:after{content:"↗";position:absolute;right:13px;top:50%;font:700 17px/1 "Space Grotesk";transform:translateY(-50%);transition:transform .35s}.primary{border:1px solid #1f55e7;background:#1f55e7;color:#fff;margin-top:18px;box-shadow:0 5px 0 #123aa9,0 12px 22px #123aa933}.primary:hover{background:#1745c4;transform:translateY(-3px);box-shadow:0 8px 0 #123aa9,0 18px 30px #123aa94d}.primary:hover:after,.secondary:hover:after{transform:translate(6px,-50%) rotate(-12deg)}.primary:active,.secondary:active{transform:translateY(2px);box-shadow:0 2px 0 #123aa9,0 5px 12px #123aa933}.secondary{border:1px solid #aeb8b3;background:transparent;color:#4f5b55;margin-top:10px;box-shadow:0 5px 0 #9daaa4,0 12px 22px #26332c1c}.secondary:hover{background:#f4f6f4;transform:translateY(-3px)}.primary b{float:right;color:#c8f36a;font-size:15px;line-height:10px}footer{display:flex;justify-content:space-between;color:#858f89;font:9px "DM Mono";margin-top:21px}
-@keyframes signal{from{transform:scaleY(.75);transform-origin:bottom}to{transform:scaleY(1.05);transform-origin:bottom}}@keyframes popupIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes cardIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){body,.monitor-card{animation:none}.signal-grid span{animation:none}}
-.primary,.secondary{box-shadow:0 5px 0 #123aa9,0 12px 22px #123aa933}.primary:after,.secondary:after{content:"↗";position:absolute;right:13px;top:50%;font:700 17px/1 "Space Grotesk";transform:translateY(-50%);transition:transform .35s}.primary:hover,.secondary:hover{box-shadow:0 8px 0 #123aa9,0 18px 30px #123aa94d}.primary:hover:after,.secondary:hover:after{transform:translate(5px,-50%) rotate(-12deg)}.primary:active,.secondary:active{transform:translateY(2px);box-shadow:0 2px 0 #123aa9,0 5px 12px #123aa933}@media(prefers-reduced-motion:reduce){.primary:before,.secondary:before,.primary:after,.secondary:after{transition:none}}
+/* Saylient AI popup — dark premium. System font stack only; nothing remote. */
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  width: 360px;
+  background: #08090a;
+  color: #f7f8f8;
+  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+main { padding: 20px; }
+header { display: flex; align-items: center; gap: 12px; }
+header strong { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.5px; }
+header strong span { color: #8b5cf6; }
+header small { display: block; color: #a1a1aa; font-size: 11px; margin-top: 3px; }
+.brand-mark {
+  width: 38px; height: 38px; border-radius: 10px;
+  display: grid; place-items: center;
+  background: #8b5cf6; color: #fff; font-size: 20px;
+}
+.rule { height: 1px; background: rgba(255,255,255,0.08); margin: 18px 0; }
+.eyebrow {
+  color: #8b5cf6; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; margin: 0 0 8px;
+}
+h1 { font-size: 17px; margin: 0 0 6px; letter-spacing: -0.3px; }
+.lede { color: #a1a1aa; font-size: 12px; line-height: 1.6; margin: 0 0 16px; }
+form label {
+  display: block; color: #a1a1aa; font-size: 11px; font-weight: 600;
+  margin-bottom: 12px;
+}
+input {
+  display: block; width: 100%; margin-top: 6px;
+  padding: 11px 12px;
+  background: #141516; color: #f7f8f8;
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+  font-size: 13px; font-family: inherit; outline: none;
+}
+input:focus { border-color: #8b5cf6; }
+input::placeholder { color: #52525b; }
+.error {
+  color: #f87171; font-size: 12px; line-height: 1.5;
+  background: rgba(248,113,113,0.08);
+  border: 1px solid rgba(248,113,113,0.25);
+  border-radius: 10px; padding: 10px 12px; margin: 0 0 12px;
+}
+.account-card {
+  display: flex; align-items: center; gap: 12px;
+  background: #141516; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 14px; margin-bottom: 14px;
+}
+.account-avatar {
+  width: 36px; height: 36px; border-radius: 10px;
+  display: grid; place-items: center; flex-shrink: 0;
+  background: #8b5cf6; color: #fff; font-size: 18px;
+}
+.account-card b { display: block; font-size: 13px; word-break: break-all; }
+.account-card small { display: block; color: #a1a1aa; font-size: 11px; margin-top: 3px; }
+.note {
+  color: #a1a1aa; font-size: 12px; line-height: 1.6;
+  background: #0f1011; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px; padding: 12px 14px; margin: 0 0 14px;
+}
+.primary, .secondary {
+  width: 100%; padding: 12px; border-radius: 10px;
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.15s;
+}
+.primary {
+  border: 1px solid #8b5cf6; background: #8b5cf6; color: #fff;
+  margin-bottom: 10px;
+}
+.primary:hover:not(:disabled) { background: #7c3aed; }
+.primary:disabled { opacity: 0.6; cursor: wait; }
+.primary:active:not(:disabled) { transform: translateY(1px); }
+.secondary {
+  border: 1px solid rgba(255,255,255,0.08); background: transparent; color: #f7f8f8;
+}
+.secondary:hover { background: #141516; }
+.secondary:active { transform: translateY(1px); }
+#settings { margin-top: 4px; }
+footer {
+  display: flex; justify-content: space-between;
+  color: #52525b; font-size: 10px; margin-top: 18px;
+}

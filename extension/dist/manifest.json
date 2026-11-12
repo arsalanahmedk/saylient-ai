@@ -2,14 +2,16 @@
   "manifest_version": 3,
   "name": "Saylient AI — Communication Assistant",
   "version": "0.1.0",
-  "description": "A local demo assistant for reviewing professional messages before sending.",
+  "description": "Analyze a message from the Saylient AI demo workspace and get a clearer draft — only when you click Analyze.",
   "permissions": [
     "storage",
     "activeTab"
   ],
   "host_permissions": [
     "http://localhost/*",
-    "http://127.0.0.1/*"
+    "http://127.0.0.1/*",
+    "https://saylient-ai.vercel.app/*",
+    "https://saylient-ai-backend.onrender.com/*"
   ],
   "web_accessible_resources": [
     {
@@ -18,7 +20,8 @@
       ],
       "matches": [
         "http://localhost/*",
-        "http://127.0.0.1/*"
+        "http://127.0.0.1/*",
+        "https://saylient-ai.vercel.app/*"
       ]
     }
   ],
@@ -33,9 +36,11 @@
     {
       "matches": [
         "http://localhost/*",
-        "http://127.0.0.1/*"
+        "http://127.0.0.1/*",
+        "https://saylient-ai.vercel.app/*"
       ],
       "js": [
+        "config.js",
         "content.js"
       ],
       "css": [

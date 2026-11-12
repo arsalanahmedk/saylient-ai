@@ -4,12 +4,12 @@ import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } fro
 import {
   ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleHelp,
   Clipboard, Clock3, Copy, Download, Gauge, Globe2, History, LayoutDashboard,
-  Lightbulb, LogOut, Menu, MessageSquare, Moon, MoreHorizontal, PenLine,
-  Plus, Search, Send, Settings, ShieldCheck, Sparkles, Target, Trash2,
+  Lightbulb, LoaderCircle, LogOut, Menu, MessageSquare, Moon, MoreHorizontal, PenLine,
+  Plus, RotateCw, Search, Send, Settings, ShieldCheck, Sparkles, Target, Trash2,
   UserRound, WandSparkles, X, Zap
 } from "lucide-react";
 import "./styles.css";
-import { api, getToken, setToken, friendlyError, prettyLabel, GOAL_VALUES, GOAL_LABELS } from "./api";
+import { api, friendlyError, prettyLabel, GOAL_VALUES, GOAL_LABELS, TONE_OPTIONS, DIRECTNESS_OPTIONS, CONFIDENCE_NOTE } from "./api";
 
 function initials(name) {
   const parts = String(name || "?").trim().split(/\s+/);
@@ -40,8 +40,112 @@ const tunnelImages = [
   ["https://cdn.21st.dev/assets/mirror/f2/f28b370a5dcbf76240f1504579c4b05fc0ff0bb990a42aff8dc2f73a5dc46072.jpg", "Better work"],
 ];
 
+/* Landing hero presets. The "demo output" for each preset is the REAL
+   output of the rule-based engine (model prototype-0.1) for that message
+   and goal, computed once and embedded here — it is labelled as a demo,
+   and a signed-in visitor gets a live analysis instead. */
+const DEMO_PRESETS = [
+  {
+    label: "Set a boundary",
+    goal: "Set a boundary",
+    message: "The extra revisions are outside the agreed scope, so I would like to treat them as a separate task.",
+    result: {
+      intent: { label: "set_boundary", confidence: 0.87 },
+      tone: { label: "neutral", confidence: 0.3 },
+      strategy: { label: "negative_politeness", rationale: "No rule strongly favours a direct response, so the response hedges and respects the recipient's autonomy." },
+      draft: "Hi,\n\nThat change is outside the agreed scope, so I'd like to treat it as a separate task. I'm happy to schedule it once we've agreed on it.\n\nPlease let me know what works for you.",
+      model_version: "prototype-0.1",
+    },
+  },
+  {
+    label: "Move a deadline",
+    goal: "Negotiate deadline",
+    message: "Could we move the deadline to Friday? I need a bit more time.",
+    result: {
+      intent: { label: "negotiate_deadline", confidence: 0.83 },
+      tone: { label: "direct", confidence: 0.57 },
+      strategy: { label: "negative_politeness", rationale: "Payment and deadline pressure constrain the recipient's time, so the response hedges and leaves room to respond." },
+      draft: "Hi,\n\nWould it be possible to move the deadline to Friday? I want to make sure the quality stays high.\n\nPlease let me know what works for you.",
+      model_version: "prototype-0.1",
+    },
+  },
+  {
+    label: "Chase a payment",
+    goal: "Request payment",
+    message: "Hi, I wanted to check in on invoice #1048 — it has been overdue for two weeks. Could you let me know when the payment will be sent?",
+    result: {
+      intent: { label: "request_payment", confidence: 0.87 },
+      tone: { label: "diplomatic", confidence: 0.64 },
+      strategy: { label: "negative_politeness", rationale: "Payment and deadline pressure constrain the recipient's time, so the response hedges and leaves room to respond." },
+      draft: "Hi,\n\nI wanted to check in on invoice #1048, which is now overdue. Could you let me know when the payment will be sent?\n\nPlease let me know what works for you.",
+      model_version: "prototype-0.1",
+    },
+  },
+];
+
+const PIPELINE_STAGES = [
+  { name: "Message", log: "Reading your message…" },
+  { name: "Intent", log: "Classifying intent and tone…" },
+  { name: "Face", log: "Checking for face-threatening acts…" },
+  { name: "Strategy", log: "Choosing a politeness strategy…" },
+  { name: "Draft", log: "Drafting a response you can edit…" },
+];
+
+function Logo() {
+  return <div className="logo"><span className="logo-mark"><Sparkles size={16} /></span><span>saylient<span className="logo-ai">.ai</span></span></div>;
+}
+
+function Button({ children, variant = "primary", onClick, icon: Icon, type = "button", disabled }) {
+  return <button type={type} className={`btn btn-${variant}`} onClick={onClick} disabled={disabled}>
+    {Icon && <Icon size={15} />}
+    <span>{children}</span>
+  </button>;
+}
+
+/** Number ticker: counts 0 -> value over ~700ms (instant when the user prefers reduced motion). */
+function CountUp({ value }) {
+  const reduce = useReducedMotion();
+  const [display, setDisplay] = useState(reduce ? value : 0);
+  useEffect(() => {
+    if (reduce) { setDisplay(value); return undefined; }
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now) => {
+      const p = Math.min(1, (now - start) / 700);
+      setDisplay(Math.round(value * (1 - Math.pow(1 - p, 3))));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, reduce]);
+  return <>{display}</>;
+}
+
+/** Score ring: intent confidence as an animated ring (0 -> value in 800ms). */
+function ScoreRing({ value, size = 132 }) {
+  const reduce = useReducedMotion();
+  const r = 52;
+  const circumference = 2 * Math.PI * r;
+  const percent = Math.round((value || 0) * 100);
+  return <div className="score-ring" style={{ width: size, height: size }}>
+    <svg viewBox="0 0 132 132">
+      <circle cx="66" cy="66" r={r} className="ring-track" />
+      <motion.circle
+        cx="66" cy="66" r={r} className="ring-value"
+        strokeDasharray={circumference}
+        initial={{ strokeDashoffset: circumference }}
+        animate={{ strokeDashoffset: circumference * (1 - (value || 0)) }}
+        transition={{ duration: reduce ? 0 : 0.8, ease: "easeOut" }}
+      />
+    </svg>
+    <div className="ring-label"><strong>{percent}%</strong><span>intent confidence</span><small>{CONFIDENCE_NOTE}</small></div>
+  </div>;
+}
+
+/* Perspective Tunnel hero — now a scroll section lower on the landing,
+   driven by the page scroll (sticky) instead of hijacking the wheel. */
 function PerspectiveTunnelHero({ go }) {
-  const containerRef = useRef(null);
+  const wrapRef = useRef(null);
   const reduce = useReducedMotion();
   const [stage, setStage] = useState({ width: 1440, height: 900, isMobile: false });
   const rawProgress = useMotionValue(0);
@@ -57,47 +161,48 @@ function PerspectiveTunnelHero({ go }) {
         pointerY.set((event.clientY / window.innerHeight - 0.5) * 2);
       }
     };
+    const onScroll = () => {
+      const el = wrapRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const total = Math.max(1, rect.height - window.innerHeight);
+      rawProgress.set(Math.min(1, Math.max(0, -rect.top / total)));
+    };
     update();
+    onScroll();
     window.addEventListener("resize", update);
     window.addEventListener("pointermove", onPointerMove, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
       window.removeEventListener("resize", update);
       window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("scroll", onScroll);
     };
-  }, [pointerX, pointerY, reduce]);
-
-  useEffect(() => {
-    const element = containerRef.current;
-    if (!element) return undefined;
-    const onWheel = event => {
-      event.preventDefault();
-      rawProgress.set(Math.min(1, Math.max(0, rawProgress.get() + event.deltaY * 0.0008)));
-    };
-    element.addEventListener("wheel", onWheel, { passive: false });
-    return () => element.removeEventListener("wheel", onWheel);
-  }, [rawProgress]);
+  }, [pointerX, pointerY, reduce, rawProgress]);
 
   const titleScale = useTransform(progress, [0, 0.5, 1], [0.7, 1, 1.35]);
   const titleOpacity = useTransform(progress, [0, 0.12, 0.85, 1], [0.25, 1, 1, 0]);
   const promptOpacity = useTransform(progress, [0, 0.12], [1, 0]);
   const panStrength = stage.isMobile ? 20 : 45;
 
-  return <section ref={containerRef} className="tunnel-hero" style={{ perspective: stage.isMobile ? "900px" : "1200px" }}>
-    <div className="tunnel-grid" />
-    <div className="tunnel-glow" />
-    <div className="tunnel-ring tunnel-ring-small" />
-    <div className="tunnel-ring tunnel-ring-large" />
-    <motion.div className="tunnel-title" style={{ scale: titleScale, opacity: titleOpacity }}>
-      <p>Context-aware communication intelligence</p>
-      <h1>MAKE ROOM<br/><em>FOR BETTER</em><br/>CONVERSATIONS.</h1>
-      <span>Scroll to move through the studio. Keep your intent. Change the impact.</span>
-      <button className="shine-button" onClick={() => go("assistant")}>Open the assistant <ArrowRight size={14}/></button>
-    </motion.div>
-    <motion.div className="tunnel-prompt" style={{ opacity: promptOpacity }}><span>Scroll to explore</span><i/></motion.div>
-    <div className="tunnel-cards">
-      {tunnelImages.map(([src, title], index) => <TunnelCard key={title} src={src} title={title} index={index} total={tunnelImages.length} progress={progress} pointerX={pointerX} pointerY={pointerY} stage={stage} panStrength={panStrength}/>)}
-    </div>
-  </section>;
+  return <div ref={wrapRef} className="tunnel-scroll">
+    <section className="tunnel-hero" style={{ perspective: stage.isMobile ? "900px" : "1200px" }}>
+      <div className="tunnel-grid" />
+      <div className="tunnel-glow" />
+      <div className="tunnel-ring tunnel-ring-small" />
+      <div className="tunnel-ring tunnel-ring-large" />
+      <motion.div className="tunnel-title" style={{ scale: titleScale, opacity: titleOpacity }}>
+        <p>Context-aware communication intelligence</p>
+        <h1>MAKE ROOM<br /><em>FOR BETTER</em><br />CONVERSATIONS.</h1>
+        <span>Scroll to move through the studio. Keep your intent. Change the impact.</span>
+        <button className="btn btn-primary" onClick={() => go("assistant")}>Open the assistant <ArrowRight size={14} /></button>
+      </motion.div>
+      <motion.div className="tunnel-prompt" style={{ opacity: promptOpacity }}><span>Scroll to explore</span><i /></motion.div>
+      <div className="tunnel-cards">
+        {tunnelImages.map(([src, title], index) => <TunnelCard key={title} src={src} title={title} index={index} total={tunnelImages.length} progress={progress} pointerX={pointerX} pointerY={pointerY} stage={stage} panStrength={panStrength} />)}
+      </div>
+    </section>
+  </div>;
 }
 
 function TunnelCard({ src, title, index, total, progress, pointerX, pointerY, stage, panStrength }) {
@@ -113,28 +218,8 @@ function TunnelCard({ src, title, index, total, progress, pointerX, pointerY, st
     return `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${currentZ}px) rotateZ(${rotation}deg)`;
   });
   return <motion.div className="tunnel-card" style={{ opacity, transform, zIndex: index + 1, width: stage.isMobile ? "38vw" : "18vw" }}>
-    <div><img src={src} alt={title} draggable="false"/><span>{title}</span></div>
+    <div><img src={src} alt={title} draggable="false" /><span>{title}</span></div>
   </motion.div>;
-}
-
-function Logo() {
-  return <div className="logo"><span className="logo-mark"><Sparkles size={16}/></span><span>saylient<span className="logo-ai">.ai</span></span></div>;
-}
-
-function Button({ children, variant = "primary", onClick, icon: Icon, type = "button" }) {
-  const label = React.Children.toArray(children).filter(child => typeof child === "string").join(" ").trim() || "Continue";
-  return <button type={type} className={`btn shine-button button-3d btn-${variant}`} onClick={onClick}>
-    <span className="button-3d-bg" aria-hidden="true"/>
-    <svg className="button-3d-splash" viewBox="0 0 342 208" aria-hidden="true">
-      <path d="M54 100S40 91 27 98 2 98 2 98M285 100s14-9 27-2 28-2 28-2M231 57s-5-16 5-27 9-17 9-17M113 57s5-16-5-27-9-17-9-17"/>
-      <path opacity=".3" d="M281 65s7-15 22-17 17-12 17-12M62 65S55 50 40 48 24 37 24 37M170 57s4-15 0-28-1-27-1-27"/>
-    </svg>
-    <span className="button-3d-content">
-      {Icon && <Icon size={16}/>}
-      <span className="button-3d-label"><span>{label}</span><span>{label === "Continue" ? "Join now" : "Start now"}</span></span>
-    </span>
-    <span className="button-3d-arrow" aria-hidden="true">→</span>
-  </button>;
 }
 
 function HalftoneFooter() {
@@ -146,7 +231,6 @@ function HalftoneFooter() {
     if (!canvas || !root) return undefined;
     const context = canvas.getContext("2d");
     if (!context) return undefined; // canvas unavailable (e.g. disabled): the footer simply stays blank.
-    let frame = 0;
     let pointer = { x: -1000, y: -1000 };
     const draw = () => {
       const rect = root.getBoundingClientRect();
@@ -161,7 +245,7 @@ function HalftoneFooter() {
       mask.width = rect.width;
       mask.height = rect.height;
       const maskContext = mask.getContext("2d");
-      maskContext.font = `800 ${fontSize}px "Space Grotesk", sans-serif`;
+      maskContext.font = `600 ${fontSize}px Inter, sans-serif`;
       maskContext.textAlign = "center";
       maskContext.textBaseline = "alphabetic";
       maskContext.fillStyle = "#fff";
@@ -173,7 +257,7 @@ function HalftoneFooter() {
           if (alpha < 0.08) continue;
           const distance = Math.hypot(x - pointer.x, y - pointer.y);
           const warmth = Math.max(0, 1 - distance / 95) * alpha;
-          context.fillStyle = `rgb(${Math.round(233 - warmth * 33)},${Math.round(229 + warmth * 14)},${Math.round(218 - warmth * 90)})`;
+          context.fillStyle = `rgb(${Math.round(139 + warmth * 116)},${Math.round(92 + warmth * 163)},${Math.round(246 + warmth * 9)})`;
           context.beginPath();
           context.arc(x, y, Math.sqrt(alpha) * gap * 0.58, 0, Math.PI * 2);
           context.fill();
@@ -191,150 +275,255 @@ function HalftoneFooter() {
     root.addEventListener("pointerleave", leave);
     window.addEventListener("resize", draw);
     return () => {
-      cancelAnimationFrame(frame);
       root.removeEventListener("pointermove", move);
       root.removeEventListener("pointerleave", leave);
       window.removeEventListener("resize", draw);
     };
   }, []);
   return <footer ref={rootRef} className="halftone-footer">
-    <canvas ref={canvasRef} aria-hidden="true"/>
+    <canvas ref={canvasRef} aria-hidden="true" />
     <div className="halftone-top">
       <div><strong>Saylient AI studio</strong><span>© 2026 · Context / Tone / Clarity</span></div>
       <div><small>Explore</small><a href="#features">Product</a><a href="#how">How it works</a><a href="#theory">The framework</a></div>
       <div><small>Connect</small><a href="mailto:hello@saylient.ai">hello@saylient.ai</a><a href="#extension">Browser extension</a><a href="#assistant">Start a conversation</a></div>
-      <div><small>Studio</small><span>Made for messages that matter.</span><button onClick={() => window.scrollTo({top: 0, behavior: "smooth"})}>Back to top ↑</button></div>
+      <div><small>Studio</small><span>Made for messages that matter.</span><button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Back to top ↑</button></div>
     </div>
     <div className="halftone-rule"><span>saylient.ai / communication studio</span><span>Keep the intent. Change the impact.</span></div>
   </footer>;
 }
 
-function Landing({ go, user }) {
-  return <div className="landing">
-    <div className="video-topbar"><span>✦ saylient.ai</span><span>Communication intelligence for modern work</span><Button onClick={() => go("assistant")}>Open workspace <ArrowRight size={14}/></Button></div>
-    <nav className="video-nav" aria-label="Primary navigation">
-      <Logo />
-      <div className="video-nav-links"><a href="#features">Discover</a><a href="#how">The method</a><a href="#theory">Framework</a><a href="#extension">Extension</a></div>
-      {user ? <button className="video-text-link" onClick={() => go("overview")}>{user.display_name || user.email} · Workspace</button> : <button className="video-text-link" onClick={() => go("login")}>Sign in</button>}
-      <button className="video-menu" onClick={() => go("assistant")}>MENU <Menu size={14}/></button>
-    </nav>
-    <main>
-      <PerspectiveTunnelHero go={go}/>
-      <section className="video-hero">
-        <div className="hero-orbit hero-orbit-left"><div className="orbit-note">Context<br/><b>01</b></div><div className="orbit-note blue">Tone<br/><b>02</b></div></div>
-        <div className="video-hero-copy"><div className="video-kicker">NEXT-LEVEL COMMUNICATION TOOLS</div><h1>Say what you<br/>mean <span>better.</span></h1><p>Saylient AI gives every important message a second set of eyes, so you can keep your intent and change the impact.</p><div className="video-hero-actions"><Button onClick={() => go("assistant")} icon={WandSparkles}>Start writing clearly</Button><button className="video-text-link" onClick={() => document.getElementById("features")?.scrollIntoView({behavior:"smooth"})}>Explore the studio <ArrowRight size={14}/></button></div></div>
-        <div className="hero-orbit hero-orbit-right"><div className="orbit-card"><span>84</span><small>clarity score</small></div><div className="orbit-card paper"><span>“</span><small>Keep the intent.<br/>Change the impact.</small></div></div>
-        <div className="hero-wordmark">SAYLIENT<span>AI</span></div>
-      </section>
-      <section className="video-intro shell"><div className="video-kicker">BUILT FOR BETTER CONVERSATIONS</div><h2>One calm layer between<br/><span>thinking and sending.</span></h2><p>Understand the subtext, find the right words, and build communication confidence without leaving the flow of work.</p></section>
-      <section id="features" className="video-feature-section shell"><div className="video-feature-heading"><span>Discover</span><h2>The communication<br/><u>studio.</u></h2><p>Choose a lens. Make the next message land the way you meant it to.</p></div><div className="video-feature-grid"><Feature icon={Target} title="Understand the subtext" text="See intent, tone, and social dynamics behind any message." color="purple"/><Feature icon={WandSparkles} title="Find the right words" text="Shape thoughtful responses that still sound like you." color="cyan"/><Feature icon={Gauge} title="Build confidence" text="Learn the patterns that make communication clear." color="green"/></div></section>
-      <section className="section shell"><div className="section-heading"><div><div className="eyebrow">A better way to communicate</div><h2>Make every message<br/><em>work harder.</em></h2></div><p>From a quick follow-up to a difficult boundary, get context-aware guidance before you hit send.</p></div>
-        <div className="video-demo-panel"><div className="demo-panel-copy"><div className="video-kicker">THE SAYLIENT AI METHOD</div><h2>Clarity you can<br/><u>use in seconds.</u></h2><p>Share a message. See what it is doing. Choose a response that sounds like you, only clearer.</p><Button onClick={() => go("assistant")}>Try a live analysis <ArrowRight size={14}/></Button></div><div className="demo-panel-ui"><span>MESSAGE ASSISTANT / 01</span><strong>“I need the files today.<br/>This is taking longer than expected.”</strong><div><i/><i/><i/><i/><i/></div></div></div>
-      </section>
-      <section id="how" className="section workflow-section"><div className="shell"><div className="center-heading"><div className="eyebrow">From thought to send</div><h2>Clarity at every <em>step.</em></h2><p>Saylient AI turns communication theory into practical help you can use in seconds.</p></div><div className="steps"><Step n="01" title="Share the context" text="Tell us who you're talking to and what you want to achieve."/><Step n="02" title="Understand the message" text="We surface intent, tone, and social dynamics that matter."/><Step n="03" title="Send with confidence" text="Choose a response that sounds like you, only clearer." last/></div></div></section>
-      <section id="theory" className="theory-banner shell"><div><div className="eyebrow">Grounded in research</div><h2>The science of<br/><em>being understood.</em></h2><p>Built on Brown and Levinson's Politeness Theory, Saylient AI helps you balance clarity with consideration — without making you sound generic.</p><Button variant="outline" onClick={() => go("theory")}>Explore politeness theory <ArrowRight size={15}/></Button></div><div className="theory-cards"><div className="theory-card"><span className="theory-number">01</span><strong>Positive face</strong><p>The desire to feel appreciated and valued.</p></div><div className="theory-card active"><span className="theory-number">02</span><strong>Negative face</strong><p>The desire for autonomy and freedom from pressure.</p></div><div className="theory-card"><span className="theory-number">03</span><strong>Face-threatening acts</strong><p>Messages that can challenge either need.</p></div></div></section>
-      <section id="extension" className="extension-cta shell"><div className="browser-icon"><Globe2 size={26}/></div><div><div className="eyebrow">Coming to your browser</div><h2>Good communication,<br/><em>wherever work happens.</em></h2></div><div className="extension-copy"><p>Bring Saylient AI into the conversations you already have. Review suggestions without leaving your workflow.</p><Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15}/></Button></div></section>
-      <section className="final-cta"><div className="shell center-heading"><div className="eyebrow">Your next message starts here</div><h2>Say it better.<br/><em>Feel the difference.</em></h2><Button onClick={() => go("assistant")} icon={Sparkles}>Try Saylient AI free <ArrowRight size={15}/></Button></div></section>
-    </main>
-    <div className="video-rail"><span>✦</span><a href="#features">Discover</a><a href="#how">The method</a><a href="#theory">Framework</a><a href="#extension">Extension</a><Button onClick={() => go("assistant")}>Start free <ArrowRight size={13}/></Button></div>
-    <HalftoneFooter/>
+/* ------------------------------------------------------------------ landing */
+
+function HeroAnalysisWindow({ go, user }) {
+  const [preset, setPreset] = useState(0);
+  const [running, setRunning] = useState(false);
+  const [live, setLive] = useState(null);
+  const [error, setError] = useState("");
+  const chosen = DEMO_PRESETS[preset];
+
+  const run = async () => {
+    if (!user) {
+      setLive(null); // demo output is shown below instead
+      return;
+    }
+    setRunning(true); setError(""); setLive(null);
+    try {
+      const result = await api.createAnalysis({
+        message: chosen.message,
+        conversation_context: [],
+        goal: GOAL_VALUES[chosen.goal],
+        context: { power: "unknown", social_distance: "unknown", imposition: "unknown" },
+      });
+      setLive(result);
+    } catch (err) { setError(friendlyError(err)); }
+    setRunning(false);
+  };
+
+  const shown = live || (!user ? chosen.result : null);
+  const isDemo = !live && !user;
+  return <div className="hero-window">
+    <div className="window-top"><span className="window-dots"><i /><i /><i /></span><span>saylient.ai — message assistant</span><Sparkles size={14} /></div>
+    <div className="window-body">
+      <div className="preset-pills">
+        {DEMO_PRESETS.map((p, i) => <button key={p.label} className={preset === i ? "active" : ""} onClick={() => { setPreset(i); setLive(null); setError(""); }}>{p.label}</button>)}
+      </div>
+      <p className="hero-message">“{chosen.message}”</p>
+      <div className="hero-run">
+        <Button onClick={run} icon={running ? LoaderCircle : WandSparkles} disabled={running}>{running ? "Analyzing…" : user ? "Run live analysis" : "Run demo analysis"}</Button>
+        <span className="hero-run-note">{user ? "Live analysis · your account" : "Demo output below is precomputed — sign in for a live one"}</span>
+      </div>
+      {error && <div className="form-error">{error}</div>}
+      {shown && <div className="hero-output">
+        <div className="hero-output-head">
+          <span className="ai-icon"><Sparkles size={14} /></span>
+          <strong>{isDemo ? "Demo output" : "Live analysis"} · {shown.model_version}</strong>
+          <span className="result-tag"><Check size={12} /> Review required</span>
+        </div>
+        <div className="hero-output-tags">
+          <span><b>Intent</b> {prettyLabel(shown.intent?.label)} · {Math.round((shown.intent?.confidence || 0) * 100)}% <small>({CONFIDENCE_NOTE})</small></span>
+          <span><b>Tone</b> {prettyLabel(shown.tone?.label)}</span>
+          <span><b>Strategy</b> {prettyLabel(shown.strategy?.label)}</span>
+        </div>
+        <p className="hero-draft">{shown.draft}</p>
+        {isDemo && <button className="link-button" onClick={() => go("login")}>Sign in to analyze your own messages <ArrowRight size={13} /></button>}
+      </div>}
+    </div>
   </div>;
 }
 
-function Feature({icon: Icon, title, text, color}) { return <div className="feature-card"><div className={`feature-icon ${color}`}><Icon size={21}/></div><h3>{title}</h3><p>{text}</p><a href="#how">Learn more <ArrowRight size={13}/></a></div>; }
-function Step({n,title,text,last}) { return <div className="step"><div className="step-number">{n}</div><div className="step-line">{!last && <span/>}</div><div><h3>{title}</h3><p>{text}</p></div></div>; }
-function ShowcaseCard({tone,title,label,go,children}) { return <button className={`showcase-card ${tone}`} onClick={go}><div className="showcase-preview">{children}<span className="showcase-arrow"><ArrowRight size={31}/></span></div><div className="showcase-caption"><span>{label}</span><strong>{title}</strong></div></button>; }
+function Landing({ go, user }) {
+  const steps = [
+    ["01", "Paste the message", "Share the message and a little context — who it's for and what you want."],
+    ["02", "See the intent", "The engine reads intent and tone without guessing what anyone feels."],
+    ["03", "Mind the face", "Possible face-threatening acts are flagged, so you know what might land badly."],
+    ["04", "Pick a strategy", "One of five politeness strategies, with the reason it fits."],
+    ["05", "Send the draft", "An editable draft in your words — review it, then send it yourself."],
+  ];
+  const features = [
+    { icon: Target, title: "Understand the subtext", text: "See intent, tone, and social dynamics behind any message — before you reply.", wide: true },
+    { icon: WandSparkles, title: "Find the right words", text: "Shape thoughtful responses that still sound like you." },
+    { icon: Gauge, title: "Build confidence", text: "Learn the patterns that make communication clear, one message at a time." },
+    { icon: History, title: "A private archive", text: "Every analysis is saved to your account — search it, reopen it, delete it." },
+    { icon: Clipboard, title: "Saved templates", text: "Keep thoughtful starting points for the moments that come up again and again." },
+    { icon: Globe2, title: "In your browser", text: "The extension brings the same live analysis into the conversations you already have." },
+  ];
+  const strategies = [
+    ["Bald on Record", "Direct and clear. Best when the message is urgent, the relationship is close, or the imposition is low."],
+    ["Positive Politeness", "Shows appreciation and shared ground. Best when you want the other person to feel valued and included."],
+    ["Negative Politeness", "Hedges and respects autonomy. Best when the imposition is high or the relationship is distant."],
+    ["Off Record", "Hints instead of asking directly. Best when the risk of a direct request is too high."],
+    ["Avoidance", "Says nothing, or delays. Sometimes the kindest and safest move."],
+  ];
+  return <div className="landing">
+    <nav className="landing-nav" aria-label="Primary navigation">
+      <Logo />
+      <div className="landing-nav-links"><a href="#features">Product</a><a href="#how">How it works</a><a href="#theory">Framework</a><a href="#extension">Extension</a></div>
+      {user ? <button className="nav-user" onClick={() => go("overview")}>{user.display_name || user.email} · Workspace</button> : <Button onClick={() => go("login")}>Sign in</Button>}
+    </nav>
+    <main>
+      <section className="hero shell">
+        <div className="hero-copy">
+          <div className="hero-badge"><span className="pulse-dot" /> AI-based freelancer communication assistant</div>
+          <h1>Say what you mean, <em>better.</em></h1>
+          <p>Saylient AI gives every important message a second set of eyes — intent, tone, face concerns, and a draft that still sounds like you.</p>
+          <div className="hero-actions">
+            <Button onClick={() => go("assistant")} icon={WandSparkles}>Start writing clearly</Button>
+            <button className="text-link" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>Explore the studio <ArrowRight size={14} /></button>
+          </div>
+          <div className="hero-note"><ShieldCheck size={14} /> Nothing is ever sent automatically. You always review before you send.</div>
+        </div>
+        <HeroAnalysisWindow go={go} user={user} />
+      </section>
+
+      <section id="how" className="pipeline-section shell">
+        <div className="center-heading"><div className="eyebrow">From thought to send</div><h2>Clarity at every <em>step.</em></h2><p>Communication theory, turned into practical help you can use in seconds.</p></div>
+        <div className="pipeline-steps">
+          {steps.map(([n, title, text], i) => <div className="pipeline-step" key={n}>
+            <div className="pipeline-node"><span>{n}</span></div>
+            {i < steps.length - 1 && <div className="pipeline-connector" aria-hidden="true" />}
+            <h3>{title}</h3><p>{text}</p>
+          </div>)}
+        </div>
+      </section>
+
+      <section id="features" className="section shell">
+        <div className="section-heading"><div><div className="eyebrow">The communication studio</div><h2>One calm layer between<br /><em>thinking and sending.</em></h2></div><p>From a quick follow-up to a difficult boundary, get context-aware guidance before you hit send.</p></div>
+        <div className="bento-grid">
+          {features.map(({ icon: Icon, title, text, wide }) => <article className={`bento-card${wide ? " wide" : ""}`} key={title}>
+            <div className="bento-icon"><Icon size={20} /></div><h3>{title}</h3><p>{text}</p>
+          </article>)}
+        </div>
+      </section>
+
+      <section id="theory" className="theory-strip shell">
+        <div className="center-heading"><div className="eyebrow">Grounded in research</div><h2>The science of <em>being understood.</em></h2><p>Built on Brown and Levinson's Politeness Theory (1987) — five strategies, one reason each.</p></div>
+        <div className="strategy-strip">
+          {strategies.map(([title, text], i) => <article className="strategy-chip" key={title}><span>{String(i + 1).padStart(2, "0")}</span><strong>{title}</strong><p>{text}</p></article>)}
+        </div>
+        <div className="center-heading" style={{ marginTop: 28 }}><Button variant="outline" onClick={() => go("theory")}>Explore politeness theory <ArrowRight size={15} /></Button></div>
+      </section>
+
+      <PerspectiveTunnelHero go={go} />
+
+      <section id="extension" className="extension-cta shell">
+        <div className="browser-icon"><Globe2 size={26} /></div>
+        <div><div className="eyebrow">In your browser</div><h2>Good communication,<br /><em>wherever work happens.</em></h2></div>
+        <div className="extension-copy"><p>Bring Saylient AI into the conversations you already have. Sign in once in the popup, pick a message, and get a live analysis — nothing is monitored or sent on its own.</p><Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button></div>
+      </section>
+
+      <section className="final-cta"><div className="shell center-heading"><div className="eyebrow">Your next message starts here</div><h2>Say it better.<br /><em>Feel the difference.</em></h2><Button onClick={() => go("assistant")} icon={Sparkles}>Try Saylient AI free <ArrowRight size={15} /></Button></div></section>
+    </main>
+    <HalftoneFooter />
+  </div>;
+}
+
+/* ------------------------------------------------------------------ workspace shell */
 
 function Layout({ page, go, user, onSignOut, children }) {
   const [mobile, setMobile] = useState(false);
-  return <div className="app-shell"><aside className={mobile ? "sidebar open" : "sidebar"}><div className="side-logo"><Logo/><button className="mobile-close" onClick={() => setMobile(false)}><X size={18}/></button></div><div className="side-label">Workspace</div><nav>{navItems.map(([id,label,Icon]) => <button key={id} className={page === id ? "side-link active" : "side-link"} onClick={() => {go(id);setMobile(false)}}><Icon size={17}/>{label}{id === "assistant" && <span className="new-dot"/>}</button>)}</nav><div className="side-label lower">Account</div><button className={`side-link ${page === "settings" ? "active" : ""}`} onClick={() => go("settings")}><Settings size={17}/>Settings</button><button className="side-link" onClick={onSignOut}><LogOut size={17}/>Sign out</button><div className="upgrade-card"><Sparkles size={17}/><strong>Prototype build</strong><p>Analyses run on the rule-based engine (prototype-0.1). Your data lives in your account.</p><button onClick={() => go("assistant")}>Analyze a message <ArrowRight size={13}/></button></div><button className="profile profile-button" onClick={() => go("profile")}><div className="profile-avatar">{initials(user.display_name || user.email)}</div><div><strong>{user.display_name || user.email}</strong><small>{user.email}</small></div><MoreHorizontal size={16}/></button></aside><div className="main-area"><header className="app-header"><button className="menu-button" onClick={() => setMobile(true)}><Menu size={20}/></button><div className="breadcrumb"><span>Workspace</span><ChevronDown size={14}/><strong>{navItems.find(x => x[0] === page)?.[1] || "Overview"}</strong></div><div className="header-actions"><button aria-label="Help" onClick={() => go("theory")}><CircleHelp size={18}/></button><button aria-label="Toggle theme"><Moon size={18}/></button><button className="header-avatar" onClick={() => go("profile")}>{initials(user.display_name || user.email)}</button></div></header><main className="dashboard-content">{children}</main></div></div>;
+  return <div className="app-shell"><aside className={mobile ? "sidebar open" : "sidebar"}><div className="side-logo"><Logo /><button className="mobile-close" onClick={() => setMobile(false)}><X size={18} /></button></div><div className="side-label">Workspace</div><nav>{navItems.map(([id, label, Icon]) => <button key={id} className={page === id ? "side-link active" : "side-link"} onClick={() => { go(id); setMobile(false); }}><Icon size={17} />{label}{id === "assistant" && <span className="new-dot" />}</button>)}</nav><div className="side-label lower">Account</div><button className={`side-link ${page === "settings" ? "active" : ""}`} onClick={() => go("settings")}><Settings size={17} />Settings</button><button className="side-link" onClick={onSignOut}><LogOut size={17} />Sign out</button><div className="upgrade-card"><Sparkles size={17} /><strong>Prototype build</strong><p>Analyses run on the rule-based engine (prototype-0.1). Your data lives in your account.</p><button onClick={() => go("assistant")}>Analyze a message <ArrowRight size={13} /></button></div><button className="profile profile-button" onClick={() => go("profile")}><div className="profile-avatar">{initials(user.display_name || user.email)}</div><div><strong>{user.display_name || user.email}</strong><small>{user.email}</small></div><MoreHorizontal size={16} /></button></aside><div className="main-area"><header className="app-header"><button className="menu-button" onClick={() => setMobile(true)}><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><ChevronDown size={14} /><strong>{navItems.find(x => x[0] === page)?.[1] || "Overview"}</strong></div><div className="header-actions"><button aria-label="Help" onClick={() => go("theory")}><CircleHelp size={18} /></button><button className="header-avatar" onClick={() => go("profile")}>{initials(user.display_name || user.email)}</button></div></header><main className="dashboard-content">{children}</main></div></div>;
 }
 
-function PageHeader({eyebrow, title, text, children}) { return <div className="page-header"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1>{text && <p>{text}</p>}</div>{children}</div>; }
+function PageHeader({ eyebrow, title, text, children }) { return <div className="page-header"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1>{text && <p>{text}</p>}</div>{children}</div>; }
+
+/* ------------------------------------------------------------------ dashboard */
+
 function Dashboard({ go, user, onOpen }) {
-  const [data, setData] = useState(null);
-  const [templates, setTemplates] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [recent, setRecent] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     let cancelled = false;
-    Promise.all([api.listAnalyses(100, 0), api.listTemplates(50, 0)])
-      .then(([a, t]) => { if (!cancelled) { setData(a); setTemplates(t.items || []); setLoading(false); } })
+    Promise.all([api.getStats(), api.listAnalyses(5, 0)])
+      .then(([s, a]) => { if (!cancelled) { setStats(s); setRecent(a.items || []); setLoading(false); } })
       .catch(e => { if (!cancelled) { setError(friendlyError(e)); setLoading(false); } });
     return () => { cancelled = true; };
   }, []);
   const firstName = (user?.display_name || user?.email || "there").split(" ")[0];
   const today = new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" });
-  const items = data?.items || [];
-  const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
-  const thisWeek = items.filter(i => new Date(i.created_at).getTime() >= weekAgo).length;
-  const avgConfidence = items.length ? Math.round(items.reduce((s, i) => s + (i.intent?.confidence || 0), 0) / items.length * 100) : null;
-  const mostCommon = (key) => {
-    const counts = {};
-    items.forEach(i => { const v = key(i); if (v) counts[v] = (counts[v] || 0) + 1; });
-    const top = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
-    return top ? { label: top[0], count: top[1] } : null;
-  };
-  const topIntent = mostCommon(i => i.intent?.label);
-  const topStrategy = mostCommon(i => i.strategy?.label);
-  const ftaCount = items.filter(i => i.fta?.detected).length;
-  const buckets = [0, 0, 0, 0, 0];
-  items.forEach(i => {
-    const days = Math.floor((Date.now() - new Date(i.created_at).getTime()) / (24 * 3600 * 1000));
-    if (days >= 0 && days < 30) buckets[4 - Math.floor(days / 6)] += 1;
-  });
+  const buckets = stats?.buckets_30d || [0, 0, 0, 0, 0];
   const maxBucket = Math.max(1, ...buckets);
   const points = buckets.map((v, i) => [i * 150, 160 - (v / maxBucket) * 140]);
   const line = points.map(([x, y], i) => `${i === 0 ? "M" : "L"}${x} ${y}`).join(" ");
   const area = `${line} L600 170 L0 170 Z`;
-  const recent = items.slice(0, 3);
+  const avgConf = stats?.avg_intent_confidence == null ? null : Math.round(stats.avg_intent_confidence * 100);
   return <>
     <PageHeader eyebrow={today} title={<>Good to see you, {firstName} <span className="wave">✦</span></>} text="Your real communication overview — data comes from your account, not a demo."><Button onClick={() => go("assistant")} icon={Plus}>New analysis</Button></PageHeader>
     {error && <div className="form-error panel">{error}</div>}
-    {loading ? <div className="panel placeholder-page"><div className="placeholder-icon"><Sparkles size={25}/></div><h2>Loading your overview…</h2></div> : <>
-    <div className="stats-grid">
-      <Stat title="Messages analyzed" value={String(data?.total ?? items.length)} change={`${thisWeek} this week`} icon={MessageSquare} color="purple"/>
-      <Stat title="Saved templates" value={String(templates.length)} change="In your account" icon={Clipboard} color="cyan"/>
-      <Stat title="Avg. intent confidence" value={avgConfidence === null ? "—" : `${avgConfidence}%`} change={items.length ? `Across ${items.length} ${items.length === 1 ? "analysis" : "analyses"}` : "No analyses yet"} icon={Gauge} color="green"/>
-      <Stat title="Flagged face concerns" value={String(ftaCount)} change={items.length ? `${Math.round(ftaCount / items.length * 100)}% of messages` : "No analyses yet"} icon={Clock3} color="orange"/>
-    </div>
-    <div className="dashboard-grid">
-      <section className="panel activity-panel"><div className="panel-heading"><div><h3>Communication activity</h3><p>Your analyses over the last 30 days</p></div></div>
-        <div className="fake-chart"><div className="chart-y"><span>{maxBucket}</span><span>{Math.ceil(maxBucket / 2)}</span><span>0</span></div><div className="chart-area"><div className="grid-lines"><i/><i/><i/><i/><i/></div>
-        <svg viewBox="0 0 600 170" preserveAspectRatio="none"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#8b5cf6" stopOpacity=".3"/><stop offset="1" stopColor="#8b5cf6" stopOpacity="0"/></linearGradient></defs>
-        {items.length ? <><path d={area} fill="url(#chartFill)"/><path d={line} fill="none" stroke="#a78bfa" strokeWidth="3"/></> : <text x="300" y="85" textAnchor="middle" fill="#94a3b8" fontSize="13">No analyses yet — try the assistant.</text>}
-        </svg><div className="chart-x"><span>30 days ago</span><span>24 days</span><span>18 days</span><span>12 days</span><span>Today</span></div></div></div>
-      </section>
-      <section className="panel insights-panel"><div className="panel-heading"><div><h3>Recent AI insights</h3><p>From your actual analyses</p></div></div>
-        {items.length ? <>
-          {topIntent && <Insight icon={Target} title={`Most often: ${prettyLabel(topIntent.label)}`} text={`${topIntent.count} of ${items.length} ${items.length === 1 ? "message" : "messages"} had this intent.`} />}
-          {topStrategy && <Insight icon={Lightbulb} title={`Usual strategy: ${prettyLabel(topStrategy.label)}`} text={`${topStrategy.count} of ${items.length} analyses recommended it.`} />}
-          <Insight icon={Zap} title={ftaCount ? `${ftaCount} message${ftaCount === 1 ? "" : "s"} flagged a face concern` : "No face concerns flagged"} text={ftaCount ? "Review the breakdown before you send." : "Keep it up — or analyze a trickier message."} />}
-        </> : <Insight icon={Lightbulb} title="Nothing analyzed yet" text="Analyze a message and your patterns will show up here." />}
-      </section>
-    </div>
-    <section className="panel recent-panel"><div className="panel-heading"><div><h3>Recent conversations</h3><p>Your latest analyses</p></div><button className="link-button" onClick={() => go("history")}>View all <ArrowRight size={14}/></button></div>
-      {recent.length ? <div className="conversation-table">{recent.map(c => <div className="conversation-row" key={c.id}><div className="conversation-icon"><MessageSquare size={16}/></div><div className="conversation-name"><strong>{prettyLabel(c.intent?.label)}</strong><span>{c.message}</span></div><span className="conversation-date">{new Date(c.created_at).toLocaleDateString()}</span><div className="score-pill"><span/> {Math.round((c.intent?.confidence || 0) * 100)}%</div><button className="icon-button" onClick={() => onOpen(c)} aria-label="Open in assistant"><ArrowRight size={16}/></button></div>)}</div> : <div className="placeholder-page"><div className="placeholder-icon"><History size={25}/></div><h2>No analyses yet.</h2><p>Your first analysis will appear here.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>}
-    </section></>}
+    {loading ? <div className="panel placeholder-page"><div className="placeholder-icon"><Sparkles size={25} /></div><h2>Loading your overview…</h2></div> : <>
+      <div className="stats-grid">
+        <Stat title="Messages analyzed" value={stats?.total ?? 0} change={`${stats?.this_week ?? 0} this week`} icon={MessageSquare} color="purple" />
+        <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="green" />
+        <Stat title="Flagged face concerns" value={stats?.fta_count ?? 0} change={stats?.total ? `${Math.round((stats.fta_count / stats.total) * 100)}% of messages` : "No analyses yet"} icon={Clock3} color="orange" />
+        <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="cyan" />
+      </div>
+      <div className="dashboard-grid">
+        <section className="panel activity-panel"><div className="panel-heading"><div><h3>Communication activity</h3><p>Your analyses over the last 30 days</p></div></div>
+          <div className="fake-chart"><div className="chart-y"><span>{maxBucket}</span><span>{Math.ceil(maxBucket / 2)}</span><span>0</span></div><div className="chart-area"><div className="grid-lines"><i /><i /><i /><i /><i /></div>
+            <svg viewBox="0 0 600 170" preserveAspectRatio="none"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#8b5cf6" stopOpacity=".3" /><stop offset="1" stopColor="#8b5cf6" stopOpacity="0" /></linearGradient></defs>
+              {(stats?.total || 0) > 0 ? <><path d={area} fill="url(#chartFill)" /><path d={line} fill="none" stroke="#a78bfa" strokeWidth="3" /></> : <text x="300" y="85" textAnchor="middle" fill="#94a3b8" fontSize="13">No analyses yet — try the assistant.</text>}
+            </svg><div className="chart-x"><span>30 days ago</span><span>24 days</span><span>18 days</span><span>12 days</span><span>Today</span></div></div></div>
+        </section>
+        <section className="panel insights-panel"><div className="panel-heading"><div><h3>Recent AI insights</h3><p>From your actual analyses</p></div></div>
+          {(stats?.total || 0) > 0 ? <>
+            {stats.top_intent && <Insight icon={Target} title={`Most often: ${prettyLabel(stats.top_intent)}`} text="Your most common intent across all analyses." />}
+            {stats.top_strategy && <Insight icon={Lightbulb} title={`Usual strategy: ${prettyLabel(stats.top_strategy)}`} text="The strategy the engine recommends most for you." />}
+            <Insight icon={Zap} title={stats.fta_count ? `${stats.fta_count} message${stats.fta_count === 1 ? "" : "s"} flagged a face concern` : "No face concerns flagged"} text={stats.fta_count ? "Review the breakdown before you send." : "Keep it up — or analyze a trickier message."} />}
+          </> : <Insight icon={Lightbulb} title="Nothing analyzed yet" text="Analyze a message and your patterns will show up here." />}
+        </section>
+      </div>
+      <section className="panel recent-panel"><div className="panel-heading"><div><h3>Recent conversations</h3><p>Your latest analyses</p></div><button className="link-button" onClick={() => go("history")}>View all <ArrowRight size={14} /></button></div>
+        {recent.length ? <div className="conversation-table">{recent.map(c => <div className="conversation-row" key={c.id}><div className="conversation-icon"><MessageSquare size={16} /></div><div className="conversation-name"><strong>{prettyLabel(c.intent?.label)}</strong><span>{c.message}</span></div><span className="conversation-date">{new Date(c.created_at).toLocaleDateString()}</span><div className="score-pill"><span /> {Math.round((c.intent?.confidence || 0) * 100)}%</div><button className="icon-button" onClick={() => onOpen(c)} aria-label="Open in assistant"><ArrowRight size={16} /></button></div>)}</div> : <div className="placeholder-page"><div className="placeholder-icon"><History size={25} /></div><h2>No analyses yet.</h2><p>Your first analysis will appear here.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>}
+      </section></>}
   </>;
 }
-function Stat({title,value,change,icon:Icon,color}) { return <div className="stat-card"><div className={`stat-icon ${color}`}><Icon size={18}/></div><div className="stat-value">{value}</div><div className="stat-title">{title}</div><div className="stat-change"><span>↗</span> {change}</div></div>; }
-function Insight({icon:Icon,title,text}) { return <div className="insight"><div className="insight-icon"><Icon size={16}/></div><div><strong>{title}</strong><p>{text}</p></div></div>; }
+function Stat({ title, value, change, icon: Icon, color }) {
+  return <div className="stat-card"><div className={`stat-icon ${color}`}><Icon size={18} /></div><div className="stat-value">{typeof value === "number" ? <CountUp value={value} /> : value}</div><div className="stat-title">{title}</div><div className="stat-change"><span>↗</span> {change}</div></div>;
+}
+function Insight({ icon: Icon, title, text }) { return <div className="insight"><div className="insight-icon"><Icon size={16} /></div><div><strong>{title}</strong><p>{text}</p></div></div>; }
+
+/* ------------------------------------------------------------------ assistant */
 
 function Assistant({ go, openAnalysis, clearOpen }) {
   const [message, setMessage] = useState("Hey, I need the final files today. This is taking longer than expected.");
-  const [context, setContext] = useState("");
+  const [contextItems, setContextItems] = useState([{ role: "client", text: "" }]);
   const [goal, setGoal] = useState("Set a boundary");
-  const [role, setRole] = useState("Freelancer");
   const [power, setPower] = useState("unknown");
   const [distance, setDistance] = useState("unknown");
   const [imposition, setImposition] = useState("unknown");
   const [tone, setTone] = useState("Diplomatic");
+  const [directness, setDirectness] = useState("balanced");
   const [loading, setLoading] = useState(false);
+  const [stage, setStage] = useState(0);
+  const [log, setLog] = useState([]);
   const [error, setError] = useState("");
   const [analysis, setAnalysis] = useState(null);
   const [draftId, setDraftId] = useState(null);
   const [savedNote, setSavedNote] = useState("");
+  const [updating, setUpdating] = useState(false);
+  const timerRef = useRef(null);
+  const messageRef = useRef(null);
 
   useEffect(() => {
     if (!openAnalysis) return;
@@ -345,7 +534,10 @@ function Assistant({ go, openAnalysis, clearOpen }) {
     setPower(cf.power || "unknown");
     setDistance(cf.social_distance || "unknown");
     setImposition(cf.imposition || "unknown");
-    setDraftId(null); setSavedNote(""); setError("");
+    const ctx = (openAnalysis.conversation_context || []).map(c => ({ role: c.role === "freelancer" ? "freelancer" : "client", text: c.text }));
+    setContextItems(ctx.length ? ctx : [{ role: "client", text: "" }]);
+    setDraftId(null); setSavedNote(""); setError(""); setStage(5);
+    setLog(["Loaded a saved analysis — review the draft below."]);
     api.listDrafts(openAnalysis.id).then(d => {
       const latest = (d.items || [])[0];
       if (latest) setDraftId(latest.id);
@@ -353,96 +545,247 @@ function Assistant({ go, openAnalysis, clearOpen }) {
     clearOpen();
   }, [openAnalysis]);
 
+  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current); }, []);
+
+  const autoResize = () => {
+    const el = messageRef.current;
+    if (el) { el.style.height = "auto"; el.style.height = `${Math.min(el.scrollHeight, 320)}px`; }
+  };
+  useEffect(autoResize, [message]);
+
+  const startPipeline = () => {
+    setStage(0);
+    setLog([PIPELINE_STAGES[0].log]);
+    let s = 0;
+    timerRef.current = setInterval(() => {
+      s += 1;
+      if (s > 4) { clearInterval(timerRef.current); return; }
+      setStage(s);
+      setLog(prev => [...prev, PIPELINE_STAGES[s].log]);
+    }, 450);
+  };
+  const stopPipeline = (done) => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setStage(done ? 5 : 0);
+    if (done) setLog(prev => [...prev, "Done — review the draft below."]);
+  };
+
   const analyze = async () => {
-    if (!message.trim() || message.length > 2000) return;
+    if (!message.trim() || message.length > 2000 || loading) return;
     setLoading(true); setError(""); setSavedNote("");
+    startPipeline();
     try {
       const result = await api.createAnalysis({
         message: message.trim(),
-        conversation_context: context.trim() ? [{ role: "prior", text: context.trim() }] : [],
+        conversation_context: contextItems.filter(c => c.text.trim()).map(c => ({ role: c.role, text: c.text.trim() })),
         goal: GOAL_VALUES[goal],
         context: { power, social_distance: distance, imposition },
+        tone,
+        directness,
       });
+      stopPipeline(true);
       setAnalysis(result); setDraftId(null);
-    } catch (err) { setError(friendlyError(err)); }
+    } catch (err) {
+      stopPipeline(false);
+      setError(friendlyError(err));
+      setLog(prev => [...prev, "The analysis could not run — see the error above."]);
+    }
     setLoading(false);
   };
-  const saveDraft = async (draftText, toneSetting) => {
+
+  const regenerate = async (nextTone, nextDirectness) => {
+    if (!analysis || loading || updating) return;
+    setUpdating(true); setError("");
+    try {
+      const result = await api.regenerateAnalysis(analysis.id, { tone: nextTone ?? tone, directness: nextDirectness ?? directness });
+      setAnalysis(result); setDraftId(null); setSavedNote("");
+    } catch (err) { setError(friendlyError(err)); }
+    setUpdating(false);
+  };
+
+  const changeTone = (t) => { setTone(t); if (analysis) regenerate(t, undefined); };
+  const changeDirectness = (d) => { setDirectness(d); if (analysis) regenerate(undefined, d); };
+
+  const saveDraft = async (draftText) => {
     if (!analysis) return;
     try {
       if (draftId) {
-        await api.patchDraft(draftId, { draft_text: draftText, tone_setting: toneSetting });
+        await api.patchDraft(draftId, { draft_text: draftText, tone_setting: tone, directness_setting: directness });
       } else {
-        const created = await api.createDraft(analysis.id, { draft_text: draftText, tone_setting: toneSetting });
+        const created = await api.createDraft(analysis.id, { draft_text: draftText, tone_setting: tone, directness_setting: directness });
         setDraftId(created.id);
       }
       setSavedNote("Draft saved to this analysis.");
     } catch (err) { setError(friendlyError(err)); }
   };
-  return <><PageHeader eyebrow="Message assistant" title="Find the right words." text="Add a little context, and we'll help you say what you mean."><span className="demo-badge"><span/> Live analysis · {role}</span></PageHeader><div className="assistant-layout"><section className="panel assistant-form"><div className="assistant-title"><div className="panel-icon purple"><MessageSquare size={17}/></div><div><h3>Your message</h3><p>Context is user supplied; predictions are labelled.</p></div></div>
-  {error && <div className="form-error">{error}</div>}
-  <label>Conversation context <span>Optional</span><textarea className="context-textarea" value={context} onChange={e => setContext(e.target.value)} placeholder="What happened before this message?"/></label>
-  <div className="field-row"><label>I'm a <div className="segmented">{["Freelancer", "Client"].map(item => <button key={item} className={role === item ? "selected" : ""} onClick={() => setRole(item)}>{item}</button>)}</div></label><label>Communication goal<select className="field select-field" value={goal} onChange={e => setGoal(e.target.value)}>{GOAL_OPTIONS.map(item => <option key={item}>{item}</option>)}</select></label></div>
-  <div className="field-row three"><label>Power<select className="field select-field" value={power} onChange={e => setPower(e.target.value)}>{PDR_OPTIONS.map(v => <option key={v} value={v}>{v === "unknown" ? "Unknown" : prettyLabel(v)}</option>)}</select></label><label>Social distance<select className="field select-field" value={distance} onChange={e => setDistance(e.target.value)}>{PDR_OPTIONS.map(v => <option key={v} value={v}>{v === "unknown" ? "Unknown" : prettyLabel(v)}</option>)}</select></label><label>Imposition<select className="field select-field" value={imposition} onChange={e => setImposition(e.target.value)}>{PDR_OPTIONS.map(v => <option key={v} value={v}>{v === "unknown" ? "Unknown" : prettyLabel(v)}</option>)}</select></label></div>
-  <label>Original message<textarea value={message} onChange={e => setMessage(e.target.value)} placeholder="Write the message you'd like help with..."/></label><div className="unknown-note"><CircleHelp size={13}/> Power, distance and imposition stay unknown unless you set them — the engine will say so instead of guessing.</div><div className="assistant-form-footer"><span className="char-count">{message.length}/2000</span><Button onClick={analyze} icon={loading ? undefined : Sparkles}>{loading ? "Analyzing..." : "Analyze conversation"}</Button></div></section><section className="panel result-panel">{!analysis ? <div className="empty-result"><div className="empty-spark"><Sparkles size={25}/></div><h3>Your thoughtful response<br/>starts here.</h3><p>We'll look at intent, tone, possible face concerns, and strategy without pretending to know the recipient's feelings.</p><div className="mini-points"><span><Check size={13}/> Context-aware</span><span><Check size={13}/> Review before sending</span></div></div> : <Result analysis={analysis} tone={tone} setTone={setTone} onSave={saveDraft} onRegenerate={analyze} savedNote={savedNote} />}</section></div></>;
+  const deleteDraft = async () => {
+    if (!draftId) return;
+    if (!window.confirm("Delete this saved draft? The analysis itself stays.")) return;
+    try {
+      await api.deleteDraft(draftId);
+      setDraftId(null); setSavedNote("Draft deleted.");
+    } catch (err) { setError(friendlyError(err)); }
+  };
+
+  return <><PageHeader eyebrow="Message assistant" title="Find the right words." text="Add a little context, and we'll help you say what you mean."><span className="demo-badge"><span /> Live analysis · real backend</span></PageHeader>
+    <div className="assistant-layout">
+      <section className="panel assistant-form"><div className="assistant-title"><div className="panel-icon purple"><MessageSquare size={17} /></div><div><h3>Your message</h3><p>Context is user supplied; predictions are labelled.</p></div></div>
+        {error && <div className="form-error">{error}</div>}
+        <div className="context-editor">
+          <label>Conversation context <span>Optional — earlier messages, newest last</span></label>
+          {contextItems.map((item, i) => <div className="context-row" key={i}>
+            <select className="field select-field" value={item.role} onChange={e => setContextItems(contextItems.map((c, j) => j === i ? { ...c, role: e.target.value } : c))} aria-label="Who wrote this message">
+              <option value="client">Client</option>
+              <option value="freelancer">Freelancer</option>
+            </select>
+            <input className="field" value={item.text} onChange={e => setContextItems(contextItems.map((c, j) => j === i ? { ...c, text: e.target.value } : c))} placeholder="An earlier message in this conversation…" maxLength={2000} />
+            <button className="icon-button" onClick={() => setContextItems(contextItems.filter((_, j) => j !== i))} aria-label="Remove this message" disabled={contextItems.length === 1}><X size={15} /></button>
+          </div>)}
+          <button className="link-button" onClick={() => setContextItems([...contextItems, { role: "client", text: "" }])}><Plus size={13} /> Add another message</button>
+        </div>
+        <label>Communication goal <span>Pick the one that fits</span>
+          <div className="goal-pills">{GOAL_OPTIONS.map(item => <button key={item} className={goal === item ? "selected" : ""} onClick={() => setGoal(item)} aria-pressed={goal === item}>{item}</button>)}</div>
+        </label>
+        <div className="field-row three"><label>Power<select className="field select-field" value={power} onChange={e => setPower(e.target.value)}>{PDR_OPTIONS.map(v => <option key={v} value={v}>{v === "unknown" ? "Unknown" : prettyLabel(v)}</option>)}</select></label><label>Social distance<select className="field select-field" value={distance} onChange={e => setDistance(e.target.value)}>{PDR_OPTIONS.map(v => <option key={v} value={v}>{v === "unknown" ? "Unknown" : prettyLabel(v)}</option>)}</select></label><label>Imposition<select className="field select-field" value={imposition} onChange={e => setImposition(e.target.value)}>{PDR_OPTIONS.map(v => <option key={v} value={v}>{v === "unknown" ? "Unknown" : prettyLabel(v)}</option>)}</select></label></div>
+        <label>Original message<textarea ref={messageRef} value={message} onChange={e => setMessage(e.target.value)} placeholder="Write the message you'd like help with..." /></label>
+        <div className="unknown-note"><CircleHelp size={13} /> Power, distance and imposition stay unknown unless you set them — the engine will say so instead of guessing.</div>
+        <div className="assistant-form-footer"><span className="char-count">{message.length}/2000</span><Button onClick={analyze} icon={loading ? LoaderCircle : Sparkles} disabled={loading}>{loading ? "Analyzing…" : "Analyze conversation"}</Button></div>
+      </section>
+
+      <section className="panel result-panel">
+        {!analysis ? <div className="empty-result"><div className="empty-spark"><Sparkles size={25} /></div><h3>Your thoughtful response<br />starts here.</h3><p>We'll look at intent, tone, possible face concerns, and strategy without pretending to know the recipient's feelings.</p><div className="mini-points"><span><Check size={13} /> Context-aware</span><span><Check size={13} /> Review before sending</span></div></div> : <>
+          <div className="pipeline-card">
+            <div className="pipeline-nodes">
+              {PIPELINE_STAGES.map((s, i) => <div key={s.name} className={`pipeline-node-item${stage > i ? " done" : ""}${stage === i && loading ? " active" : ""}`}>
+                <span className="node-dot">{stage > i ? <Check size={11} /> : i + 1}</span><span className="node-name">{s.name}</span>
+                {i < PIPELINE_STAGES.length - 1 && <span className="node-connector" />}
+              </div>)}
+            </div>
+            <div className="pipeline-side">
+              {loading ? <div className="pipeline-spinner"><LoaderCircle size={26} className="spin" /><span>Analyzing…</span></div> : <ScoreRing value={analysis.intent?.confidence || 0} />}
+              <div className="pipeline-log" aria-live="polite">
+                {log.map((line, i) => <div key={i} className="log-line"><span>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>{line}</div>)}
+              </div>
+            </div>
+          </div>
+          <Result analysis={analysis} tone={tone} directness={directness} onTone={changeTone} onDirectness={changeDirectness} onSave={saveDraft} onDeleteDraft={deleteDraft} hasDraft={!!draftId} onRegenerate={() => regenerate()} savedNote={savedNote} updating={updating} />
+        </>}
+      </section>
+    </div></>;
 }
-function Result({ analysis, tone, setTone, onSave, onRegenerate, savedNote }) {
+
+function Result({ analysis, tone, directness, onTone, onDirectness, onSave, onDeleteDraft, hasDraft, onRegenerate, savedNote, updating }) {
   const [draft, setDraft] = useState(analysis.draft);
   const [copied, setCopied] = useState(false);
   const [saving, setSaving] = useState(false);
-  useEffect(() => { setDraft(analysis.draft); }, [analysis.id]);
+  useEffect(() => { setDraft(analysis.draft); }, [analysis.id, analysis.draft]);
   const copy = async () => { await navigator.clipboard?.writeText(draft); setCopied(true); setTimeout(() => setCopied(false), 1400); };
-  const save = async () => { setSaving(true); await onSave(draft, tone); setSaving(false); };
+  const save = async () => { setSaving(true); await onSave(draft); setSaving(false); };
   const faceLabels = (analysis.face_concern || []).map(f => f === "positive_face" ? "Positive face" : f === "negative_face" ? "Negative face" : prettyLabel(f));
   const cf = analysis.context_factors || {};
   const pdr = (v) => v === "unknown" ? "Unknown" : prettyLabel(v);
-  return <div className="result-content"><div className="result-top"><div><div className="result-kicker"><span className="ai-icon"><Sparkles size={14}/></span> Live analysis · {analysis.model_version}</div><h3>A clearer way to say it</h3></div><span className="result-tag"><Check size={12}/> Review required</span></div><div className="analysis-tags"><span><b>Intent</b> {prettyLabel(analysis.intent?.label)} · {Math.round((analysis.intent?.confidence || 0) * 100)}%</span><span><b>Tone</b> {prettyLabel(analysis.tone?.label)} · {Math.round((analysis.tone?.confidence || 0) * 100)}%</span><span><b>FTA</b> {analysis.fta?.detected ? analysis.fta.description : "None detected"}</span></div><div className="analysis-breakdown"><div><small>Face concerns</small><p>{faceLabels.length ? faceLabels.join(" · ") : "None flagged."}</p></div><div><small>Strategy</small><p>{prettyLabel(analysis.strategy?.label)}</p></div><div><small>P / D / R</small><p>Power: {pdr(cf.power)} · Distance: {pdr(cf.social_distance)} · Imposition: {pdr(cf.imposition)}</p></div></div><div className="strategy-card"><span>Recommended strategy</span><strong>{prettyLabel(analysis.strategy?.label)}</strong><p>{analysis.strategy?.rationale}</p></div><div className="response-card"><div className="response-card-head"><span>Editable suggested response</span><button onClick={copy}><Copy size={14}/> {copied ? "Copied" : "Copy"}</button></div><textarea className="draft-editor" value={draft} onChange={e => setDraft(e.target.value)}/><div className="response-note"><Lightbulb size={14}/><span>{(analysis.limitations || []).join(" ")}</span></div></div><div className="tone-section"><span>Response tone</span><div className="tone-options">{["Professional", "Friendly", "Diplomatic", "Assertive", "Empathetic"].map(t => <button className={tone === t ? "active" : ""} onClick={() => setTone(t)} key={t}>{t}</button>)}</div></div><div className="result-actions"><button className="secondary-action" onClick={() => setDraft(analysis.draft)}><Trash2 size={15}/> Reset draft</button><button className="secondary-action" onClick={save} disabled={saving}><History size={15}/> {saving ? "Saving..." : "Save draft"}</button><Button onClick={onRegenerate} icon={WandSparkles}>Regenerate</Button></div>{savedNote && <div className="form-note">{savedNote}</div>}<small className="model-note">Model: {analysis.model_version} · No message is sent automatically.</small></div>;
+  return <div className="result-content">
+    <div className="result-top"><div><div className="result-kicker"><span className="ai-icon"><Sparkles size={14} /></span> Live analysis · {analysis.model_version}</div><h3>A clearer way to say it</h3></div><span className="result-tag"><Check size={12} /> Review required</span></div>
+    <div className="original-message"><small>ORIGINAL MESSAGE</small><p>“{analysis.message}”</p></div>
+    <div className="result-cards">
+      <div className="result-card"><small>Intent</small><strong>{prettyLabel(analysis.intent?.label)}</strong><span>{Math.round((analysis.intent?.confidence || 0) * 100)}% · {CONFIDENCE_NOTE}</span></div>
+      <div className="result-card"><small>Tone</small><strong>{prettyLabel(analysis.tone?.label)}</strong><span>{Math.round((analysis.tone?.confidence || 0) * 100)}% · {CONFIDENCE_NOTE}</span></div>
+      <div className="result-card"><small>Strategy</small><strong>{prettyLabel(analysis.strategy?.label)}</strong><span>{analysis.fta?.detected ? analysis.fta.description : "No face-threatening act detected"}</span></div>
+    </div>
+    <div className="analysis-breakdown"><div><small>Face concerns</small><p>{faceLabels.length ? faceLabels.join(" · ") : "None flagged."}</p></div><div><small>P / D / R</small><p>Power: {pdr(cf.power)} · Distance: {pdr(cf.social_distance)} · Imposition: {pdr(cf.imposition)}</p></div></div>
+    <div className="strategy-card"><span>Recommended strategy</span><strong>{prettyLabel(analysis.strategy?.label)}</strong><p>{analysis.strategy?.rationale}</p></div>
+    <div className="response-card"><div className="response-card-head"><span>Editable suggested response</span><button onClick={copy}><Copy size={14} /> {copied ? "Copied" : "Copy"}</button></div><textarea className="draft-editor" value={draft} onChange={e => setDraft(e.target.value)} /><div className="response-note"><Lightbulb size={14} /><span>{(analysis.limitations || []).join(" ")}</span></div></div>
+    <div className="tone-section"><span>Response tone</span><div className="tone-options">{TONE_OPTIONS.map(t => <button className={tone === t ? "active" : ""} onClick={() => onTone(t)} key={t} aria-pressed={tone === t}>{t}</button>)}</div></div>
+    <div className="tone-section"><span>Directness</span><div className="tone-options">{DIRECTNESS_OPTIONS.map(d => <button className={directness === d.value ? "active" : ""} onClick={() => onDirectness(d.value)} key={d.value} aria-pressed={directness === d.value}>{d.label}</button>)}</div><p className="tone-hint">Changing tone or directness re-runs the analysis with the new styling.</p></div>
+    <div className="result-actions">
+      <button className="secondary-action" onClick={() => setDraft(analysis.draft)}><RotateCw size={15} /> Reset draft</button>
+      {hasDraft && <button className="secondary-action" onClick={onDeleteDraft}><Trash2 size={15} /> Delete draft</button>}
+      <button className="secondary-action" onClick={save} disabled={saving}><History size={15} /> {saving ? "Saving…" : "Save draft"}</button>
+      <Button onClick={onRegenerate} icon={WandSparkles} disabled={updating}>{updating ? "Updating…" : "Regenerate"}</Button>
+    </div>
+    {savedNote && <div className="form-note">{savedNote}</div>}
+    <small className="model-note">Model: {analysis.model_version} · No message is sent automatically.</small>
+  </div>;
 }
-function SimplePage({ type, go, user, onSignOut, onOpen }) {
+
+/* ------------------------------------------------------------------ other pages */
+
+const STARTERS = [
+  { title: "Payment reminder", category: "Payment", text: "Hi Alex, I wanted to follow up on the outstanding invoice and check whether you have an expected payment date." },
+  { title: "Scope boundary", category: "Work boundaries", text: "I can help with that change. To keep the current deadline, it would be best to treat it as a new scope item." },
+  { title: "Deadline negotiation", category: "Deadline", text: "Would moving the delivery to Thursday work for you? That would give me enough time to keep the quality where it needs to be." },
+];
+
+function SimplePage({ type, go, user, onSignOut, onOpen, onUserChanged }) {
   if (type === "analysis") return <AnalysisPage go={go} onOpen={onOpen} />;
   if (type === "history") return <HistoryPage go={go} onOpen={onOpen} />;
   if (type === "templates") return <TemplatesPage go={go} />;
   if (type === "theory") return <TheoryPage go={go} />;
   if (type === "settings") return <SettingsPage user={user} go={go} onSignOut={onSignOut} />;
-  if (type === "profile") return <ProfilePage user={user} go={go} onSignOut={onSignOut} />;
+  if (type === "profile") return <ProfilePage user={user} go={go} onSignOut={onSignOut} onUserChanged={onUserChanged} />;
   if (type === "extension") return <ExtensionPage go={go} />;
   return <AnalysisPage go={go} onOpen={onOpen} />;
 }
+
+function AnalysisPage({ go, onOpen }) {
+  const [items, setItems] = useState([]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  useEffect(() => {
+    api.listAnalyses(10, 0)
+      .then(d => { setItems(d.items || []); setLoading(false); })
+      .catch(e => { setError(friendlyError(e)); setLoading(false); });
+  }, []);
+  return <><PageHeader eyebrow="Workspace" title="Communication analysis" text="Intent, tone, face concerns and strategy — for your latest messages."><Button onClick={() => go("assistant")} icon={Plus}>New analysis</Button></PageHeader>
+    {error && <div className="form-error panel">{error}</div>}
+    {loading ? <div className="panel placeholder-page"><div className="placeholder-icon"><BarChart3 size={25} /></div><h2>Loading your analyses…</h2></div> : items.length ? <div className="history-list">{items.map(item => <article className="panel history-item" key={item.id}><div><small>{prettyLabel(item.goal)} · {new Date(item.created_at).toLocaleDateString()}</small><h3>{item.message}</h3><div className="analysis-tags"><span><b>Intent</b> {prettyLabel(item.intent?.label)} · {Math.round((item.intent?.confidence || 0) * 100)}% <small>({CONFIDENCE_NOTE})</small></span><span><b>Tone</b> {prettyLabel(item.tone?.label)}</span><span><b>Strategy</b> {prettyLabel(item.strategy?.label)}</span><span>{item.fta?.detected ? "Face concern flagged" : "No face concern"}</span></div></div><button className="secondary-action" onClick={() => onOpen(item)}><ArrowRight size={15} /> Open</button></article>)}</div> : <div className="placeholder-page panel"><div className="placeholder-icon"><BarChart3 size={25} /></div><h2>Nothing analyzed yet.</h2><p>Analyze a message and its breakdown will appear here.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>}
+  </>;
+}
+
 function HistoryPage({ go, onOpen }) {
+  const PAGE = 10;
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
+  const [offset, setOffset] = useState(0);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const load = () => {
-    setLoading(true);
-    api.listAnalyses(50, 0)
-      .then(d => { setItems(d.items || []); setTotal(d.total || 0); setLoading(false); })
-      .catch(e => { setError(friendlyError(e)); setLoading(false); });
+  const [loadingMore, setLoadingMore] = useState(false);
+  const load = (nextOffset) => {
+    if (nextOffset === 0) setLoading(true); else setLoadingMore(true);
+    api.listAnalyses(PAGE, nextOffset)
+      .then(d => {
+        setItems(prev => nextOffset === 0 ? (d.items || []) : [...prev, ...(d.items || [])]);
+        setTotal(d.total || 0); setOffset(nextOffset);
+        setLoading(false); setLoadingMore(false);
+      })
+      .catch(e => { setError(friendlyError(e)); setLoading(false); setLoadingMore(false); });
   };
-  useEffect(load, []);
+  useEffect(() => { load(0); }, []);
   const remove = async (id) => {
     if (!window.confirm("Delete this saved analysis?")) return;
     try { await api.deleteAnalysis(id); setItems(items.filter(item => item.id !== id)); setTotal(total - 1); }
     catch (e) { setError(friendlyError(e)); }
   };
   const filtered = items.filter(item => `${item.message} ${item.intent?.label || ""} ${item.strategy?.label || ""}`.toLowerCase().includes(query.toLowerCase()));
+  const hasMore = items.length < total;
   return <><PageHeader eyebrow="Your private archive" title="Conversation history" text="Analyses are stored in your account. Deleting one removes it for good."><Button onClick={() => go("assistant")} icon={Plus}>New analysis</Button></PageHeader>
-  {error && <div className="form-error panel">{error}</div>}
-  <div className="history-toolbar panel"><Search size={16}/><input placeholder="Search saved conversations..." value={query} onChange={event => setQuery(event.target.value)} /><span>{total} saved</span></div>
-  <div className="history-list">{loading ? <div className="placeholder-page panel"><div className="placeholder-icon"><History size={25}/></div><h2>Loading your history…</h2></div> : filtered.length ? filtered.map(item => <article className="panel history-item" key={item.id}><div><small>{prettyLabel(item.intent?.label)} · {new Date(item.created_at).toLocaleDateString()}</small><h3>{item.message}</h3><p>{item.draft}</p><div className="analysis-tags"><span>{prettyLabel(item.strategy?.label)}</span><span>{item.fta?.detected ? "Face concern flagged" : "No face concern"}</span></div></div><div style={{ display: "flex", gap: 8 }}><button className="secondary-action" onClick={() => onOpen(item)}><ArrowRight size={15}/> Open</button><button className="secondary-action" onClick={() => remove(item.id)}><Trash2 size={15}/> Delete</button></div></article>) : <div className="placeholder-page panel"><div className="placeholder-icon"><History size={25}/></div><h2>Your saved conversations will appear here.</h2><p>Analyze a message and it is saved to your account automatically.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>}</div></>;
+    {error && <div className="form-error panel">{error}</div>}
+    <div className="history-toolbar panel"><Search size={16} /><input placeholder="Search saved conversations..." value={query} onChange={event => setQuery(event.target.value)} /><span>{total} saved</span></div>
+    <div className="history-list">{loading ? <div className="placeholder-page panel"><div className="placeholder-icon"><History size={25} /></div><h2>Loading your history…</h2></div> : filtered.length ? filtered.map(item => <article className="panel history-item" key={item.id}><div><small>{prettyLabel(item.intent?.label)} · {new Date(item.created_at).toLocaleDateString()}</small><h3>{item.message}</h3><p>{item.draft}</p><div className="analysis-tags"><span>{prettyLabel(item.strategy?.label)}</span><span>{item.fta?.detected ? "Face concern flagged" : "No face concern"}</span></div></div><div style={{ display: "flex", gap: 8 }}><button className="secondary-action" onClick={() => onOpen(item)}><ArrowRight size={15} /> Open</button><button className="secondary-action" onClick={() => remove(item.id)}><Trash2 size={15} /> Delete</button></div></article>) : <div className="placeholder-page panel"><div className="placeholder-icon"><History size={25} /></div><h2>Your saved conversations will appear here.</h2><p>Analyze a message and it is saved to your account automatically.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>}</div>
+    {hasMore && <div className="load-more"><Button variant="outline" onClick={() => load(offset + PAGE)} disabled={loadingMore}>{loadingMore ? "Loading…" : `Load more (${total - items.length} left)`}</Button></div>}
+  </>;
 }
+
 function TemplatesPage({ go }) {
-  const STARTERS = [
-    { title: "Payment reminder", category: "Payment", text: "Hi Alex, I wanted to follow up on the outstanding invoice and check whether you have an expected payment date." },
-    { title: "Scope boundary", category: "Work boundaries", text: "I can help with that change. To keep the current deadline, it would be best to treat it as a new scope item." },
-    { title: "Deadline negotiation", category: "Deadline", text: "Would moving the delivery to Thursday work for you? That would give me enough time to keep the quality where it needs to be." },
-  ];
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("All");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ title: "", category: "", body: "" });
+  const [editing, setEditing] = useState(null);
+  const [editForm, setEditForm] = useState({ title: "", category: "", body: "" });
   const load = () => {
     api.listTemplates(50, 0)
       .then(d => { setItems(d.items || []); setLoading(false); })
@@ -468,109 +811,57 @@ function TemplatesPage({ go }) {
     try { await api.deleteTemplate(id); setItems(items.filter(i => i.id !== id)); }
     catch (err) { setError(friendlyError(err)); }
   };
-  const filtered = items.filter(item => `${item.title} ${item.category} ${item.body}`.toLowerCase().includes(query.toLowerCase()));
+  const startEdit = (item) => { setEditing(item.id); setEditForm({ title: item.title, category: item.category, body: item.body }); };
+  const saveEdit = async (e) => {
+    e.preventDefault();
+    try {
+      const updated = await api.patchTemplate(editing, { title: editForm.title.trim(), category: editForm.category.trim(), body: editForm.body.trim() });
+      setItems(items.map(i => i.id === editing ? updated : i));
+      setEditing(null);
+    } catch (err) { setError(friendlyError(err)); }
+  };
+  const categories = ["All", ...new Set(items.map(i => i.category))];
+  const filtered = items.filter(item => (category === "All" || item.category === category) && `${item.title} ${item.category} ${item.body}`.toLowerCase().includes(query.toLowerCase()));
   const savedTitles = new Set(items.map(i => i.title));
   return <><PageHeader eyebrow="Reusable language" title="Saved templates" text="Keep thoughtful starting points for the moments that matter."><Button onClick={() => go("assistant")} icon={Plus}>Create from assistant</Button></PageHeader>
-  {error && <div className="form-error panel">{error}</div>}
-  <div className="history-toolbar panel"><Search size={16}/><input placeholder="Search templates..." value={query} onChange={event => setQuery(event.target.value)} /><span>{filtered.length} templates</span></div>
-  <form className="panel" onSubmit={create} style={{ marginBottom: 15 }}>
-    <div className="field-row"><label>Title<input className="field select-field" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Payment reminder" maxLength={120} /></label><label>Category<input className="field select-field" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="Payment" maxLength={60} /></label></div>
-    <label>Template text<textarea className="context-textarea" value={form.body} onChange={e => setForm({ ...form, body: e.target.value })} placeholder="Write the template..." maxLength={2000} /></label>
-    <Button type="submit" icon={Plus}>Save template</Button>
-  </form>
-  {loading ? <div className="placeholder-page panel"><div className="placeholder-icon"><Clipboard size={25}/></div><h2>Loading your templates…</h2></div> : <>
-  <div className="template-grid">{filtered.map(item => <article className="panel template-item" key={item.id}><div className="template-top"><span>{item.category}</span><button onClick={() => navigator.clipboard?.writeText(item.body)} aria-label="Copy template"><Copy size={15}/></button></div><h3>{item.title}</h3><p>{item.body}</p><button className="link-button" onClick={() => remove(item.id)}>Delete <Trash2 size={14}/></button></article>)}</div>
-  <div className="panel" style={{ marginTop: 15 }}><div className="panel-heading"><div><h3>Starter templates</h3><p>Save one to your account to make it yours.</p></div></div>
-  <div className="template-grid" style={{ marginTop: 15 }}>{STARTERS.map(item => <article className="panel template-item" key={item.title}><div className="template-top"><span>{item.category}</span><button onClick={() => navigator.clipboard?.writeText(item.text)} aria-label="Copy template"><Copy size={15}/></button></div><h3>{item.title}</h3><p>{item.text}</p>{savedTitles.has(item.title) ? <span className="model-note">Saved to your account</span> : <button className="link-button" onClick={() => saveStarter(item)}>Save template <Plus size={14}/></button>}</article>)}</div></div>
-  </>}
-  </>;
-}
-  function DemoChat({ go }) {
-    const [messages, setMessages] = useState([
-      ["client", "Hi! I wanted to check whether the homepage concepts will be ready today.", "10:32 AM"],
-      ["freelancer", "Hi Alex, I am putting the final details together now.", "10:34 AM"],
-    ]);
-    const [draft, setDraft] = useState("");
-    const send = () => { if (!draft.trim()) return; setMessages([...messages, ["freelancer", draft.trim(), "Just now"]]); setDraft(""); };
-    return <div className="demo-chat-page"><div className="demo-chat-header"><button className="link-button" onClick={() => go("landing")}>← Back</button><div className="profile-avatar">AM</div><div><strong>Alex Morgan</strong><small>Client · Website redesign</small></div><span className="online-dot"/> <span className="demo-label">Extension demo</span></div><div className="demo-messages">{messages.map(([role,text,time], index) => <div className={`demo-message ${role}`} data-demo-message data-message-id={index} key={`${index}-${text}`}><span className="demo-author">{role === "client" ? "Alex" : "You"}</span><p>{text}</p><small>{time}</small></div>)}</div><div className="demo-composer"><textarea data-demo-composer value={draft} onChange={event => setDraft(event.target.value)} placeholder="Write a message..."/><button onClick={send}><Send size={16}/> Send</button></div><p className="demo-disclaimer"><ShieldCheck size={13}/> Local demo only · Saylient AI never sends messages automatically</p></div>;
-  }
-
-function AuthPage({ mode, go, onAuthed, notice }) {
-  const [isLogin, setIsLogin] = useState(mode !== "register");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [forgot, setForgot] = useState(false);
-  const [resetToken, setResetToken] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const submit = async (e) => {
-    e.preventDefault();
-    setError(""); setMessage(""); setBusy(true);
-    try {
-      if (forgot) {
-        if (resetToken) {
-          await api.resetPassword(resetToken, newPassword);
-          setMessage("Password changed. Please sign in with your new password.");
-          setForgot(false); setResetToken(""); setNewPassword("");
-        } else {
-          const res = await api.forgotPassword(email);
-          if (res.reset_token) {
-            setResetToken(res.reset_token);
-            setMessage("Development mode: your reset token is shown below. In production it would be sent by email.");
-          } else {
-            setMessage("If that email has an account, reset instructions were sent.");
-          }
-        }
-      } else if (isLogin) {
-        const auth = await api.login(email, password);
-        onAuthed(auth);
-      } else {
-        const auth = await api.register(email, password, name.trim());
-        onAuthed(auth);
-      }
-    } catch (err) { setError(friendlyError(err)); }
-    setBusy(false);
-  };
-  return <div className="auth-page"><div className="auth-card panel">
-    <Logo />
-    <h1>{forgot ? "Reset your password" : isLogin ? "Welcome back" : "Create your account"}</h1>
-    <p>{notice || "Your analyses, drafts and templates live in your account — not just in this browser."}</p>
-    {error && <div className="form-error">{error}</div>}
-    {message && <div className="form-note">{message}</div>}
-    <form onSubmit={submit}>
-      {!isLogin && !forgot && <label>Display name<input value={name} onChange={e => setName(e.target.value)} placeholder="Arsalan Ahmed Khan" maxLength={100} /></label>}
-      <label>Email<input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" /></label>
-      {!forgot && <label>Password<input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder={isLogin ? "Your password" : "At least 8 characters"} minLength={isLogin ? 1 : 8} autoComplete={isLogin ? "current-password" : "new-password"} /></label>}
-      {forgot && resetToken && <label>Reset token<input value={resetToken} readOnly /></label>}
-      {forgot && resetToken && <label>New password<input type="password" required value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="At least 8 characters" minLength={8} autoComplete="new-password" /></label>}
-      <Button type="submit" icon={Sparkles}>{busy ? "Please wait..." : forgot ? (resetToken ? "Set new password" : "Send reset token") : isLogin ? "Sign in" : "Create account"}</Button>
+    {error && <div className="form-error panel">{error}</div>}
+    <div className="history-toolbar panel"><Search size={16} /><input placeholder="Search templates..." value={query} onChange={event => setQuery(event.target.value)} /><span>{filtered.length} templates</span></div>
+    <div className="category-chips">{categories.map(c => <button key={c} className={category === c ? "active" : ""} onClick={() => setCategory(c)} aria-pressed={category === c}>{c}</button>)}</div>
+    <form className="panel template-form" onSubmit={create}>
+      <div className="field-row"><label>Title<input className="field select-field" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} placeholder="Payment reminder" maxLength={120} /></label><label>Category<input className="field select-field" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} placeholder="Payment" maxLength={60} /></label></div>
+      <label>Template text<textarea className="context-textarea" value={form.body} onChange={e => setForm({ ...form, body: e.target.value })} placeholder="Write the template..." maxLength={2000} /></label>
+      <Button type="submit" icon={Plus}>Save template</Button>
     </form>
-    <div className="auth-links">
-      {!forgot && <button className="link-button" onClick={() => { setIsLogin(!isLogin); setError(""); setMessage(""); }}>{isLogin ? "No account yet? Create one" : "Already have an account? Sign in"}</button>}
-      {!forgot && isLogin && <button className="link-button" onClick={() => { setForgot(true); setError(""); setMessage(""); }}>Forgot password?</button>}
-      {forgot && <button className="link-button" onClick={() => { setForgot(false); setResetToken(""); setError(""); setMessage(""); }}>Back to sign in</button>}
-      <button className="link-button" onClick={() => go("landing")}>Back to the landing page</button>
-    </div>
-    <small className="model-note">Prototype: the backend stores your data in its own database. Never reuse a password from another account.</small>
-  </div></div>;
+    {loading ? <div className="placeholder-page panel"><div className="placeholder-icon"><Clipboard size={25} /></div><h2>Loading your templates…</h2></div> : <>
+      <div className="template-grid">{filtered.map(item => editing === item.id ? <form className="panel template-item editing" key={item.id} onSubmit={saveEdit}>
+        <label>Title<input className="field select-field" value={editForm.title} onChange={e => setEditForm({ ...editForm, title: e.target.value })} maxLength={120} /></label>
+        <label>Category<input className="field select-field" value={editForm.category} onChange={e => setEditForm({ ...editForm, category: e.target.value })} maxLength={60} /></label>
+        <label>Template text<textarea className="context-textarea" value={editForm.body} onChange={e => setEditForm({ ...editForm, body: e.target.value })} maxLength={2000} /></label>
+        <div className="template-edit-actions"><Button type="submit" icon={Check}>Save changes</Button><button type="button" className="secondary-action" onClick={() => setEditing(null)}>Cancel</button></div>
+      </form> : <article className="panel template-item" key={item.id}><div className="template-top"><span>{item.category}</span><button onClick={() => navigator.clipboard?.writeText(item.body)} aria-label="Copy template"><Copy size={15} /></button></div><h3>{item.title}</h3><p>{item.body}</p><div className="template-actions"><button className="link-button" onClick={() => startEdit(item)}><PenLine size={13} /> Edit</button><button className="link-button" onClick={() => remove(item.id)}>Delete <Trash2 size={14} /></button></div></article>)}</div>
+      <div className="panel" style={{ marginTop: 15 }}><div className="panel-heading"><div><h3>Starter templates</h3><p>Save one to your account to make it yours.</p></div></div>
+        <div className="template-grid" style={{ marginTop: 15 }}>{STARTERS.map(item => <article className="panel template-item" key={item.title}><div className="template-top"><span>{item.category}</span><button onClick={() => navigator.clipboard?.writeText(item.text)} aria-label="Copy template"><Copy size={15} /></button></div><h3>{item.title}</h3><p>{item.text}</p>{savedTitles.has(item.title) ? <span className="model-note">Saved to your account</span> : <button className="link-button" onClick={() => saveStarter(item)}>Save template <Plus size={14} /></button>}</article>)}</div></div>
+    </>}
+  </>;
 }
 
-function AnalysisPage({ go, onOpen }) {
-  const [items, setItems] = useState([]);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    api.listAnalyses(10, 0)
-      .then(d => { setItems(d.items || []); setLoading(false); })
-      .catch(e => { setError(friendlyError(e)); setLoading(false); });
-  }, []);
-  return <><PageHeader eyebrow="Workspace" title="Communication analysis" text="Intent, tone, face concerns and strategy — for your latest messages."><Button onClick={() => go("assistant")} icon={Plus}>New analysis</Button></PageHeader>
-  {error && <div className="form-error panel">{error}</div>}
-  {loading ? <div className="panel placeholder-page"><div className="placeholder-icon"><BarChart3 size={25}/></div><h2>Loading your analyses…</h2></div> : items.length ? <div className="history-list">{items.map(item => <article className="panel history-item" key={item.id}><div><small>{prettyLabel(item.goal)} · {new Date(item.created_at).toLocaleDateString()}</small><h3>{item.message}</h3><div className="analysis-tags"><span><b>Intent</b> {prettyLabel(item.intent?.label)} · {Math.round((item.intent?.confidence || 0) * 100)}%</span><span><b>Tone</b> {prettyLabel(item.tone?.label)}</span><span><b>Strategy</b> {prettyLabel(item.strategy?.label)}</span><span>{item.fta?.detected ? "Face concern flagged" : "No face concern"}</span></div></div><button className="secondary-action" onClick={() => onOpen(item)}><ArrowRight size={15}/> Open</button></article>)}</div> : <div className="placeholder-page panel"><div className="placeholder-icon"><BarChart3 size={25}/></div><h2>Nothing analyzed yet.</h2><p>Analyze a message and its breakdown will appear here.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>}
-  </>;
+function TheoryPage({ go }) {
+  const strategies = [
+    ["Bald on Record", "Direct and clear. Best when the message is urgent, the relationship is close, or the imposition is low."],
+    ["Positive Politeness", "Shows appreciation and shared ground. Best when you want the other person to feel valued and included."],
+    ["Negative Politeness", "Hedges and respects autonomy. Best when the imposition is high or the relationship is distant."],
+    ["Off Record", "Hints instead of asking directly. Best when the risk of a direct request is too high."],
+    ["Avoidance", "Says nothing, or delays. Sometimes the kindest and safest move."],
+  ];
+  return <><PageHeader eyebrow="Learn the framework" title="Politeness theory" text="The science of being understood — Brown and Levinson's Politeness Theory (1987)."><Button onClick={() => go("assistant")} icon={Sparkles}>Try it in the assistant</Button></PageHeader>
+    <div className="template-grid" style={{ marginBottom: 15 }}>
+      <article className="panel template-item"><div className="template-top"><span>01</span></div><h3>Positive face</h3><p>The desire to feel appreciated, valued and included.</p></article>
+      <article className="panel template-item"><div className="template-top"><span>02</span></div><h3>Negative face</h3><p>The desire for autonomy — freedom from pressure and imposition.</p></article>
+      <article className="panel template-item"><div className="template-top"><span>03</span></div><h3>Face-threatening acts</h3><p>Messages that can challenge either need — a request, a criticism, a deadline.</p></article>
+    </div>
+    <section className="panel"><div className="panel-heading"><div><h3>Five strategies</h3><p>Saylient AI recommends one of these for every message it analyzes.</p></div></div>
+      <div className="history-list" style={{ marginTop: 15 }}>{strategies.map(([title, text]) => <article className="panel history-item" key={title}><div><h3>{title}</h3><p>{text}</p></div></article>)}</div>
+      <p className="model-note" style={{ marginTop: 16 }}>Saylient AI never claims to know what the recipient truly feels. It looks at what the message does — and what it might do.</p></section></>;
 }
 
 function SettingsPage({ user, go, onSignOut }) {
@@ -598,73 +889,181 @@ function SettingsPage({ user, go, onSignOut }) {
     catch (e) { setDeleteError(friendlyError(e)); }
   };
   return <><PageHeader eyebrow="Workspace" title="Settings" text="Make Saylient AI fit the way you work — and control your data."><Button onClick={() => go("assistant")} icon={Plus}>New analysis</Button></PageHeader>
-  <div className="history-list">
-    <section className="panel history-item"><div><small>Account</small><h3>{user.display_name || user.email}</h3><p>{user.email} · Member since {new Date(user.created_at).toLocaleDateString()} · Status: {user.status}</p></div><button className="secondary-action" onClick={() => go("profile")}><UserRound size={15}/> View profile</button></section>
-    <section className="panel history-item"><div><small>Privacy · your data</small><h3>Export my data</h3><p>Downloads a JSON file with your profile, analyses, drafts and templates.</p>{exportError && <div className="form-error">{exportError}</div>}{exportDone && <div className="form-note">{exportDone}</div>}</div><button className="secondary-action" onClick={doExport} disabled={exportBusy}><Download size={15}/> {exportBusy ? "Preparing..." : "Download export"}</button></section>
-    <section className="panel history-item"><div><small>Privacy · danger zone</small><h3>Delete my account</h3><p>This permanently deletes your account, analyses, drafts and templates. It cannot be undone.</p>{deleteError && <div className="form-error">{deleteError}</div>}</div>{confirmDelete ? <div style={{ display: "flex", gap: 8, alignItems: "center" }}><input type="password" className="field select-field" value={password} onChange={e => setPassword(e.target.value)} placeholder="Confirm your password" /><button className="secondary-action" onClick={doDelete}><Trash2 size={15}/> Delete forever</button><button className="secondary-action" onClick={() => { setConfirmDelete(false); setPassword(""); }}>Cancel</button></div> : <button className="secondary-action" onClick={() => setConfirmDelete(true)}><Trash2 size={15}/> Delete account</button>}</section>
-    <section className="panel history-item"><div><small>Local preferences</small><h3>Appearance &amp; defaults</h3><p>Appearance: light editorial theme · Default tone: Diplomatic · Notifications: enabled. These preferences are stored in this browser only.</p></div><button className="secondary-action" onClick={() => go("assistant")}><Sparkles size={15}/> Open assistant</button></section>
-  </div></>;
+    <div className="history-list">
+      <section className="panel history-item"><div><small>Account</small><h3>{user.display_name || user.email}</h3><p>{user.email} · Member since {new Date(user.created_at).toLocaleDateString()} · Status: {user.status}</p></div><button className="secondary-action" onClick={() => go("profile")}><UserRound size={15} /> View profile</button></section>
+      <section className="panel history-item"><div><small>Privacy · your data</small><h3>Export my data</h3><p>Downloads a JSON file with your profile, analyses, drafts and templates.</p>{exportError && <div className="form-error">{exportError}</div>}{exportDone && <div className="form-note">{exportDone}</div>}</div><button className="secondary-action" onClick={doExport} disabled={exportBusy}><Download size={15} /> {exportBusy ? "Preparing..." : "Download export"}</button></section>
+      <section className="panel history-item"><div><small>Privacy · danger zone</small><h3>Delete my account</h3><p>This permanently deletes your account, analyses, drafts and templates. It cannot be undone.</p>{deleteError && <div className="form-error">{deleteError}</div>}</div>{confirmDelete ? <div style={{ display: "flex", gap: 8, alignItems: "center" }}><input type="password" className="field select-field" value={password} onChange={e => setPassword(e.target.value)} placeholder="Confirm your password" /><button className="secondary-action" onClick={doDelete}><Trash2 size={15} /> Delete forever</button><button className="secondary-action" onClick={() => { setConfirmDelete(false); setPassword(""); }}>Cancel</button></div> : <button className="secondary-action" onClick={() => setConfirmDelete(true)}><Trash2 size={15} /> Delete account</button>}</section>
+    </div></>;
 }
 
-function ProfilePage({ user, go, onSignOut }) {
+function ProfilePage({ user, go, onSignOut, onUserChanged }) {
   const [analyses, setAnalyses] = useState(null);
+  const [name, setName] = useState(user.display_name || "");
+  const [nameNote, setNameNote] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [pwNote, setPwNote] = useState("");
+  const [pwError, setPwError] = useState("");
+  const [busy, setBusy] = useState(false);
   useEffect(() => {
     api.listAnalyses(1, 0).then(d => setAnalyses(d.total || 0)).catch(() => setAnalyses(null));
   }, []);
+  const saveName = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setBusy(true); setNameNote(""); setNameError("");
+    try {
+      const updated = await api.patchMe({ display_name: name.trim() });
+      onUserChanged(updated);
+      setNameNote("Display name updated.");
+    } catch (err) { setNameError(friendlyError(err)); }
+    setBusy(false);
+  };
+  const changePassword = async (e) => {
+    e.preventDefault();
+    setBusy(true); setPwNote(""); setPwError("");
+    try {
+      await api.patchMe({ current_password: currentPassword, new_password: newPassword });
+      setPwNote("Password changed. Your other signed-in sessions were signed out.");
+      setCurrentPassword(""); setNewPassword("");
+    } catch (err) { setPwError(friendlyError(err)); }
+    setBusy(false);
+  };
   return <><PageHeader eyebrow="Workspace" title="Profile" text="Your communication workspace."><Button onClick={() => go("assistant")} icon={Plus}>New analysis</Button></PageHeader>
-  <div className="history-list">
-    <section className="panel history-item"><div><div className="profile-avatar" style={{ width: 56, height: 56, fontSize: 16 }}>{initials(user.display_name || user.email)}</div><h3 style={{ marginTop: 12 }}>{user.display_name || "No display name set"}</h3><p>{user.email}</p><div className="analysis-tags"><span>Member since {new Date(user.created_at).toLocaleDateString()}</span><span>Status: {user.status}</span>{analyses !== null && <span>{analyses} {analyses === 1 ? "analysis" : "analyses"} saved</span>}</div></div><button className="secondary-action" onClick={onSignOut}><LogOut size={15}/> Sign out</button></section>
-    <section className="panel history-item"><div><small>Privacy</small><h3>Your data, your call</h3><p>Export everything or delete the account from Settings. The display name cannot be changed yet — that comes with the next backend update.</p></div><button className="secondary-action" onClick={() => go("settings")}><Settings size={15}/> Open settings</button></section>
-  </div></>;
-}
-
-function TheoryPage({ go }) {
-  const strategies = [
-    ["Bald on Record", "Direct and clear. Best when the message is urgent, the relationship is close, or the imposition is low."],
-    ["Positive Politeness", "Shows appreciation and shared ground. Best when you want the other person to feel valued and included."],
-    ["Negative Politeness", "Hedges and respects autonomy. Best when the imposition is high or the relationship is distant."],
-    ["Off Record", "Hints instead of asking directly. Best when the risk of a direct request is too high."],
-    ["Avoidance", "Says nothing, or delays. Sometimes the kindest and safest move."],
-  ];
-  return <><PageHeader eyebrow="Learn the framework" title="Politeness theory" text="The science of being understood — Brown and Levinson's Politeness Theory (1987)."><Button onClick={() => go("assistant")} icon={Sparkles}>Try it in the assistant</Button></PageHeader>
-  <div className="template-grid" style={{ marginBottom: 15 }}>
-    <article className="panel template-item"><div className="template-top"><span>01</span></div><h3>Positive face</h3><p>The desire to feel appreciated, valued and included.</p></article>
-    <article className="panel template-item"><div className="template-top"><span>02</span></div><h3>Negative face</h3><p>The desire for autonomy — freedom from pressure and imposition.</p></article>
-    <article className="panel template-item"><div className="template-top"><span>03</span></div><h3>Face-threatening acts</h3><p>Messages that can challenge either need — a request, a criticism, a deadline.</p></article>
-  </div>
-  <section className="panel"><div className="panel-heading"><div><h3>Five strategies</h3><p>Saylient AI recommends one of these for every message it analyzes.</p></div></div>
-  <div className="history-list" style={{ marginTop: 15 }}>{strategies.map(([title, text]) => <article className="panel history-item" key={title}><div><h3>{title}</h3><p>{text}</p></div></article>)}</div>
-  <p className="model-note" style={{ marginTop: 16 }}>Saylient AI never claims to know what the recipient truly feels. It looks at what the message does — and what it might do.</p></section></>;
+    <div className="history-list">
+      <section className="panel history-item"><div><div className="profile-avatar" style={{ width: 56, height: 56, fontSize: 16 }}>{initials(user.display_name || user.email)}</div><h3 style={{ marginTop: 12 }}>{user.display_name || "No display name set"}</h3><p>{user.email}</p><div className="analysis-tags"><span>Member since {new Date(user.created_at).toLocaleDateString()}</span><span>Status: {user.status}</span>{analyses !== null && <span>{analyses} {analyses === 1 ? "analysis" : "analyses"} saved</span>}</div></div><button className="secondary-action" onClick={onSignOut}><LogOut size={15} /> Sign out</button></section>
+      <section className="panel history-item"><div><small>Profile</small><h3>Display name</h3><p>This is the name shown across your workspace.</p>{nameError && <div className="form-error">{nameError}</div>}{nameNote && <div className="form-note">{nameNote}</div>}</div>
+        <form onSubmit={saveName} style={{ display: "flex", gap: 8, alignItems: "center" }}><input className="field select-field" value={name} onChange={e => setName(e.target.value)} maxLength={100} placeholder="Your display name" /><button className="secondary-action" type="submit" disabled={busy}>Save</button></form></section>
+      <section className="panel history-item"><div><small>Security</small><h3>Change password</h3><p>Changing your password signs out your other sessions.</p>{pwError && <div className="form-error">{pwError}</div>}{pwNote && <div className="form-note">{pwNote}</div>}</div>
+        <form onSubmit={changePassword} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <input type="password" className="field select-field" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Current password" autoComplete="current-password" />
+          <input type="password" className="field select-field" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password (8+ chars)" minLength={8} autoComplete="new-password" />
+          <button className="secondary-action" type="submit" disabled={busy || !currentPassword || newPassword.length < 8}>Change password</button>
+        </form></section>
+      <section className="panel history-item"><div><small>Privacy</small><h3>Your data, your call</h3><p>Export everything or delete the account from Settings.</p></div><button className="secondary-action" onClick={() => go("settings")}><Settings size={15} /> Open settings</button></section>
+    </div></>;
 }
 
 function ExtensionPage({ go }) {
-  return <><PageHeader eyebrow="Workspace" title="Good communication, wherever work happens." text="A thoughtful layer for your browser."><Button onClick={() => go("demo-chat")} icon={Globe2}>Open local demo chat</Button></PageHeader><div className="placeholder-page panel"><div className="placeholder-icon"><Globe2 size={25}/></div><h2>Review suggestions without leaving your workflow.</h2><p>Load the extension from the repo's extension/dist folder in Chrome (Developer mode → Load unpacked), open the local demo chat, and click the Saylient AI button. It reads the active conversation only when you click, and never sends anything automatically.</p><Button variant="outline" onClick={() => go("demo-chat")}>Open local demo chat <ArrowRight size={15}/></Button></div></>;
+  return <><PageHeader eyebrow="Workspace" title="Good communication, wherever work happens." text="A thoughtful layer for your browser."><Button onClick={() => go("demo-chat")} icon={Globe2}>Open local demo chat</Button></PageHeader><div className="placeholder-page panel"><div className="placeholder-icon"><Globe2 size={25} /></div><h2>Review suggestions without leaving your workflow.</h2><p>Load the extension from the repo's extension/dist folder in Chrome (Developer mode → Load unpacked), sign in from the extension popup, open the demo chat, and click the Saylient AI button. Pick the message you want analyzed — the extension calls the real backend and shows the live intent, strategy and draft. It never monitors the page and never sends anything automatically.</p><Button variant="outline" onClick={() => go("demo-chat")}>Open local demo chat <ArrowRight size={15} /></Button></div></>;
+}
+
+function DemoChat({ go }) {
+  const [messages, setMessages] = useState([
+    ["client", "Hi! I wanted to check whether the homepage concepts will be ready today.", "10:32 AM"],
+    ["freelancer", "Hi Alex, I am putting the final details together now.", "10:34 AM"],
+  ]);
+  const [draft, setDraft] = useState("");
+  const send = () => { if (!draft.trim()) return; setMessages([...messages, ["freelancer", draft.trim(), "Just now"]]); setDraft(""); };
+  return <div className="demo-chat-page"><div className="demo-chat-header"><button className="link-button" onClick={() => go("landing")}>← Back</button><div className="profile-avatar">AM</div><div><strong>Alex Morgan</strong><small>Client · Website redesign</small></div><span className="online-dot" /> <span className="demo-label">Extension demo</span></div><div className="demo-messages">{messages.map(([role, text, time], index) => <div className={`demo-message ${role}`} data-demo-message data-message-id={index} key={`${index}-${text}`}><span className="demo-author">{role === "client" ? "Alex" : "You"}</span><p>{text}</p><small>{time}</small></div>)}</div><div className="demo-composer"><textarea data-demo-composer value={draft} onChange={event => setDraft(event.target.value)} placeholder="Write a message..." /><button onClick={send}><Send size={16} /> Send</button></div><p className="demo-disclaimer"><ShieldCheck size={13} /> Local demo only · Saylient AI never sends messages automatically</p></div>;
+}
+
+function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken }) {
+  const [isLogin, setIsLogin] = useState(mode !== "register");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [forgot, setForgot] = useState(mode === "reset");
+  const [resetToken, setResetToken] = useState(initialToken || "");
+  const [newPassword, setNewPassword] = useState("");
+  const submit = async (e) => {
+    e.preventDefault();
+    setError(""); setMessage(""); setBusy(true);
+    try {
+      if (forgot) {
+        if (resetToken) {
+          await api.resetPassword(resetToken, newPassword);
+          setMessage("Password changed. Please sign in with your new password.");
+          setForgot(false); setResetToken(""); setNewPassword("");
+        } else {
+          const res = await api.forgotPassword(email);
+          if (res.reset_token) {
+            setResetToken(res.reset_token);
+            setMessage("Development mode: your reset token is shown below. In production it would be sent by email.");
+          } else {
+            setMessage(res.message || "If that email has an account, reset instructions were sent.");
+          }
+        }
+      } else if (isLogin) {
+        const auth = await api.login(email, password);
+        onAuthed(auth);
+      } else {
+        const auth = await api.register(email, password, name.trim());
+        onAuthed(auth);
+      }
+    } catch (err) { setError(friendlyError(err)); }
+    setBusy(false);
+  };
+  return <div className="auth-page"><div className="auth-card panel">
+    <Logo />
+    <h1>{forgot ? "Reset your password" : isLogin ? "Welcome back" : "Create your account"}</h1>
+    <p>{notice || "Your analyses, drafts and templates live in your account — not just in this browser."}</p>
+    {error && <div className="form-error">{error}</div>}
+    {message && <div className="form-note">{message}</div>}
+    <form onSubmit={submit}>
+      {!isLogin && !forgot && <label>Display name<input value={name} onChange={e => setName(e.target.value)} placeholder="Arsalan Ahmed Khan" maxLength={100} /></label>}
+      <label>Email<input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" /></label>
+      {!forgot && <label>Password<input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder={isLogin ? "Your password" : "At least 8 characters"} minLength={isLogin ? 1 : 8} autoComplete={isLogin ? "current-password" : "new-password"} /></label>}
+      {forgot && resetToken && <label>Reset token<input value={resetToken} readOnly /></label>}
+      {forgot && resetToken && <label>New password<input type="password" required value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="At least 8 characters" minLength={8} autoComplete="new-password" /></label>}
+      <Button type="submit" icon={Sparkles}>{busy ? "Please wait..." : forgot ? (resetToken ? "Set new password" : "Send reset link") : isLogin ? "Sign in" : "Create account"}</Button>
+    </form>
+    <div className="auth-links">
+      {!forgot && <button className="link-button" onClick={() => { setIsLogin(!isLogin); setError(""); setMessage(""); }}>{isLogin ? "No account yet? Create one" : "Already have an account? Sign in"}</button>}
+      {!forgot && isLogin && <button className="link-button" onClick={() => { setForgot(true); setError(""); setMessage(""); }}>Forgot password?</button>}
+      {forgot && <button className="link-button" onClick={() => { setForgot(false); setResetToken(""); setError(""); setMessage(""); }}>Back to sign in</button>}
+      <button className="link-button" onClick={() => go("landing")}>Back to the landing page</button>
+    </div>
+    <small className="model-note">Prototype: the backend stores your data in its own database. Never reuse a password from another account.</small>
+  </div></div>;
 }
 
 function App() {
-  const [page, setPage] = useState(window.location.hash.slice(1) || "landing");
+  const parseHash = () => {
+    const raw = window.location.hash.slice(1) || "landing";
+    const [path, query] = raw.split("?");
+    const params = new URLSearchParams(query || "");
+    return { page: path || "landing", token: params.get("token") || "" };
+  };
+  const [route, setRoute] = useState(parseHash);
   const [user, setUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [openAnalysis, setOpenAnalysis] = useState(null);
-  const go = p => { setPage(p); window.history.replaceState(null, "", p === "landing" ? window.location.pathname : `#${p}`); window.scrollTo(0, 0); };
+  const page = route.page;
+  const go = p => {
+    setRoute({ page: p, token: "" });
+    window.history.replaceState(null, "", p === "landing" ? window.location.pathname : `#${p}`);
+    window.scrollTo(0, 0);
+  };
   useEffect(() => {
-    if (!getToken()) { setAuthChecked(true); return; }
+    const onHash = () => setRoute(parseHash());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  useEffect(() => {
+    // The session is an HttpOnly cookie: always ask the API who is
+    // signed in. A 401 just means "visitor" — no error is shown.
     api.me()
       .then(data => { setUser(data); setAuthChecked(true); })
-      .catch(() => { setToken(null); setUser(null); setAuthChecked(true); });
+      .catch(() => { setUser(null); setAuthChecked(true); });
   }, []);
   const signOut = async () => {
-    try { await api.logout(); } catch { /* token is cleared either way */ }
-    setToken(null); setUser(null); go("landing");
+    try { await api.logout(); } catch { /* the session is cleared either way */ }
+    setUser(null); go("landing");
   };
-  const onAuthed = (auth) => { setToken(auth.token); setUser(auth.user); go("overview"); };
+  const onAuthed = (auth) => { setUser(auth.user); go("overview"); };
   const openInAssistant = (analysis) => { setOpenAnalysis(analysis); go("assistant"); };
   if (page === "landing") return <Landing go={go} user={user} />;
   if (page === "login") return user ? <AuthPage mode="login" go={go} onAuthed={onAuthed} notice="You are already signed in — this will switch to another account." /> : <AuthPage mode="login" go={go} onAuthed={onAuthed} />;
   if (page === "register") return user ? <AuthPage mode="register" go={go} onAuthed={onAuthed} notice="You are already signed in — this will switch to another account." /> : <AuthPage mode="register" go={go} onAuthed={onAuthed} />;
+  if (page === "reset-password") return <AuthPage mode="reset" go={go} onAuthed={onAuthed} resetToken={route.token} />;
   if (page === "demo-chat") return <DemoChat go={go} />;
   if (!authChecked) return <div className="auth-page"><div className="auth-card panel"><Logo /><h1>Loading…</h1><p>Checking your session.</p></div></div>;
   if (!user) return <AuthPage mode="login" go={go} onAuthed={onAuthed} notice="Sign in to open your workspace." />;
-  return <Layout page={page} go={go} user={user} onSignOut={signOut}>{page === "overview" ? <Dashboard go={go} user={user} onOpen={openInAssistant} /> : page === "assistant" ? <Assistant go={go} openAnalysis={openAnalysis} clearOpen={() => setOpenAnalysis(null)} /> : <SimplePage type={page} go={go} user={user} onSignOut={signOut} onOpen={openInAssistant} />}</Layout>;
+  return <Layout page={page} go={go} user={user} onSignOut={signOut}>{page === "overview" ? <Dashboard go={go} user={user} onOpen={openInAssistant} /> : page === "assistant" ? <Assistant go={go} openAnalysis={openAnalysis} clearOpen={() => setOpenAnalysis(null)} /> : <SimplePage type={page} go={go} user={user} onSignOut={signOut} onOpen={openInAssistant} onUserChanged={setUser} />}</Layout>;
 }
 createRoot(document.getElementById("root")).render(<App />);

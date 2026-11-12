@@ -273,3 +273,84 @@ def test_golden_set_agreement():
         f"strategy agreement {report['strategy_agreement']} is below 10/12: "
         f"{report['disagreements']}"
     )
+
+
+# ---------------------------------------------------------------- power in the strategy rules (R3)
+
+
+def test_power_high_defers_with_medium_imposition():
+    # R3: the recipient holds more power and the request is not trivial,
+    # so the response defers and hedges. Without the power rule this
+    # message would fall through to the R7 safe default (same label, but
+    # a different rationale), so assert on the rationale to prove R3 fired.
+    result = analyze(
+        "The extra revisions are outside the agreed scope, so I'd like to treat them as a separate task.",
+        "set_boundary",
+        {"power": "high", "social_distance": "low", "imposition": "medium"},
+    )
+    assert result["strategy"]["label"] == "negative_politeness"
+    assert "power" in result["strategy"]["rationale"].lower()
+
+
+def test_power_unknown_does_not_trigger_deference():
+    # Same message, power unknown: the power rule must not fire, and the
+    # strategy comes from the other rules (here the safe default).
+    result = analyze(
+        "Could we move the deadline to Friday?",
+        "negotiate_deadline",
+        {"power": "unknown", "social_distance": "low", "imposition": "medium"},
+    )
+    assert result["strategy"]["label"] == "negative_politeness"
+
+
+# ---------------------------------------------------------------- tone + directness restyle the draft
+
+
+def test_draft_tone_changes_greeting():
+    friendly = analyze(
+        "Hi, I wanted to check in on invoice #1048 — it has been overdue for two weeks.",
+        "request_payment",
+        {},
+        draft_tone="Friendly",
+    )
+    professional = analyze(
+        "Hi, I wanted to check in on invoice #1048 — it has been overdue for two weeks.",
+        "request_payment",
+        {},
+        draft_tone="Professional",
+    )
+    assert friendly["draft"].startswith("Hi there,")
+    assert professional["draft"].startswith("Hello,")
+    # Styling never changes the analysis itself.
+    assert friendly["intent"] == professional["intent"]
+    assert friendly["strategy"] == professional["strategy"]
+
+
+def test_draft_directness_changes_hedging():
+    direct = analyze(
+        "Could we move the deadline to Friday? I need a bit more time.",
+        "negotiate_deadline",
+        {},
+        draft_directness="direct",
+    )
+    gentle = analyze(
+        "Could we move the deadline to Friday? I need a bit more time.",
+        "negotiate_deadline",
+        {},
+        draft_directness="gentle",
+    )
+    assert "Would it be possible" not in direct["draft"]
+    assert direct["draft"].rstrip().endswith("Please let me know.")
+    assert gentle["draft"].rstrip().endswith("Whenever you have a moment.")
+
+
+def test_invalid_tone_or_directness_raises():
+    with pytest.raises(ValueError):
+        analyze("Please pay invoice #1.", "request_payment", {}, draft_tone="Sarcastic")
+    with pytest.raises(ValueError):
+        analyze(
+            "Please pay invoice #1.",
+            "request_payment",
+            {},
+            draft_directness="aggressive",
+        )

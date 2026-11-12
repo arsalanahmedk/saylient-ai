@@ -43,6 +43,17 @@ def _reset_rate_limiters():
     reset_all_limiters()
 
 
+@pytest.fixture(autouse=True)
+def _clear_client_cookies(client: TestClient):
+    """Sessions are also issued as a cookie (see api/v1/routes/auth.py),
+    and the shared test client keeps a cookie jar. Clear it before and
+    after every test so a cookie from one test can never authenticate
+    another test (in particular, "no token" tests must stay 401)."""
+    client.cookies.clear()
+    yield
+    client.cookies.clear()
+
+
 def make_user(client: TestClient, tag: str | None = None) -> dict:
     """Register a fresh user and return {"token", "user", "email", "password"}.
 

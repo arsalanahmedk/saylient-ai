@@ -41,31 +41,49 @@ production.
 | `DATABASE_URL` | `sqlite:///./saylient.db` | SQLite file or PostgreSQL URL |
 | `ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated CORS origins |
 | `SESSION_COOKIE_SECURE` | `false` | Set `true` in production (HTTPS) |
-| `SESSION_COOKIE_SAMESITE` | `lax` | `lax` / `strict` / `none` |
+| `SESSION_COOKIE_SAMESITE` | `lax` | `lax` / `strict` / `none` — the deployed frontend (Vercel) calls this API (Render) cross-site, so production needs `none` + `SESSION_COOKIE_SECURE=true` (browsers reject SameSite=None without Secure) |
+| `APP_ORIGIN` | `http://127.0.0.1:5173` | Public origin of the web app; used to build password-reset links |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USERNAME` / `SMTP_PASSWORD` / `SMTP_FROM` / `SMTP_USE_TLS` | empty / `587` / empty / empty / `Saylient AI <noreply@saylient.ai>` / `true` | Password-reset email (SMTP). All optional — without `SMTP_HOST` no email is sent; in production forgot-password then answers honestly that reset by email is not set up (it never claims a link was sent). Set in the deployment environment (Render env vars), never commit credentials |
 | `AI_PROVIDER` / `AI_API_KEY` / `AI_MODEL` | empty | Reserved for a future LLM provider adapter; the current engine makes **no** external calls |
 
-## Endpoints (base `/api/v1`, JSON only)
+## Endpoints (base `/api/v1`, JSON only) — 24 under `/api/v1`, plus `/health` = 25 routes
 
-**Auth** — `POST /auth/register` (201, returns token), `POST /auth/login`,
+**Auth** — `POST /auth/register` (201), `POST /auth/login`,
 `POST /auth/logout`, `POST /auth/forgot-password`, `POST /auth/reset-password`,
-`GET /auth/me`. Sessions are opaque bearer tokens (`Authorization: Bearer
-<token>`); only the SHA-256 hash is stored. Tokens expire after 7 days;
-logout revokes the token; a password reset revokes all sessions.
+`GET /auth/me`, `PATCH /auth/me` (display name; password change with the
+current password, revokes every other session). Sessions are opaque tokens
+(only the SHA-256 hash is stored) issued two ways at once: an HttpOnly
+session cookie (`saylient_session`) for the web app and the `token` field
+in the JSON body for Bearer clients (the browser extension, which cannot
+use cross-site cookies). Tokens expire after 7 days; logout revokes the
+token; a password change/reset revokes all sessions. Cookie-authenticated
+state changes are CSRF-protected: a request whose `Origin` header is not
+an allowed origin is rejected (403); the SameSite cookie attribute is
+the second layer.
 
 **Forgot-password note:** the response body is always the same generic
-message. The reset token is returned in the response **only when
-`APP_ENV=development`**, so the flow is testable without email. Production
-must deliver the token by email and never put it in a response.
+message when email is configured. The reset token is returned in the
+response **only when `APP_ENV=development`**, so the flow is testable
+without email. In production the token is delivered by email (SMTP_* config,
+see `app/services/email.py`) and never appears in a response; when no
+email provider is configured, production answers honestly that reset by
+email is not set up — it never claims a link was sent.
 
 **Analyses** — `POST /analyses` (201), `GET /analyses?limit&offset`
-(paginated), `GET /analyses/{id}`, `DELETE /analyses/{id}` (also deletes
+(paginated), `GET /analyses/stats` (dashboard aggregates), `GET /analyses/{id}`,
+`POST /analyses/{id}/regenerate` (re-runs the engine on the same analysis,
+in place — no duplicate history row), `DELETE /analyses/{id}` (also deletes
 the analysis's drafts). Request: `message` (1-2000 chars),
 `conversation_context` (optional list of strings or `{role, text}`),
 `goal` (one of the 7 intents), `context` (`power` / `social_distance` /
-`imposition`, each `unknown` / `low` / `medium` / `high`).
+`imposition`, each `unknown` / `low` / `medium` / `high`), `tone`
+(Professional/Friendly/Diplomatic/Assertive/Empathetic — changes the draft
+greeting) and `directness` (`direct` / `balanced` / `gentle` — changes how
+hedged the draft is). Tone/directness never change intent, tone label,
+FTA or strategy.
 
-**Drafts** — `POST /analyses/{id}/drafts` (201), `PATCH /drafts/{id}`,
-`DELETE /drafts/{id}`.
+**Drafts** — `GET /analyses/{id}/drafts`, `POST /analyses/{id}/drafts` (201),
+`PATCH /drafts/{id}`, `DELETE /drafts/{id}`.
 
 **Templates** — `POST /templates` (201), `GET /templates` (paginated),
 `GET /templates/{id}`, `PATCH /templates/{id}`, `DELETE /templates/{id}`.
@@ -179,7 +197,31 @@ pytest -s tests/test_engine.py::test_golden_set_agreement   # golden-set numbers
   when an analysis is deleted, privacy export, account deletion.
 - **Security** (`tests/test_security.py`): cross-user IDOR (404, no
   existence leak), 401 without a token, oversized payload → 413, rate
-  limit → 429, error-envelope + `X-Request-Id` shape, `/health`.
+  limit → 429, error-envelope + `X-Request-Id` shape, `/health`, security
+  headers on every response, cookie CSRF rejection of a foreign Origin.
+- **Email** (`tests/test_email.py`): provider is None when SMTP is
+  unconfigured; the reset link uses `APP_ORIGIN`; forgot-password in
+  production without SMTP answers honestly instead of claiming a link
+  was sent.
+- **Auth** also covers cookie sessions (HttpOnly `saylient_session` set
+  on login/register, cookie-only `/me`), generic register-conflict
+  message (no email leak), and `PATCH /auth/me` (display name, password
+  change revoking other sessions).
+- **Analyses** also covers `POST /analyses/{id}/regenerate` (in place,
+  no duplicate row), `GET /analyses/stats`, and tone/directness
+  restyling of the draft (engine tests cover the Power rule R3).
+
+## Password hashing: PBKDF2, not Argon2id (documented choice)
+
+The docs name Argon2id; this implementation uses PBKDF2-HMAC-SHA256
+with 600,000 iterations and a random 16-byte salt (stdlib
+`hashlib.pbkdf2_hmac`, format `pbkdf2_sha256$<iterations>$<salt_hex>$<hash_hex>`).
+PBKDF2 at 600k iterations is a vetted, OWASP-listed password-hashing
+choice and keeps the backend dependency-free (no `argon2-cffi` binary
+wheel, which matters for the Render free build). Argon2id would add
+memory-hardness against GPU cracking; switching later means re-hashing
+passwords on next login — a known, small migration, deferred to a later
+phase. This is a deliberate deviation from the docs, not a vulnerability.
 
 Tests use one temp SQLite file per session and reset the in-memory rate
 limiters before every test.
@@ -204,13 +246,15 @@ backend/
     services/
       analysis_engine.py    # rule-based baseline (the AI)
       auth.py  analyses.py  drafts.py  templates.py  privacy.py
+      email.py              # SMTP provider for password-reset email
     api/v1/
       deps.py               # current-user + rate-limited-user dependencies
       routes/  auth.py  analyses.py  templates.py  privacy.py
   eval/
     golden.json             # 12 hand-labelled evaluation examples
   tests/
-    conftest.py  test_engine.py  test_auth.py  test_analyses.py  test_security.py
+    conftest.py  test_engine.py  test_auth.py  test_analyses.py
+    test_security.py  test_email.py
 ```
 
 ## What a real LLM provider needs later
@@ -226,11 +270,14 @@ backend/
    `create_all` never alters existing tables.
 3. **Shared rate limiting**: the limiter is in-memory per process —
    use Redis for multi-worker deployments.
-4. **Email delivery** for forgot-password (the dev-only token-in-response
-   must be removed in production).
-5. **HTTPS + secure cookies** (`SESSION_COOKIE_SECURE=true`,
-   `SESSION_COOKIE_SAMESITE=lax` or `strict`) and a real secret manager
-   for `APP_SECRET_KEY`.
+4. **Email delivery** for forgot-password is implemented (SMTP provider,
+   `app/services/email.py`, `SMTP_*` config). Production still needs
+   credentials set (Render env vars) — without them forgot-password
+   answers honestly that reset by email is not set up.
+5. **HTTPS + secure cookies** are implemented (`SESSION_COOKIE_SECURE=true`,
+   `SESSION_COOKIE_SAMESITE=none` for the cross-site Vercel → Render
+   setup). A real secret manager for `APP_SECRET_KEY` is still a
+   later step.
 6. **Evaluation**: replace/augment the golden set with a held-out,
    double-annotated dataset and report per-class precision/recall/F1
    (05-ai-ml/MODEL_EVALUATION.md).

@@ -1,8 +1,55 @@
-<!doctype html><html><head><meta charset="UTF-8"><title>Saylient AI</title><link rel="stylesheet" href="popup.css"></head><body>
-<div class="utility">LOCAL DEMO <span>●</span> SAYLIENT AI</div>
-<main><header><div class="brand-mark">✦</div><div><strong>saylient<span>.ai</span></strong><small>Communication studio</small></div><i></i></header>
-<div class="rule"></div><p class="eyebrow">BROWSER ASSISTANT</p>
-<section class="status"><div class="status-icon">✦</div><div><b>Conversation monitoring</b><small id="status-text">Active on supported pages</small></div><button id="toggle" aria-pressed="true"><span></span></button></section>
-<section class="monitor-card"><div class="card-label">WHAT IT DOES</div><p>Reads the local demo conversation, spots context and tone, then prepares a response for your review.</p><div class="signal-grid" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="privacy"><span>●</span> Nothing is sent automatically</div></section>
-<button id="open" class="primary">Open demo workspace <b>↗</b></button><button id="settings" class="secondary">View privacy & settings</button>
-<footer><span>saylient.ai / extension</span><span>v0.1</span></footer></main><script src="popup.js"></script></body></html>
+<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Saylient AI</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+<main>
+  <header>
+    <div class="brand-mark">✦</div>
+    <div>
+      <strong>saylient<span>.ai</span></strong>
+      <small>Communication studio</small>
+    </div>
+  </header>
+  <div class="rule"></div>
+
+  <section id="signin-view" hidden>
+    <p class="eyebrow">SIGN IN</p>
+    <h1>Sign in to analyze</h1>
+    <p class="lede">Use your Saylient AI account to analyze messages from the demo workspace.</p>
+    <form id="signin-form">
+      <label>Email
+        <input id="email" type="email" required autocomplete="email" placeholder="you@example.com">
+      </label>
+      <label>Password
+        <input id="password" type="password" required autocomplete="current-password" placeholder="Your password">
+      </label>
+      <p class="error" id="signin-error" hidden></p>
+      <button type="submit" class="primary" id="signin-submit">Sign in</button>
+    </form>
+  </section>
+
+  <section id="signedin-view" hidden>
+    <p class="eyebrow">SIGNED IN</p>
+    <div class="account-card">
+      <div class="account-avatar">✦</div>
+      <div>
+        <b id="user-email"></b>
+        <small>Signed in to Saylient AI</small>
+      </div>
+    </div>
+    <p class="note">Analysis runs only when you click Analyze in the panel. Nothing is monitored or sent automatically.</p>
+    <button id="open" class="primary">Open demo workspace</button>
+    <button id="signout" class="secondary">Sign out</button>
+  </section>
+
+  <button id="settings" class="secondary">View privacy &amp; settings</button>
+  <footer><span>saylient.ai / extension</span><span>v0.1</span></footer>
+</main>
+<script src="config.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

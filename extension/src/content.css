@@ -1,11 +1,131 @@
-#saylient-ai-trigger{position:fixed;right:22px;bottom:22px;z-index:2147483646;width:52px;height:52px;border:0;border-radius:2px;background:#c8f36a;color:#111513;font:700 22px "Space Grotesk";box-shadow:6px 6px 0 #111513;cursor:pointer;animation:saiPulse 2.4s infinite}#saylient-ai-panel{position:fixed;right:22px;bottom:86px;z-index:2147483647;width:360px;background:#e9e5db;color:#111513;border:1px solid #aeb5a5;border-radius:2px;padding:20px;box-shadow:8px 8px 0 #111513;font:13px "DM Sans",Arial,sans-serif}#saylient-ai-panel *{box-sizing:border-box}#saylient-ai-panel .sai-head{display:flex;justify-content:space-between;font:700 17px "Space Grotesk"}#saylient-ai-panel .sai-head span{color:#536b2d}#saylient-ai-panel .sai-head button{border:0;background:none;color:#667168;font-size:21px;cursor:pointer}.sai-kicker{color:#536b2d;font:9px "DM Mono",monospace;letter-spacing:1.4px;margin:22px 0 8px}.sai-live{color:#739735;float:right;letter-spacing:0}.sai-context{background:#f4f1e9;border:1px solid #c7c8bd;border-radius:2px;padding:12px;margin:17px 0}.sai-context small,.sai-result small{color:#737b72;font:9px "DM Mono",monospace}.sai-context p,.sai-result p{font:12px/1.7 "Libre Baskerville",serif;color:#354039;margin:8px 0 0}.sai-analyze,.sai-copy,.sai-insert{position:relative;isolation:isolate;overflow:hidden;width:100%;padding:12px;border:1px solid #536b2d;border-radius:2px;background:#111513;color:#c8f36a;cursor:pointer;font-size:11px;font-weight:700;box-shadow:0 0 0 1px #c8f36a14 inset,0 6px 18px #11151335;transition:transform .25s,box-shadow .25s}
-.sai-analyze:before,.sai-copy:before,.sai-insert:before{content:"";position:absolute;z-index:-1;inset:-80% 42% -80% -42%;background:linear-gradient(105deg,transparent 35%,#fff8 47%,#c8f36a 51%,transparent 62%);transform:translateX(-150%) rotate(8deg);transition:transform .7s ease}
-.sai-analyze:hover,.sai-copy:hover,.sai-insert:hover{transform:translateY(-2px);border-color:#c8f36a;box-shadow:0 0 0 1px #c8f36a44 inset,0 10px 24px #11151355}
-.sai-analyze:hover:before,.sai-copy:hover:before,.sai-insert:hover:before{transform:translateX(320%) rotate(8deg)}.sai-analyze:disabled{opacity:.7;cursor:wait}.sai-progress{height:3px;border-radius:0;background:#c8c9bd;overflow:hidden;margin-top:10px}.sai-progress span{display:block;width:45%;height:100%;background:#739735;animation:saiProgress .65s ease-in-out infinite alternate}.sai-result{border-top:1px solid #c7c8bd;padding-top:16px;margin-top:16px}.sai-chips{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:12px}.sai-chips span{background:#dce7b9;color:#536b2d;border-radius:2px;padding:5px 7px;font:9px "DM Mono",monospace}.sai-copy,.sai-insert{margin-top:12px}.sai-copy{background:#536b2d;color:#eef6d9}.sai-insert{background:transparent;border:1px solid #aeb5a5;color:#354039}@keyframes saiPulse{0%,100%{box-shadow:6px 6px 0 #111513,0 0 0 0 #c8f36a66}50%{box-shadow:6px 6px 0 #111513,0 0 0 9px #c8f36a00}}@keyframes saiProgress{from{transform:translateX(-100%)}to{transform:translateX(220%)}}
-#saylient-ai-trigger{background:#1f55e7;color:#fff;box-shadow:6px 6px 0 #111313;animation:saiPulseBlue 2.4s infinite}
-#saylient-ai-panel{background:#e8ebea;border-color:#cfd6d2;box-shadow:8px 8px 0 #111313;animation:saiPanelIn .45s cubic-bezier(.2,.8,.2,1) both}
-#saylient-ai-panel .sai-head span,.sai-kicker{color:#1f55e7}.sai-live{color:#1f55e7}.sai-context{background:#f4f6f4;border-color:#cfd6d2}.sai-chips span{background:#dce6fa;color:#1f55e7}
-.sai-analyze,.sai-copy,.sai-insert{background:#1f55e7;color:#fff;border-color:#1f55e7;box-shadow:0 0 0 1px #fff3 inset,0 6px 18px #1f55e733}.sai-analyze:hover,.sai-copy:hover,.sai-insert:hover{background:#1745c4;border-color:#1745c4;box-shadow:0 0 0 1px #fff6 inset,0 10px 24px #1f55e755}.sai-progress span{background:#1f55e7}
-@keyframes saiPulseBlue{0%,100%{box-shadow:6px 6px 0 #111313,0 0 0 0 #1f55e766}50%{box-shadow:6px 6px 0 #111313,0 0 0 9px #1f55e700}}@keyframes saiPanelIn{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
-.sai-analyze,.sai-copy,.sai-insert{box-shadow:0 5px 0 #123aa9,0 12px 22px #123aa933}.sai-analyze:after,.sai-copy:after,.sai-insert:after{content:"↗";float:right;font:700 17px/11px "Space Grotesk";transition:transform .35s}.sai-analyze:hover,.sai-copy:hover,.sai-insert:hover{box-shadow:0 8px 0 #123aa9,0 18px 30px #123aa94d}.sai-analyze:hover:after,.sai-copy:hover:after,.sai-insert:hover:after{transform:translateX(5px) rotate(-12deg)}.sai-analyze:active,.sai-copy:active,.sai-insert:active{transform:translateY(2px);box-shadow:0 2px 0 #123aa9,0 5px 12px #123aa933}
-#saylient-ai-trigger{background:#1f55e7;color:#fff;box-shadow:6px 6px 0 #111313}#saylient-ai-panel{background:#e8ebea;border-color:#cfd6d2;box-shadow:8px 8px 0 #111313}#saylient-ai-panel .sai-head span,.sai-kicker{color:#1f55e7}.sai-live{color:#1f55e7}.sai-context{background:#f4f6f4;border-color:#cfd6d2}.sai-chips span{background:#dce6fa;color:#1f55e7}.sai-analyze,.sai-copy,.sai-insert{border-color:#1f55e7;background:#1f55e7;color:#fff;box-shadow:0 0 0 1px #fff3 inset,0 6px 18px #1f55e733}.sai-analyze:hover,.sai-copy:hover,.sai-insert:hover{border-color:#1745c4;box-shadow:0 0 0 1px #fff6 inset,0 10px 24px #1f55e755}.sai-progress span{background:#1f55e7}
+/* Saylient AI panel — dark premium. System font stack only. */
+#saylient-ai-trigger {
+  position: fixed; right: 22px; bottom: 22px; z-index: 2147483646;
+  width: 52px; height: 52px; border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 50%; background: #8b5cf6; color: #fff;
+  font-size: 22px; font-weight: 700; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(139,92,246,0.45);
+  animation: saiPulse 2.4s infinite;
+}
+#saylient-ai-trigger:hover { background: #7c3aed; }
+
+#saylient-ai-panel {
+  position: fixed; right: 22px; bottom: 86px; z-index: 2147483647;
+  width: 360px; max-height: calc(100vh - 110px); overflow-y: auto;
+  background: #0f1011; color: #f7f8f8;
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;
+  padding: 20px; box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+  font: 13px -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+#saylient-ai-panel * { box-sizing: border-box; }
+#saylient-ai-panel .sai-head {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 17px; font-weight: 700;
+}
+#saylient-ai-panel .sai-head span { color: #8b5cf6; }
+#saylient-ai-panel .sai-head button {
+  border: 0; background: none; color: #a1a1aa;
+  font-size: 22px; line-height: 1; cursor: pointer; padding: 4px 8px;
+}
+#saylient-ai-panel .sai-head button:hover { color: #f7f8f8; }
+#saylient-ai-panel .sai-kicker {
+  color: #8b5cf6; font-size: 10px; font-weight: 700;
+  letter-spacing: 0.12em; margin: 16px 0 8px;
+}
+#saylient-ai-panel h2 { font-size: 16px; margin: 0 0 16px; letter-spacing: -0.3px; }
+
+#saylient-ai-panel .sai-picker small,
+#saylient-ai-panel .sai-result small {
+  color: #a1a1aa; font-size: 10px; font-weight: 700; letter-spacing: 0.1em;
+}
+#saylient-ai-panel .sai-options { margin: 8px 0 16px; display: grid; gap: 8px; }
+#saylient-ai-panel .sai-option {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: #141516; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 10px 12px; cursor: pointer;
+  font-size: 12px; line-height: 1.5; color: #d4d4d8;
+}
+#saylient-ai-panel .sai-option:has(input:checked) {
+  border-color: #8b5cf6; background: rgba(139,92,246,0.12); color: #f7f8f8;
+}
+#saylient-ai-panel .sai-option input { accent-color: #8b5cf6; margin-top: 2px; flex-shrink: 0; }
+#saylient-ai-panel .sai-empty { color: #a1a1aa; font-size: 12px; }
+
+#saylient-ai-panel .sai-goal-label {
+  display: block; color: #a1a1aa; font-size: 11px; font-weight: 600; margin-bottom: 14px;
+}
+#saylient-ai-panel .sai-goal-label select {
+  display: block; width: 100%; margin-top: 6px; padding: 11px 12px;
+  background: #141516; color: #f7f8f8;
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+  font-size: 13px; font-family: inherit; outline: none; cursor: pointer;
+}
+#saylient-ai-panel .sai-goal-label select:focus { border-color: #8b5cf6; }
+
+#saylient-ai-panel .sai-signin-note {
+  color: #fbbf24; font-size: 12px; line-height: 1.5;
+  background: rgba(251,191,36,0.08); border: 1px solid rgba(251,191,36,0.25);
+  border-radius: 10px; padding: 10px 12px; margin: 0 0 12px;
+}
+#saylient-ai-panel .sai-error {
+  color: #f87171; font-size: 12px; line-height: 1.5;
+  background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.25);
+  border-radius: 10px; padding: 10px 12px; margin: 12px 0 0;
+}
+
+#saylient-ai-panel .sai-analyze,
+#saylient-ai-panel .sai-copy,
+#saylient-ai-panel .sai-insert {
+  width: 100%; padding: 12px; border-radius: 10px; cursor: pointer;
+  font-size: 13px; font-weight: 600; font-family: inherit;
+  transition: background 0.2s, border-color 0.2s;
+}
+#saylient-ai-panel .sai-analyze {
+  border: 1px solid #8b5cf6; background: #8b5cf6; color: #fff;
+}
+#saylient-ai-panel .sai-analyze:hover:not(:disabled) { background: #7c3aed; }
+#saylient-ai-panel .sai-analyze:disabled { opacity: 0.6; cursor: wait; }
+#saylient-ai-panel .sai-copy {
+  border: 1px solid #8b5cf6; background: transparent; color: #a78bfa; margin-top: 12px;
+}
+#saylient-ai-panel .sai-copy:hover { background: rgba(139,92,246,0.12); }
+#saylient-ai-panel .sai-insert {
+  border: 1px solid rgba(255,255,255,0.08); background: #141516; color: #f7f8f8; margin-top: 10px;
+}
+#saylient-ai-panel .sai-insert:hover { background: #1c1d1f; }
+
+#saylient-ai-panel .sai-progress {
+  height: 3px; border-radius: 3px; background: #26272a; overflow: hidden; margin-top: 12px;
+}
+#saylient-ai-panel .sai-progress span {
+  display: block; width: 45%; height: 100%; background: #8b5cf6;
+  animation: saiProgress 0.65s ease-in-out infinite alternate;
+}
+#saylient-ai-panel .sai-result {
+  border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px; margin-top: 16px;
+}
+#saylient-ai-panel .sai-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+#saylient-ai-panel .sai-chips span {
+  background: rgba(139,92,246,0.15); color: #c4b5fd;
+  border-radius: 10px; padding: 5px 9px; font-size: 11px; font-weight: 600;
+}
+#saylient-ai-panel .sai-conf-note { display: block; margin-bottom: 12px; color: #71717a !important; font-weight: 400 !important; letter-spacing: 0 !important; }
+#saylient-ai-panel .sai-result p {
+  font-size: 12px; line-height: 1.7; color: #d4d4d8; margin: 6px 0 14px;
+}
+#saylient-ai-panel .sai-strategy { color: #f7f8f8 !important; font-weight: 600; }
+#saylient-ai-panel .sai-draft {
+  background: #141516; border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px; padding: 12px; color: #f7f8f8 !important;
+}
+#saylient-ai-panel .sai-list { margin: 6px 0 14px; padding-left: 18px; }
+#saylient-ai-panel .sai-list li { font-size: 12px; line-height: 1.6; color: #d4d4d8; margin-bottom: 4px; }
+#saylient-ai-panel .sai-model { display: block; margin-bottom: 4px; color: #71717a !important; font-weight: 400 !important; letter-spacing: 0 !important; }
+#saylient-ai-panel .sai-note {
+  color: #71717a; font-size: 11px; line-height: 1.6; margin: 16px 0 0;
+}
+@keyframes saiPulse {
+  0%, 100% { box-shadow: 0 8px 24px rgba(139,92,246,0.45), 0 0 0 0 rgba(139,92,246,0.4); }
+  50% { box-shadow: 0 8px 24px rgba(139,92,246,0.45), 0 0 0 9px rgba(139,92,246,0); }
+}
+@keyframes saiProgress { from { transform: translateX(-100%); } to { transform: translateX(220%); } }

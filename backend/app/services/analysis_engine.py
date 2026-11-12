@@ -31,13 +31,15 @@ the rule order — first match wins):
             otherwise                               -> positive_politeness
     R2  intent is request_payment or negotiate_deadline
             -> negative_politeness (deadline/payment pressure)
-    R3  imposition high + social_distance unknown/high
+    R3  power is high (the recipient holds more power) and imposition
+        is medium or high -> negative_politeness (deference)
+    R4  imposition high + social_distance unknown/high
             -> negative_politeness
-    R4  imposition low + social_distance low
+    R5  imposition low + social_distance low
             -> bald_on_record
-    R5  intent is clarify_requirements + imposition unknown/low
+    R6  intent is clarify_requirements + imposition unknown/low
             -> bald_on_record (seeking information is low-threat)
-    R6  default -> negative_politeness (the safe, hedged default)
+    R7  default -> negative_politeness (the safe, hedged default)
 """
 
 from __future__ import annotations
@@ -401,11 +403,54 @@ _CLOSES = {
     "avoidance": "I'll check back later this week.",
 }
 
+# Draft tone + directness (FR-09): the tone selector and the directness
+# selector in the result panel re-run the engine with these values, and
+# the draft text actually changes. Tones change the greeting and the
+# close; directness changes how hedged the wording is.
+_TONE_GREETINGS = {
+    "Professional": "Hello,",
+    "Friendly": "Hi there,",
+    "Diplomatic": "Hi,",
+    "Assertive": "Hi,",
+    "Empathetic": "Hi, I hope you're doing well —",
+}
+_VALID_TONES = frozenset(_TONE_GREETINGS)
+_VALID_DIRECTNESS = frozenset({"direct", "balanced", "gentle"})
+
+# Hedge phrases a "direct" draft drops in favour of plain requests.
+_DIRECT_REPLACEMENTS = [
+    ("Would it be possible to", "Please"),
+    ("would it be possible to", "please"),
+    ("Could you let me know", "Please let me know"),
+    ("could you let me know", "please let me know"),
+    ("I wanted to check in on", "I'm following up on"),
+    ("I wanted to check in", "I'm following up"),
+]
+
+
+def _style_draft(core: str, close: str, tone: str, directness: str) -> str:
+    """Assemble the draft from the intent core, tone and directness.
+
+    ``tone`` picks the greeting; ``directness`` scales the hedging:
+    "direct" swaps hedged requests for plain ones and shortens the close,
+    "gentle" adds a softener to the close. The factual core (dates,
+    invoices, amounts) and the strategy close are never rewritten — only
+    the framing around them changes.
+    """
+    greeting = _TONE_GREETINGS[tone]
+    if directness == "direct":
+        for old, new in _DIRECT_REPLACEMENTS:
+            core = core.replace(old, new)
+        close = "Please let me know."
+    elif directness == "gentle":
+        close = f"{close} Whenever you have a moment."
+    return f"{greeting}\n\n{core}\n\n{close}"
+
 
 def _choose_strategy(
     intent: str, power: str, social_distance: str, imposition: str
 ) -> tuple[str, str]:
-    """Strategy engine — rules R1-R6, first match wins (see module docstring)."""
+    """Strategy engine — rules R1-R7, first match wins (see module docstring)."""
     if intent in {"respond_to_criticism", "resolve_disagreement"}:
         # R1: criticism/disagreement threatens positive face; hedging or
         # stepping back keeps the relationship intact.
@@ -434,28 +479,36 @@ def _choose_strategy(
             "Payment and deadline pressure constrain the recipient's time, "
             "so the response hedges and leaves room to respond.",
         )
+    if power == "high" and imposition in {"medium", "high"}:
+        # R3: the recipient holds more power, so the response defers and
+        # hedges rather than pressing the request directly.
+        return (
+            "negative_politeness",
+            "The recipient holds more power in this relationship and the "
+            "request is not trivial, so the response defers and hedges.",
+        )
     if imposition == "high" and social_distance in {"unknown", "high"}:
-        # R3: high imposition without a close relationship needs hedging.
+        # R4: high imposition without a close relationship needs hedging.
         return (
             "negative_politeness",
             "The request is high-imposition and the relationship is not "
             "close, so the response hedges and respects the recipient's autonomy.",
         )
     if imposition == "low" and social_distance == "low":
-        # R4: low imposition with a close relationship can be direct.
+        # R5: low imposition with a close relationship can be direct.
         return (
             "bald_on_record",
             "The request is low-imposition and the relationship is close, "
             "so a direct response is appropriate.",
         )
     if intent == "clarify_requirements" and imposition in {"unknown", "low"}:
-        # R5: asking for information is low-threat; a direct question is fine.
+        # R6: asking for information is low-threat; a direct question is fine.
         return (
             "bald_on_record",
             "Asking for clarification is a low-threat request, so a direct "
             "question is appropriate.",
         )
-    # R6: the safe default — hedge rather than risk a face threat.
+    # R7: the safe default — hedge rather than risk a face threat.
     return (
         "negative_politeness",
         "No rule strongly favours a direct response, so the response hedges "
@@ -467,6 +520,8 @@ def analyze(
     message: str,
     goal: str,
     context: dict | None = None,
+    draft_tone: str = "Diplomatic",
+    draft_directness: str = "balanced",
 ) -> dict:
     """Run the rule-based analysis and return the exact output contract
     from 05-ai-ml/AI_ML_ARCHITECTURE.md.
@@ -475,6 +530,13 @@ def analyze(
     "unknown" | "low" | "medium" | "high". Missing values are "unknown".
     P/D/R are never inferred from the message — the requester's context is
     the only source.
+
+    ``draft_tone`` (one of Professional/Friendly/Diplomatic/Assertive/
+    Empathetic) and ``draft_directness`` ("direct" | "balanced" |
+    "gentle") change the draft text only — intent, tone label, FTA and
+    strategy are computed from the message and context, not from the
+    styling. (Named ``draft_*`` because the detected tone label is a
+    local called ``tone`` further down.)
     """
     context = context or {}
     power = context.get("power", "unknown")
@@ -483,6 +545,10 @@ def analyze(
     for value in (power, social_distance, imposition):
         if value not in {"unknown", "low", "medium", "high"}:
             raise ValueError(f"Invalid context level: {value!r}")
+    if draft_tone not in _VALID_TONES:
+        raise ValueError(f"Invalid tone: {draft_tone!r}")
+    if draft_directness not in _VALID_DIRECTNESS:
+        raise ValueError(f"Invalid directness: {draft_directness!r}")
 
     text = message.strip()
     intent, intent_conf, _ = _best_label(
@@ -519,8 +585,11 @@ def analyze(
     )
 
     facts = extract_facts(text)
-    draft = (
-        f"Hi,\n\n{_draft_core(intent, facts)}\n\n{_CLOSES[strategy_label]}"
+    draft = _style_draft(
+        _draft_core(intent, facts),
+        _CLOSES[strategy_label],
+        draft_tone,
+        draft_directness,
     )
 
     limitations = [

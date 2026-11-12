@@ -25,6 +25,18 @@ class Settings:
     )
     session_cookie_secure: bool = False
     session_cookie_samesite: str = "lax"
+    # Public origin of the web app (used to build password-reset links).
+    app_origin: str = "http://127.0.0.1:5173"
+    # Password-reset email (SMTP). All optional: when smtp_host is empty no
+    # email is sent and forgot-password returns an honest "not set up"
+    # message in production (see app/services/email.py). Never commit real
+    # credentials — set these in the deployment environment (Render env vars).
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from: str = "Saylient AI <noreply@saylient.ai>"
+    smtp_use_tls: bool = True
     ai_provider: str = ""
     ai_api_key: str = ""
     ai_model: str = ""
@@ -50,6 +62,11 @@ class Settings:
         if self.session_cookie_samesite not in {"lax", "strict", "none"}:
             raise ValueError(
                 "SESSION_COOKIE_SAMESITE must be 'lax', 'strict' or 'none'."
+            )
+        if self.session_cookie_samesite == "none" and not self.session_cookie_secure:
+            # Browsers reject SameSite=None cookies without Secure.
+            raise ValueError(
+                "SESSION_COOKIE_SAMESITE=none requires SESSION_COOKIE_SECURE=true."
             )
         if self.database_url.startswith("postgresql://"):
             pass  # supported by SQLAlchemy; keep the check permissive.
@@ -96,6 +113,17 @@ def get_settings() -> Settings:
             "SESSION_COOKIE_SAMESITE", "lax"
         ).strip().lower()
         or "lax",
+        app_origin=os.environ.get("APP_ORIGIN", "http://127.0.0.1:5173").strip()
+        or "http://127.0.0.1:5173",
+        smtp_host=os.environ.get("SMTP_HOST", "").strip(),
+        smtp_port=int(os.environ.get("SMTP_PORT", "587") or 587),
+        smtp_username=os.environ.get("SMTP_USERNAME", "").strip(),
+        smtp_password=os.environ.get("SMTP_PASSWORD", ""),
+        smtp_from=os.environ.get(
+            "SMTP_FROM", "Saylient AI <noreply@saylient.ai>"
+        ).strip()
+        or "Saylient AI <noreply@saylient.ai>",
+        smtp_use_tls=_bool_env("SMTP_USE_TLS", True),
         ai_provider=os.environ.get("AI_PROVIDER", "").strip(),
         ai_api_key=os.environ.get("AI_API_KEY", "").strip(),
         ai_model=os.environ.get("AI_MODEL", "").strip(),
