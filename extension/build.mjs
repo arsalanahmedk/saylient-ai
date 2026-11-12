@@ -7,13 +7,13 @@ await mkdir(out, { recursive: true });
 await cp(resolve(root, "src"), out, { recursive: true });
 await writeFile(resolve(out, "manifest.json"), JSON.stringify({
   manifest_version: 3,
-  name: "Polite AI — Communication Assistant",
+  name: "Saylient AI — Communication Assistant",
   version: "0.1.0",
   description: "A local demo assistant for reviewing professional messages before sending.",
   permissions: ["storage", "activeTab"],
   host_permissions: ["http://localhost/*", "http://127.0.0.1/*"],
   web_accessible_resources: [{ resources: ["content.css"], matches: ["http://localhost/*", "http://127.0.0.1/*"] }],
-  action: { default_title: "Open Polite AI", default_popup: "popup.html" },
+  action: { default_title: "Open Saylient AI", default_popup: "popup.html" },
   background: { service_worker: "background.js" },
   content_scripts: [{ matches: ["http://localhost/*", "http://127.0.0.1/*"], js: ["content.js"], css: ["content.css"], run_at: "document_idle" }],
   icons: { "16": "icon.svg", "48": "icon.svg", "128": "icon.svg" }

@@ -10,7 +10,7 @@ document.querySelector("#open").addEventListener("click", async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const isLocal = tab?.url?.startsWith("http://localhost") || tab?.url?.startsWith("http://127.0.0.1");
   if (isLocal && tab.url.includes("#demo-chat")) {
-    await chrome.tabs.sendMessage(tab.id, { type: "POLITE_OPEN" }).catch(() => {});
+    await chrome.tabs.sendMessage(tab.id, { type: "SAYLIENT_OPEN" }).catch(() => {});
   } else if (isLocal) {
     await chrome.tabs.update(tab.id, { url: "http://127.0.0.1:5173/#demo-chat" });
   } else {

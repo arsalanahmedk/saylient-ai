@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Polite AI — Communication Assistant",
+  "name": "Saylient AI — Communication Assistant",
   "version": "0.1.0",
   "description": "A local demo assistant for reviewing professional messages before sending.",
   "permissions": [
@@ -23,7 +23,7 @@
     }
   ],
   "action": {
-    "default_title": "Open Polite AI",
+    "default_title": "Open Saylient AI",
     "default_popup": "popup.html"
   },
   "background": {
