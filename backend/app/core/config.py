@@ -19,7 +19,10 @@ class Settings:
     app_env: str = "development"
     app_secret_key: str = ""
     database_url: str = "sqlite:///./saylient.db"
-    allowed_origins: tuple[str, ...] = ("http://localhost:5173",)
+    allowed_origins: tuple[str, ...] = (
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    )
     session_cookie_secure: bool = False
     session_cookie_samesite: str = "lax"
     ai_provider: str = ""
@@ -84,7 +87,10 @@ def get_settings() -> Settings:
         app_env=app_env,
         app_secret_key=secret,
         database_url=os.environ.get("DATABASE_URL", "sqlite:///./saylient.db"),
-        allowed_origins=_origins_env("ALLOWED_ORIGINS", ("http://localhost:5173",)),
+        allowed_origins=_origins_env(
+            "ALLOWED_ORIGINS",
+            ("http://localhost:5173", "http://127.0.0.1:5173"),
+        ),
         session_cookie_secure=_bool_env("SESSION_COOKIE_SECURE", False),
         session_cookie_samesite=os.environ.get(
             "SESSION_COOKIE_SAMESITE", "lax"

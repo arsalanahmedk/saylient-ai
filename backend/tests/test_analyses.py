@@ -116,6 +116,40 @@ def test_draft_lifecycle(client):
     assert again.status_code == 404
 
 
+def test_list_drafts_for_analysis(client):
+    user = make_user(client, tag="listdrafts")
+    headers = auth_headers(user["token"])
+    other = make_user(client, tag="listdrafts-b")
+    other_headers = auth_headers(other["token"])
+    analysis = _create_analysis(client, headers)
+
+    empty = client.get(f"/api/v1/analyses/{analysis['id']}/drafts", headers=headers)
+    assert empty.status_code == 200
+    assert empty.json()["items"] == []
+
+    first = client.post(
+        f"/api/v1/analyses/{analysis['id']}/drafts",
+        json={"draft_text": "First saved draft.", "tone_setting": "Diplomatic"},
+        headers=headers,
+    ).json()
+    second = client.post(
+        f"/api/v1/analyses/{analysis['id']}/drafts",
+        json={"draft_text": "Second saved draft.", "tone_setting": "Friendly"},
+        headers=headers,
+    ).json()
+
+    listed = client.get(f"/api/v1/analyses/{analysis['id']}/drafts", headers=headers)
+    assert listed.status_code == 200
+    assert listed.json()["total"] == 2
+    assert {item["id"] for item in listed.json()["items"]} == {first["id"], second["id"]}
+
+    # Another user sees nothing — not even existence.
+    assert (
+        client.get(f"/api/v1/analyses/{analysis['id']}/drafts", headers=other_headers).status_code
+        == 404
+    )
+
+
 def test_delete_analysis_cascades_drafts(client):
     user = make_user(client, tag="cascade")
     headers = auth_headers(user["token"])

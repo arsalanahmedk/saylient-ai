@@ -12,6 +12,7 @@ from app.schemas import (
     AnalysisListResponse,
     AnalysisOut,
     DraftCreateRequest,
+    DraftListResponse,
     DraftOut,
     DraftPatchRequest,
     GenericMessageResponse,
@@ -22,7 +23,7 @@ from app.services.analyses import (
     get_analysis,
     list_analyses,
 )
-from app.services.drafts import create_draft, delete_draft, update_draft
+from app.services.drafts import create_draft, delete_draft, list_drafts, update_draft
 
 router = APIRouter(tags=["analyses"])
 
@@ -81,6 +82,21 @@ def delete(
 ) -> GenericMessageResponse:
     delete_analysis(db, user=user, analysis_id=analysis_id)
     return GenericMessageResponse(message="Analysis deleted.")
+
+
+@router.get(
+    "/analyses/{analysis_id}/drafts", response_model=DraftListResponse
+)
+def list_drafts_for_analysis(
+    analysis_id: str,
+    user: User = Depends(get_current_user),
+    db: DbSession = Depends(get_db),
+) -> DraftListResponse:
+    items = list_drafts(db, user=user, analysis_id=analysis_id)
+    return DraftListResponse(
+        items=[DraftOut.model_validate(item) for item in items],
+        total=len(items),
+    )
 
 
 @router.post(

@@ -219,6 +219,11 @@ class DraftOut(BaseModel):
     updated_at: datetime
 
 
+class DraftListResponse(BaseModel):
+    items: list[DraftOut]
+    total: int
+
+
 # ---------------------------------------------------------------- templates
 
 

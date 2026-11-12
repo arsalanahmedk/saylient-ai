@@ -27,6 +27,18 @@ def _draft_to_dict(draft: Draft) -> dict:
     }
 
 
+def list_drafts(db: DbSession, *, user: User, analysis_id: str) -> list[dict]:
+    """All saved drafts for one analysis the user owns, newest first."""
+    _get_owned_analysis(db, user=user, analysis_id=analysis_id)
+    rows = (
+        db.query(Draft)
+        .filter(Draft.analysis_id == analysis_id, Draft.user_id == user.id)
+        .order_by(Draft.updated_at.desc())
+        .all()
+    )
+    return [_draft_to_dict(draft) for draft in rows]
+
+
 def create_draft(
     db: DbSession,
     *,
