@@ -86,8 +86,8 @@ const PIPELINE_STAGES = [
 /* The Saylient mark: a geometric "S" (two cubic bowls on a 24-unit grid)
    followed by three vertical bars of decreasing height (7, 4, 2) — the
    voice fading into silence. One flat colour (currentColor, so it follows
-   the palette: warm orange on the dark tile, warm orange everywhere else;
-   the standalone SVG files carry the full sunset gradient).
+   the palette: sky blue on the white tile, sky blue everywhere else;
+   the standalone SVG files carry the full sky → cyan → pink gradient).
    The S is deliberately unclosed: the message pauses before it is sent. */
 const LOGO_S_PATH = "M17.5 7C17.5 4.2 15 2.5 12 2.5C9 2.5 6.5 4.2 6.5 7C6.5 9.8 9 11.5 12 11.5C15 11.5 17.5 13.2 17.5 16C17.5 18.8 15 20.5 12 20.5C9 20.5 6.5 18.8 6.5 16";
 const LOGO_WAVE_PATH = "M20.5 8.5V15.5M23 10V14M25.5 11V13";
@@ -390,7 +390,7 @@ function HalftoneFooter({ go }) {
       mask.width = rect.width;
       mask.height = rect.height;
       const maskContext = mask.getContext("2d");
-      maskContext.font = `600 ${fontSize}px "Space Grotesk", "Inter", sans-serif`;
+      maskContext.font = `600 ${fontSize}px "Plus Jakarta Sans", "Manrope", sans-serif`;
       maskContext.textAlign = "center";
       maskContext.textBaseline = "alphabetic";
       maskContext.fillStyle = "#fff";
@@ -402,7 +402,7 @@ function HalftoneFooter({ go }) {
           if (alpha < 0.08) continue;
           const distance = Math.hypot(x - pointer.x, y - pointer.y);
           const lift = Math.max(0, 1 - distance / 95) * alpha;
-          context.fillStyle = `rgb(${Math.round(38 + lift * 213)},${Math.round(30 + lift * 138)},${Math.round(22 + lift * 60)})`;
+          context.fillStyle = `rgb(${Math.round(203 - lift * 147)},${Math.round(213 - lift * 24)},${Math.round(225 + lift * 23)})`;
           context.beginPath();
           context.arc(x, y, Math.sqrt(alpha) * gap * 0.58, 0, Math.PI * 2);
           context.fill();
@@ -579,6 +579,7 @@ function Landing({ go, user }) {
     <PublicNav go={go} user={user} />
     <main>
       <section className="hero shell">
+        <div className="hero-mesh" aria-hidden="true"><i /><i /><i /></div>
         <div className="hero-dots" aria-hidden="true" />
         <motion.div className="hero-badge" {...fadeUp(0)}><span className="pulse-dot" /> AI-based freelancer communication assistant</motion.div>
         <motion.h1 {...fadeUp(0.08)}>Say it so <em>they say yes.</em></motion.h1>

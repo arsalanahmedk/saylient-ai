@@ -1,20 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 48" width="208" height="48" role="img" aria-label="Saylient AI">
   <defs>
-    <linearGradient id="sunsetGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#FBBF24" />
-      <stop offset="0.55" stop-color="#FB923C" />
-      <stop offset="1" stop-color="#FB7185" />
+    <linearGradient id="auroraGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#38BDF8" />
+      <stop offset="0.5" stop-color="#22D3EE" />
+      <stop offset="1" stop-color="#EC4899" />
     </linearGradient>
   </defs>
-  <!-- Saylient AI lockup — Sunset Ember version.
+  <!-- Saylient AI lockup — Aurora Light version.
        Mark: a geometric "S" (two cubic bowls on a 24-unit grid) followed by
        three vertical bars of decreasing height (7, 4, 2) — the voice fading
-       into silence. Sunset gradient (#FBBF24 → #FB923C → #FB7185).
-       Wordmark: "Saylient" in warm white Space Grotesk 600; "AI" in orange.
-       Text #FAF9F7 mirrors the ink token: use on warm dark. -->
-  <g transform="translate(0,10.2) scale(1.2)" fill="none" stroke="url(#sunsetGrad)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+       into silence. Aurora gradient (#38BDF8 → #22D3EE → #EC4899).
+       Wordmark: "Saylient" in ink Plus Jakarta Sans 700; "AI" in hot pink.
+       Text #0F172A mirrors the ink token: use on white. -->
+  <g transform="translate(0,10.2) scale(1.2)" fill="none" stroke="url(#auroraGrad)" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M17.5 7C17.5 4.2 15 2.5 12 2.5C9 2.5 6.5 4.2 6.5 7C6.5 9.8 9 11.5 12 11.5C15 11.5 17.5 13.2 17.5 16C17.5 18.8 15 20.5 12 20.5C9 20.5 6.5 18.8 6.5 16"/>
     <path d="M20.5 8.5V15.5M23 10V14M25.5 11V13"/>
   </g>
-  <text x="42" y="31" font-family="Space Grotesk, Inter, sans-serif" font-size="27" font-weight="600" letter-spacing="-0.3" fill="#FAF9F7">Saylient<tspan fill="#FB923C">AI</tspan></text>
+  <text x="42" y="31" font-family="Plus Jakarta Sans, Manrope, sans-serif" font-size="27" font-weight="700" letter-spacing="-0.3" fill="#0F172A">Saylient<tspan fill="#EC4899">AI</tspan></text>
 </svg>

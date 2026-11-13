@@ -1,24 +1,24 @@
-/* Saylient AI popup — Sunset Ember. System font stack only; nothing remote.
+/* Saylient AI popup — Aurora Light. System font stack only; nothing remote.
    All colours live in :root, so a palette swap is a single edit.
    Note: the toolbar icon no longer opens this popup — it opens the Saylient
    AI hero page, and sign-in lives in the in-page panel (content.js). This
    file is kept for reference and for the sign-in flow it documents. */
 :root {
-  /* Sunset Ember palette (warm near-black + amber → orange → rose). */
-  --bg: #0b0a08;
-  --panel: #161310;
-  --card: #1d1917;
-  --text: #faf9f7;
-  --text-2: #a8a29a;
-  --text-3: #78716c;
-  --accent: #fb923c;
-  --accent-hover: #fbbf24;
-  --accent-deep: #ea580c;
-  --white: #faf9f7;
-  --border: rgba(250, 249, 247, 0.12);
-  --error: #fb7185;
-  --error-bg: rgba(251, 113, 133, 0.10);
-  --error-border: rgba(251, 113, 133, 0.35);
+  /* Aurora Light palette (white + sky → cyan → pink). */
+  --bg: #ffffff;
+  --panel: #f8fafc;
+  --card: #f1f5f9;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --accent: #0ea5e9;
+  --accent-hover: #ec4899;
+  --accent-deep: #0284c7;
+  --white: #ffffff;
+  --border: rgba(15, 23, 42, 0.10);
+  --error: #db2777;
+  --error-bg: rgba(219, 39, 119, 0.10);
+  --error-border: rgba(219, 39, 119, 0.35);
 }
 * { box-sizing: border-box; }
 body {
@@ -36,7 +36,7 @@ header small { display: block; color: var(--text-2); font-size: 11px; margin-top
 .brand-mark {
   width: 38px; height: 38px; border-radius: 10px;
   display: grid; place-items: center;
-  background: linear-gradient(135deg, #fbbf24, #fb923c 60%, #fb7185); color: #1c0f08; font-size: 20px;
+  background: linear-gradient(135deg, #38bdf8, #22d3ee 55%, #ec4899); color: #ffffff; font-size: 20px;
 }
 .rule { height: 1px; background: var(--border); margin: 18px 0; }
 .eyebrow {
@@ -72,7 +72,7 @@ input::placeholder { color: var(--text-3); }
 .account-avatar {
   width: 36px; height: 36px; border-radius: 10px;
   display: grid; place-items: center; flex-shrink: 0;
-  background: linear-gradient(135deg, #fbbf24, #fb923c 60%, #fb7185); color: #1c0f08; font-size: 18px;
+  background: linear-gradient(135deg, #38bdf8, #22d3ee 55%, #ec4899); color: #ffffff; font-size: 18px;
 }
 .account-card b { display: block; font-size: 13px; word-break: break-all; }
 .account-card small { display: block; color: var(--text-2); font-size: 11px; margin-top: 3px; }
@@ -87,7 +87,7 @@ input::placeholder { color: var(--text-3); }
   cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
 .primary {
-  border: 1px solid transparent; background: linear-gradient(135deg, #fbbf24, #fb923c 55%, #fb7185 130%); color: #1c0f08;
+  border: 1px solid transparent; background: linear-gradient(135deg, #38bdf8, #22d3ee 55%, #ec4899 130%); color: #ffffff;
   margin-bottom: 10px;
 }
 .primary:hover:not(:disabled) { filter: brightness(1.07); }

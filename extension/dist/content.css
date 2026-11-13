@@ -1,40 +1,40 @@
-/* Saylient AI panel — Sunset Ember. System font stack only.
+/* Saylient AI panel — Aurora Light. System font stack only.
    All colours live in :root as --sai-* variables, so a palette swap is a
    single edit. (Names are --sai-* prefixed: this stylesheet is injected
    into host pages, so its variables must not collide with theirs.) */
 :root {
-  --sai-bg: #161310;
-  --sai-card: #1d1917;
-  --sai-elevated: #241f1a;
-  --sai-track: #2a251f;
-  --sai-text: #faf9f7;
-  --sai-text-2: #a8a29a;
-  --sai-text-3: #a8a29a;
-  --sai-text-4: #78716c;
-  --sai-accent: #fb923c;
-  --sai-accent-deep: #ea580c;
-  --sai-accent-light: #fbbf24;
-  --sai-accent-pale: #fcd34d;
-  --sai-white: #faf9f7;
-  --sai-border: rgba(250, 249, 247, 0.12);
-  --sai-border-strong: rgba(250, 249, 247, 0.22);
-  --sai-accent-soft: rgba(251, 146, 60, 0.12);
-  --sai-accent-softer: rgba(251, 146, 60, 0.10);
-  --sai-accent-glow: rgba(251, 146, 60, 0.4);
-  --sai-accent-glow-soft: rgba(251, 146, 60, 0.25);
-  --sai-accent-glow-clear: rgba(251, 146, 60, 0);
-  --sai-error: #fb7185;
-  --sai-error-bg: rgba(251, 113, 133, 0.10);
-  --sai-error-border: rgba(251, 113, 133, 0.35);
-  --sai-warn: #fbbf24;
-  --sai-warn-bg: rgba(251, 191, 36, 0.08);
-  --sai-warn-border: rgba(251, 191, 36, 0.25);
-  --sai-shadow: rgba(0, 0, 0, 0.5);
+  --sai-bg: #ffffff;
+  --sai-card: #f8fafc;
+  --sai-elevated: #f1f5f9;
+  --sai-track: #e2e8f0;
+  --sai-text: #0f172a;
+  --sai-text-2: #475569;
+  --sai-text-3: #64748b;
+  --sai-text-4: #94a3b8;
+  --sai-accent: #0ea5e9;
+  --sai-accent-deep: #0284c7;
+  --sai-accent-light: #ec4899;
+  --sai-accent-pale: #be185d;
+  --sai-white: #ffffff;
+  --sai-border: rgba(15, 23, 42, 0.10);
+  --sai-border-strong: rgba(15, 23, 42, 0.18);
+  --sai-accent-soft: rgba(56, 189, 248, 0.12);
+  --sai-accent-softer: rgba(56, 189, 248, 0.10);
+  --sai-accent-glow: rgba(56, 189, 248, 0.4);
+  --sai-accent-glow-soft: rgba(236, 72, 153, 0.25);
+  --sai-accent-glow-clear: rgba(56, 189, 248, 0);
+  --sai-error: #db2777;
+  --sai-error-bg: rgba(219, 39, 119, 0.10);
+  --sai-error-border: rgba(219, 39, 119, 0.35);
+  --sai-warn: #0284c7;
+  --sai-warn-bg: rgba(2, 132, 199, 0.08);
+  --sai-warn-border: rgba(2, 132, 199, 0.25);
+  --sai-shadow: rgba(15, 23, 42, 0.18);
 }
 #saylient-ai-trigger {
   position: fixed; right: 22px; bottom: 22px; z-index: 2147483646;
   width: 52px; height: 52px; border: 1px solid var(--sai-border-strong);
-  border-radius: 50%; background: linear-gradient(135deg, #fbbf24, #fb923c 60%, #fb7185); color: #1c0f08;
+  border-radius: 50%; background: linear-gradient(135deg, #38bdf8, #22d3ee 55%, #ec4899); color: #ffffff;
   font-size: 22px; font-weight: 700; cursor: pointer;
   box-shadow: 0 8px 24px var(--sai-accent-glow);
   animation: saiPulse 2.4s infinite;
@@ -132,7 +132,7 @@
 }
 #saylient-ai-panel .sai-analyze,
 #saylient-ai-panel .sai-primary {
-  border: 1px solid transparent; background: linear-gradient(135deg, #fbbf24, #fb923c 55%, #fb7185 130%); color: #1c0f08;
+  border: 1px solid transparent; background: linear-gradient(135deg, #38bdf8, #22d3ee 55%, #ec4899 130%); color: #ffffff;
 }
 #saylient-ai-panel .sai-analyze:hover:not(:disabled),
 #saylient-ai-panel .sai-primary:hover:not(:disabled) { filter: brightness(1.07); }

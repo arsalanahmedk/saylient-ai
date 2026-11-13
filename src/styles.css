@@ -1,90 +1,96 @@
-@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&family=Manrope:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 
-'':root {
-  /* Sunset Ember palette (2026-11-13 — Folio layout, warm near-black +
-     amber→orange→rose gradient). Every colour in this file is one of
-     these variables — a palette swap is a single edit here. */
-  --bg: #0b0a08;
-  --panel: #161310;
-  --card: #161310;
-  --elevated: #1d1917;
-  --input: #1d1917;
-  --border: #2a251f;
-  --border-strong: #3a322a;
-  --text: #faf9f7;
-  --text-2: #a8a29a;
-  --text-3: #78716c;
-  --accent: #fb923c;
-  --accent-hover: #fbbf24;
-  --accent-deep: #ea580c;
-  --accent-tint: rgba(251, 146, 60, 0.08);
-  --success: #fbbf24;
-  --pending: #a8a29a;
-  --error: #fb7185;
-  --info: #241f1a;
-  --white: #faf9f7;
-  /* Sunset gradient (amber → orange → rose). Buttons and headline words
-     use it; --btn-text is the dark text that sits on it (white text on
-     amber fails contrast — dark text reads ~10:1). */
-  --sunset: linear-gradient(90deg, #fbbf24 0%, #fb923c 55%, #fb7185 100%);
-  --sunset-btn: linear-gradient(135deg, #fbbf24 0%, #fb923c 55%, #fb7185 130%);
-  --btn-text: #1c0f08;
-  /* Accent tints, named by alpha. */
-  --accent-03: rgba(251, 146, 60, 0.03);
-  --accent-08: rgba(251, 146, 60, 0.08);
-  --accent-10: rgba(251, 146, 60, 0.1);
-  --accent-12: rgba(251, 146, 60, 0.12);
-  --accent-14: rgba(251, 146, 60, 0.14);
-  --accent-15: rgba(251, 146, 60, 0.15);
-  --accent-16: rgba(251, 146, 60, 0.16);
-  --accent-18: rgba(251, 146, 60, 0.18);
-  --accent-20: rgba(251, 146, 60, 0.2);
-  --accent-24: rgba(251, 146, 60, 0.24);
-  --accent-25: rgba(251, 146, 60, 0.25);
-  --accent-30: rgba(251, 146, 60, 0.3);
-  --accent-35: rgba(251, 146, 60, 0.35);
-  --accent-40: rgba(251, 146, 60, 0.4);
-  --accent-45: rgba(251, 146, 60, 0.45);
-  --accent-50: rgba(251, 146, 60, 0.5);
-  --accent-deep-28: rgba(234, 88, 12, 0.28);
-  /* Status tints. */
-  --success-09: rgba(251, 191, 36, 0.09);
-  --success-12: rgba(251, 191, 36, 0.12);
-  --success-13: rgba(251, 191, 36, 0.13);
-  --success-30: rgba(251, 191, 36, 0.3);
-  --success-50: rgba(251, 191, 36, 0.5);
-  --success-00: rgba(251, 191, 36, 0);
-  --success-text: #fcd34d;
-  --error-10: rgba(251, 113, 133, 0.1);
-  --error-35: rgba(251, 113, 133, 0.35);
-  --error-text: #fda4af;
-  --cyan: #fbbf24;
-  --cyan-05: rgba(251, 191, 36, 0.06);
-  --cyan-10: rgba(251, 191, 36, 0.12);
-  --green-light: #a8a29a;
-  --amber-light: #fbbf24;
-  --amber-10: rgba(251, 191, 36, 0.1);
-  /* Light overlays on the dark page, and true-black shadows. */
-  --white-05: rgba(250, 249, 247, 0.05);
-  --white-06: rgba(250, 249, 247, 0.06);
-  --white-07: rgba(250, 249, 247, 0.07);
-  --white-10: rgba(250, 249, 247, 0.1);
-  --white-32: rgba(250, 249, 247, 0.32);
-  --white-35: rgba(250, 249, 247, 0.35);
-  --black-35: rgba(0, 0, 0, 0.35);
-  --black-45: rgba(0, 0, 0, 0.45);
-  --black-50: rgba(0, 0, 0, 0.5);
-  --black-60: rgba(0, 0, 0, 0.6);
-  --nav-bg: rgba(11, 10, 8, 0.8);
-  --scrollbar: #2a251f;
-  --dot-neutral: #2a251f;
-  --glow: rgba(251, 146, 60, 0.35);
-  --glow-soft: rgba(251, 146, 60, 0.18);
+:root {
+  /* Aurora Light palette (2026-11-13 — Folio layout, white +
+     sky → cyan → pink gradient mesh). Every colour in this file is one
+     of these variables — a palette swap is a single edit here.
+     NOTE: the selector MUST be plain `:root`. A previous warm-dark build
+     briefly had `'':root` here, which browsers drop as an invalid
+     selector, silently un-applying every token below. */
+  --bg: #ffffff;
+  --panel: #ffffff;
+  --card: #f8fafc;
+  --elevated: #f1f5f9;
+  --input: #ffffff;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --accent: #0ea5e9;
+  --accent-hover: #ec4899;
+  --accent-deep: #0284c7;
+  --accent-tint: rgba(56, 189, 248, 0.10);
+  --success: #0284c7;
+  --pending: #94a3b8;
+  --error: #db2777;
+  --info: #f1f5f9;
+  --white: #ffffff;
+  /* Aurora gradient (sky → cyan → pink). Buttons and headline words
+     use it; --btn-text is the white text that sits on it. */
+  --aurora: linear-gradient(90deg, #38bdf8 0%, #22d3ee 50%, #ec4899 100%);
+  --aurora-btn: linear-gradient(135deg, #38bdf8 0%, #22d3ee 45%, #ec4899 110%);
+  --btn-text: #ffffff;
+  --pink: #ec4899;
+  --pink-12: rgba(236, 72, 153, 0.12);
+  --slate: #475569;
+  --slate-10: rgba(71, 85, 105, 0.10);
+  /* Accent tints, named by alpha (sky). */
+  --accent-03: rgba(56, 189, 248, 0.03);
+  --accent-08: rgba(56, 189, 248, 0.08);
+  --accent-10: rgba(56, 189, 248, 0.10);
+  --accent-12: rgba(56, 189, 248, 0.12);
+  --accent-14: rgba(56, 189, 248, 0.14);
+  --accent-15: rgba(56, 189, 248, 0.15);
+  --accent-16: rgba(56, 189, 248, 0.16);
+  --accent-18: rgba(56, 189, 248, 0.18);
+  --accent-20: rgba(56, 189, 248, 0.20);
+  --accent-24: rgba(56, 189, 248, 0.24);
+  --accent-25: rgba(56, 189, 248, 0.25);
+  --accent-30: rgba(56, 189, 248, 0.30);
+  --accent-35: rgba(56, 189, 248, 0.35);
+  --accent-40: rgba(56, 189, 248, 0.40);
+  --accent-45: rgba(56, 189, 248, 0.45);
+  --accent-50: rgba(56, 189, 248, 0.50);
+  --accent-deep-28: rgba(2, 132, 199, 0.28);
+  /* Status tints (sky success, pink error). */
+  --success-09: rgba(2, 132, 199, 0.09);
+  --success-12: rgba(2, 132, 199, 0.12);
+  --success-13: rgba(2, 132, 199, 0.13);
+  --success-30: rgba(2, 132, 199, 0.30);
+  --success-50: rgba(2, 132, 199, 0.50);
+  --success-00: rgba(2, 132, 199, 0);
+  --success-text: #0369a1;
+  --error-10: rgba(219, 39, 119, 0.10);
+  --error-35: rgba(219, 39, 119, 0.35);
+  --error-text: #be185d;
+  --cyan: #0891b2;
+  --cyan-05: rgba(34, 211, 238, 0.06);
+  --cyan-10: rgba(34, 211, 238, 0.12);
+  --green-light: #db2777;
+  --amber-light: #475569;
+  --amber-10: rgba(71, 85, 105, 0.10);
+  /* Slate tints for hover/shimmer on the white page, and soft shadows. */
+  --white-05: rgba(15, 23, 42, 0.04);
+  --white-06: rgba(15, 23, 42, 0.05);
+  --white-07: rgba(15, 23, 42, 0.06);
+  --white-10: rgba(15, 23, 42, 0.08);
+  --white-32: rgba(15, 23, 42, 0.32);
+  --white-35: rgba(15, 23, 42, 0.35);
+  --black-35: rgba(15, 23, 42, 0.10);
+  --black-45: rgba(15, 23, 42, 0.14);
+  --black-50: rgba(15, 23, 42, 0.18);
+  --black-60: rgba(15, 23, 42, 0.24);
+  --nav-bg: rgba(255, 255, 255, 0.82);
+  --scrollbar: #cbd5e1;
+  --dot-neutral: #cbd5e1;
+  --glow: rgba(56, 189, 248, 0.35);
+  --glow-soft: rgba(236, 72, 153, 0.18);
   --radius-card: 16px;
   --radius-inner: 12px;
   --radius-input: 10px;
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-sans: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Plus Jakarta Sans", "Manrope", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 * { box-sizing: border-box; }
@@ -92,7 +98,7 @@
 html {
   width: 100%;
   min-height: 100%;
-  color-scheme: dark;
+  color-scheme: light;
   background: var(--bg);
 }
 
@@ -138,7 +144,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   padding: 0 18px;
   border: 0;
   border-radius: 100px;
-  background: var(--sunset-btn);
+  background: var(--aurora-btn);
   color: var(--btn-text);
   font-size: 14px;
   font-weight: 700;
@@ -153,7 +159,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   box-shadow: none;
 }
 .button.outline::after, .btn-outline::after { display: none; }
-.button:hover:not(:disabled), .btn:hover:not(:disabled) { filter: brightness(1.07); box-shadow: 0 1px 2px var(--black-35), 0 8px 40px var(--glow), 0 0 0 1px rgba(251, 191, 36, 0.3); }
+.button:hover:not(:disabled), .btn:hover:not(:disabled) { filter: brightness(1.07); box-shadow: 0 1px 2px var(--black-35), 0 8px 40px var(--glow), 0 0 0 1px rgba(236, 72, 153, 0.35); }
 .button:active:not(:disabled), .btn:active:not(:disabled) { transform: scale(0.98); }
 .button:disabled, .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 .button .icon, .btn .icon { display: inline-flex; }
@@ -241,7 +247,7 @@ select.select-field option { background: var(--input); }
 
 /* ---------- logo ---------- */
 .logo { display: inline-flex; align-items: center; gap: 9px; color: var(--text); font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; background: none; border: 0; padding: 0; text-align: left; }
-.logo-ai { color: var(--accent); }
+.logo-ai { color: var(--pink); }
 .logo-icon {
   display: inline-grid;
   place-items: center;
@@ -250,7 +256,7 @@ select.select-field option { background: var(--input); }
   border-radius: 9px;
   border: 1px solid var(--border);
   background: var(--elevated);
-  color: #fb923c;
+  color: #0ea5e9;
 }
 .logo-icon svg { width: 20px; height: 16px; }
 
@@ -291,20 +297,28 @@ select.select-field option { background: var(--input); }
 }
 
 /* ---------- hero (Folio-style, tool first) ----------
-   Big bold headline with a sunset-gradient key word, then the Analyzer
-   console dominating the fold. A slowly shifting sunset glow washes the
-   top of the hero, a soft gradient orb drifts behind the console, and a
-   warm dot grid ties it together (all CSS-only, all disabled under
-   prefers-reduced-motion). */
+   Big bold headline with an aurora-gradient key word, then the Analyzer
+   console dominating the fold. Three large blurred colour blobs (sky,
+   cyan, pink) drift behind the hero, a soft top wash ties them together,
+   and a slate dot grid fades out toward the bottom (all CSS-only, all
+   disabled under prefers-reduced-motion). */
 .hero { position: relative; padding: 120px 24px 40px; text-align: center; overflow: hidden; }
-.hero::before { content: ""; position: absolute; inset: -10% -20% auto; height: 640px; background: radial-gradient(ellipse 62% 55% at 50% 0%, rgba(251, 191, 36, 0.22), rgba(251, 146, 60, 0.12) 42%, rgba(251, 113, 133, 0.08) 62%, transparent 72%); animation: sunsetGlow 14s ease-in-out infinite alternate; pointer-events: none; }
-@keyframes sunsetGlow { from { opacity: 0.75; transform: translateY(-14px) scale(1); } to { opacity: 1; transform: translateY(10px) scale(1.06); } }
-.hero::after { content: ""; position: absolute; top: -140px; right: -90px; width: 460px; height: 460px; border-radius: 50%; background: radial-gradient(circle, rgba(251, 146, 60, 0.30), rgba(251, 113, 133, 0.14) 55%, transparent 70%); filter: blur(44px); animation: orbFloat 18s ease-in-out infinite alternate; pointer-events: none; }
+.hero::before { content: ""; position: absolute; inset: -10% -20% auto; height: 640px; background: radial-gradient(ellipse 62% 55% at 50% 0%, rgba(56, 189, 248, 0.14), rgba(34, 211, 238, 0.07) 42%, rgba(236, 72, 153, 0.06) 62%, transparent 72%); animation: auroraGlow 16s ease-in-out infinite alternate; pointer-events: none; }
+@keyframes auroraGlow { from { opacity: 0.75; transform: translateY(-14px) scale(1); } to { opacity: 1; transform: translateY(10px) scale(1.06); } }
+.hero::after { content: ""; position: absolute; top: -140px; right: -90px; width: 460px; height: 460px; border-radius: 50%; background: radial-gradient(circle, rgba(236, 72, 153, 0.26), rgba(34, 211, 238, 0.12) 55%, transparent 70%); filter: blur(44px); animation: orbFloat 20s ease-in-out infinite alternate; pointer-events: none; }
 @keyframes orbFloat { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(-70px, 46px, 0) scale(1.12); } }
-.hero-dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(251, 191, 36, 0.16) 1px, transparent 1px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); pointer-events: none; }
+.hero-mesh { position: absolute; inset: 0; overflow: hidden; pointer-events: none; -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 96%); mask-image: linear-gradient(to bottom, #000 55%, transparent 96%); }
+.hero-mesh i { position: absolute; border-radius: 50%; filter: blur(70px); }
+.hero-mesh i:nth-child(1) { top: -180px; left: 6%; width: 520px; height: 520px; background: radial-gradient(circle, rgba(56, 189, 248, 0.45), transparent 65%); animation: meshDrift1 24s ease-in-out infinite alternate; }
+.hero-mesh i:nth-child(2) { top: -120px; right: 2%; width: 460px; height: 460px; background: radial-gradient(circle, rgba(236, 72, 153, 0.38), transparent 65%); animation: meshDrift2 28s ease-in-out infinite alternate; }
+.hero-mesh i:nth-child(3) { top: 40px; left: 38%; width: 420px; height: 420px; background: radial-gradient(circle, rgba(34, 211, 238, 0.35), transparent 65%); animation: meshDrift3 32s ease-in-out infinite alternate; }
+@keyframes meshDrift1 { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(90px, 60px, 0) scale(1.15); } }
+@keyframes meshDrift2 { from { transform: translate3d(0, 0, 0) scale(1.1); } to { transform: translate3d(-110px, 70px, 0) scale(0.95); } }
+@keyframes meshDrift3 { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(-60px, -50px, 0) scale(1.2); } }
+.hero-dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(100, 116, 139, 0.20) 1px, transparent 1px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); pointer-events: none; }
 .hero-badge { position: relative; }
 .hero h1 { position: relative; max-width: 960px; margin: 0 auto; font-family: var(--font-display); font-size: clamp(3.5rem, 7vw, 5.5rem); line-height: 1.02; font-weight: 700; letter-spacing: -0.02em; }
-.hero h1 em { font-family: "Space Grotesk", "Inter", sans-serif; font-style: normal; font-weight: 700; background: var(--sunset); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.hero h1 em { font-family: "Plus Jakarta Sans", "Manrope", sans-serif; font-style: normal; font-weight: 700; background: var(--aurora); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
 .hero > p { position: relative; max-width: 620px; margin: 24px auto 0; color: var(--text-2); font-size: 19px; line-height: 1.6; }
 .hero-note { position: relative; justify-content: center; }
 
@@ -385,7 +399,7 @@ select.select-field option { background: var(--input); }
 
 .center-heading { max-width: 580px; margin: 0 auto 48px; text-align: center; }
 .center-heading h2 { font-size: clamp(2rem, 4vw, 3rem); line-height: 1.06; font-weight: 700; letter-spacing: -0.02em; }
-.center-heading h2 em, .section-heading h2 em, .theory-strip h2 em, .extension-cta h2 em, .pricing-section h2 em { font-family: "Space Grotesk", "Inter", sans-serif; font-style: normal; font-weight: 700; background: var(--sunset); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.center-heading h2 em, .section-heading h2 em, .theory-strip h2 em, .extension-cta h2 em, .pricing-section h2 em { font-family: "Plus Jakarta Sans", "Manrope", sans-serif; font-style: normal; font-weight: 700; background: var(--aurora); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
 .center-heading p, .section-heading p { margin-top: 16px; color: var(--text-2); font-size: 17px; line-height: 1.55; }
 
 
@@ -420,7 +434,7 @@ select.select-field option { background: var(--input); }
 .beam-track i { position: absolute; top: -3px; left: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); animation: beamDot 2.2s linear infinite; }
 @keyframes beamDot { 0% { left: 0; opacity: 0; } 12% { opacity: 1; } 88% { opacity: 1; } 100% { left: calc(100% - 7px); opacity: 0; } }
 .beam-center { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px 22px; border: 1px solid var(--accent-45); border-radius: var(--radius-card); background: var(--accent-08); text-align: center; }
-.beam-center-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--sunset-btn); color: var(--btn-text); font-size: 20px; }
+.beam-center-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 12px; background: var(--aurora-btn); color: var(--btn-text); font-size: 20px; }
 .beam-center strong { font-family: var(--font-display); font-size: 16px; }
 .beam-center small { color: var(--text-2); font-size: 11px; }
 .extension-copy p { color: var(--text-2); font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
@@ -443,7 +457,7 @@ select.select-field option { background: var(--input); }
 .pricing-card li { display: flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 14px; }
 .pricing-card li svg { flex: none; color: var(--accent); }
 .pricing-card .btn { width: 100%; }
-.pricing-soon { position: absolute; top: -11px; right: 20px; padding: 4px 10px; border-radius: 100px; background: var(--sunset-btn); color: var(--btn-text); font-size: 11px; font-weight: 700; }
+.pricing-soon { position: absolute; top: -11px; right: 20px; padding: 4px 10px; border-radius: 100px; background: var(--aurora-btn); color: var(--btn-text); font-size: 11px; font-weight: 700; }
 .teams-strip { display: flex; align-items: center; gap: 16px; max-width: 780px; margin: 24px auto 0; padding: 18px 20px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); }
 .teams-strip > span { flex: none; padding: 6px 10px; border-radius: 100px; background: var(--accent-14); color: var(--accent-hover); font-size: 12px; font-weight: 700; }
 .teams-strip p { flex: 1; color: var(--text-2); font-size: 14px; }
@@ -537,9 +551,9 @@ select.select-field option { background: var(--input); }
   transition: background 0.2s ease, color 0.2s ease;
 }
 .side-link:hover { background: var(--white-05); color: var(--text); }
-.side-link.active { background: var(--accent-16); color: var(--accent-hover); }
-.side-link.active svg { color: var(--accent-hover); }
-.new-dot { width: 5px; height: 5px; margin-left: auto; border-radius: 50%; background: var(--accent-hover); }
+.side-link.active { background: var(--accent-16); color: var(--accent); }
+.side-link.active svg { color: var(--accent); }
+.new-dot { width: 5px; height: 5px; margin-left: auto; border-radius: 50%; background: var(--accent); }
 .upgrade-card {
   margin-top: auto;
   padding: 14px;
@@ -594,16 +608,16 @@ select.select-field option { background: var(--input); }
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; }
 .stat-card { position: relative; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); animation: riseIn 0.6s ease both; overflow: hidden; transition: border-color 0.2s ease, transform 0.2s ease; }
 .stat-card:hover { transform: translateY(-3px); border-color: var(--accent-45); }
-/* KPI rhythm: a thin black rule across the top of each card,
+/* KPI rhythm: a thin accent rule across the top of each card,
    so the four stats read as one dashboard row. */
 .stat-card::before { content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: 2px; border-radius: 2px; background: var(--accent); opacity: 0.7; }
 .stat-card:nth-child(2) { animation-delay: 0.08s; }
 .stat-card:nth-child(3) { animation-delay: 0.16s; }
 .stat-card:nth-child(4) { animation-delay: 0.24s; }
 .stat-icon { display: grid; place-items: center; width: 36px; height: 36px; margin-bottom: 18px; border-radius: var(--radius-inner); }
-.stat-icon.accent { color: var(--accent-hover); background: var(--accent-14); }
+.stat-icon.accent { color: var(--accent); background: var(--accent-14); }
 .stat-icon.grey { color: var(--cyan); background: var(--cyan-10); }
-.stat-icon.black { color: var(--green-light); background: var(--success-12); }
+.stat-icon.black { color: var(--pink); background: var(--pink-12); }
 .stat-icon.slate { color: var(--amber-light); background: var(--amber-10); }
 .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; overflow-wrap: anywhere; }
 .stat-title { margin-top: 6px; color: var(--text-2); font-size: 12px; }
@@ -692,7 +706,7 @@ select.select-field option { background: var(--input); }
 
 /* Score ring (Assistant result): the SVG circles MUST have fill:none —
    without it a bare <circle> renders with the default black fill and
-   the gauge looks like a solid black disc. The value arc is the black
+   the gauge looks like a solid black disc. The value arc is the sky
    brand colour on a translucent track; the label is absolutely centred
    inside the ring, and the (long) confidence note lives BELOW the ring
    as .ring-caption so it can never collide with the live log. */
@@ -819,7 +833,7 @@ select.select-field option { background: var(--input); }
 .demo-composer { display: flex; gap: 10px; padding: 15px; border-top: 1px solid var(--border); }
 .demo-composer textarea { flex: 1; height: 44px; padding: 11px; border: 1px solid var(--border); border-radius: var(--radius-input); background: var(--input); color: var(--text); font-size: 13px; resize: none; outline: none; }
 .demo-composer textarea:focus { border-color: var(--accent); }
-.demo-composer button { display: flex; align-self: stretch; align-items: center; gap: 7px; padding: 0 15px; border: 0; border-radius: var(--radius-input); background: var(--sunset-btn); color: var(--btn-text); font-size: 13px; font-weight: 700; }
+.demo-composer button { display: flex; align-self: stretch; align-items: center; gap: 7px; padding: 0 15px; border: 0; border-radius: var(--radius-input); background: var(--aurora-btn); color: var(--btn-text); font-size: 13px; font-weight: 700; }
 .demo-disclaimer { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 0 0 16px; color: var(--text-3); font-size: 11px; }
 
 /* ---------- responsive ---------- */
@@ -895,7 +909,8 @@ select.select-field option { background: var(--input); }
 }
 
 /* ---------- analyzer console (hero + assistant) ---------- */
-.analyzer-console { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); box-shadow: 0 24px 48px var(--black-45), 0 0 0 1px rgba(251, 146, 60, 0.08), 0 0 90px rgba(251, 146, 60, 0.12); overflow: hidden; text-align: left; }
+.analyzer-console { position: relative; border: 1px solid var(--border); border-radius: var(--radius-card); background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 24px 48px rgba(15, 23, 42, 0.10), 0 0 0 1px rgba(56, 189, 248, 0.10), 0 0 90px rgba(56, 189, 248, 0.16); overflow: hidden; text-align: left; }
+.analyzer-console::before { content: ""; display: block; height: 3px; background: var(--aurora); }
 .console-toolbar { display: flex; align-items: center; gap: 10px; padding: 12px 18px; border-bottom: 1px solid var(--border); background: var(--elevated); color: var(--text-2); font-size: 13px; font-weight: 600; }
 .console-toolbar strong { color: var(--text); }
 .console-badge { margin-left: auto; padding: 5px 10px; border: 1px solid var(--border); border-radius: 100px; background: var(--panel); color: var(--text-2); font-size: 11px; font-weight: 600; white-space: nowrap; }
@@ -941,7 +956,7 @@ select.select-field option { background: var(--input); }
 .tabs-section { padding: 110px 24px 40px; }
 .tabs-nav { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 28px; }
 .tabs-nav button { padding: 10px 18px; border: 1px solid var(--border); border-radius: 100px; background: var(--panel); color: var(--text-2); font-size: 13px; font-weight: 600; }
-.tabs-nav button.active { border-color: transparent; background: var(--sunset-btn); color: var(--btn-text); }
+.tabs-nav button.active { border-color: transparent; background: var(--aurora-btn); color: var(--btn-text); }
 .tab-panel { padding: 32px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); }
 .tab-panel > * { animation: tabIn 0.35s ease; }
 @keyframes tabIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
@@ -959,7 +974,7 @@ select.select-field option { background: var(--input); }
 .closing-cta { padding: 40px 24px 120px; }
 .closing-card { padding: 64px 32px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); text-align: center; }
 .closing-card h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; margin-bottom: 12px; }
-.closing-card h2 em { font-family: "Space Grotesk", "Inter", sans-serif; font-style: normal; font-weight: 700; background: var(--sunset); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.closing-card h2 em { font-family: "Plus Jakarta Sans", "Manrope", sans-serif; font-style: normal; font-weight: 700; background: var(--aurora); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
 .closing-card p { max-width: 480px; margin: 0 auto 28px; color: var(--text-2); font-size: 17px; line-height: 1.55; }
 
 /* ---------- collapsible sidebar ---------- */
