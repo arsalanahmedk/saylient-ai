@@ -86,7 +86,8 @@ const PIPELINE_STAGES = [
 /* The Saylient mark: a geometric "S" (two cubic bowls on a 24-unit grid)
    followed by three vertical bars of decreasing height (7, 4, 2) — the
    voice fading into silence. One flat colour (currentColor, so it follows
-   the palette: black on a white tile, black everywhere else).
+   the palette: warm orange on the dark tile, warm orange everywhere else;
+   the standalone SVG files carry the full sunset gradient).
    The S is deliberately unclosed: the message pauses before it is sent. */
 const LOGO_S_PATH = "M17.5 7C17.5 4.2 15 2.5 12 2.5C9 2.5 6.5 4.2 6.5 7C6.5 9.8 9 11.5 12 11.5C15 11.5 17.5 13.2 17.5 16C17.5 18.8 15 20.5 12 20.5C9 20.5 6.5 18.8 6.5 16";
 const LOGO_WAVE_PATH = "M20.5 8.5V15.5M23 10V14M25.5 11V13";
@@ -264,13 +265,14 @@ function BeamDiagram() {
    analysis chips and a draft from the rule-based engine (precomputed
    demo, labelled), and recent-analysis rows from the same demo presets. */
 function HowItWorks({ go }) {
+  const reduce = useReducedMotion();
   const demo = DEMO_PRESETS[2];
   return <section id="how" className="how-section shell">
     <div className="center-heading"><div className="eyebrow">How it works</div><h2>From thought <em>to send.</em></h2><p>Communication theory, turned into practical help you can use in seconds.</p></div>
     <div className="how-bento">
-      <article className="how-card"><span className="how-num">01</span><h3>Analyze the message</h3><p>Paste a message and see intent, tone and face concerns — before you reply.</p><div className="how-visual"><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><span className="how-note">Precomputed demo · prototype-0.1</span></div></article>
-      <article className="how-card"><span className="how-num">02</span><h3>Get a draft reply</h3><p>An editable draft in your words, with tone options — formal, casual or short.</p><div className="how-visual"><p className="hero-draft">{demo.result.draft}</p><span className="how-note">Precomputed demo · prototype-0.1</span></div></article>
-      <article className="how-card"><span className="how-num">03</span><h3>Use it anywhere</h3><p>The extension brings the same analysis into the places you already write — and every analysis is saved to your history.</p><div className="how-visual">{DEMO_PRESETS.map(p => <div className="how-row" key={p.label}><div className="conversation-icon"><MessageSquare size={16} /></div><div className="conversation-name"><strong>{prettyLabel(p.result.intent.label)}</strong><span>{p.message}</span></div><span className="score-pill"><span /> {Math.round(p.result.intent.confidence * 100)}%</span></div>)}<span className="how-note">Your recent analyses, as they appear in the workspace.</span></div></article>
+      <motion.article className="how-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, delay: 0, ease: "easeOut" }}><span className="how-num">01</span><h3>Analyze the message</h3><p>Paste a message and see intent, tone and face concerns — before you reply.</p><div className="how-visual"><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><span className="how-note">Precomputed demo · prototype-0.1</span></div></motion.article>
+      <motion.article className="how-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}><span className="how-num">02</span><h3>Get a draft reply</h3><p>An editable draft in your words, with tone options — formal, casual or short.</p><div className="how-visual"><p className="hero-draft">{demo.result.draft}</p><span className="how-note">Precomputed demo · prototype-0.1</span></div></motion.article>
+      <motion.article className="how-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, delay: 0.2, ease: "easeOut" }}><span className="how-num">03</span><h3>Use it anywhere</h3><p>The extension brings the same analysis into the places you already write — and every analysis is saved to your history.</p><div className="how-visual">{DEMO_PRESETS.map(p => <div className="how-row" key={p.label}><div className="conversation-icon"><MessageSquare size={16} /></div><div className="conversation-name"><strong>{prettyLabel(p.result.intent.label)}</strong><span>{p.message}</span></div><span className="score-pill"><span /> {Math.round(p.result.intent.confidence * 100)}%</span></div>)}<span className="how-note">Your recent analyses, as they appear in the workspace.</span></div></motion.article>
     </div>
     <div className="center-heading" style={{ marginTop: 32 }}><Button onClick={() => go("assistant")} icon={WandSparkles}>Try the assistant</Button></div>
   </section>;
@@ -304,17 +306,20 @@ function ActivityTab({ go, user }) {
 }
 
 function FeatureTabs({ go, user }) {
+  const reduce = useReducedMotion();
   const [tab, setTab] = useState(0);
   const demo = DEMO_PRESETS[2];
   return <section id="features" className="tabs-section shell">
     <div className="center-heading"><div className="eyebrow">The communication studio</div><h2>One calm layer between<br /><em>thinking and sending.</em></h2><p>From a quick follow-up to a difficult boundary, get context-aware guidance before you hit send.</p></div>
     <div className="tabs-nav" role="tablist">{FEATURE_TABS.map((label, i) => <button key={label} role="tab" aria-selected={tab === i} className={tab === i ? "active" : ""} onClick={() => setTab(i)}>{label}</button>)}</div>
     <div className="tab-panel">
+      <motion.div key={tab} initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: "easeOut" }}>
       {tab === 0 && <div className="tab-grid"><div><h3>See what a message really asks for.</h3><p>The engine reads intent, tone and social dynamics without guessing what anyone feels — and tells you how sure it is.</p><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><span className="how-note">Precomputed demo · prototype-0.1</span><div style={{ marginTop: 18 }}><Button onClick={() => go("assistant")} icon={WandSparkles}>Open the analyzer</Button></div></div><div className="tab-frame"><ScoreRing value={0.87} /><span className="how-note">Intent confidence · boundary preset · precomputed demo</span></div></div>}
       {tab === 1 && <div><h3>Three ways to say the same thing.</h3><p>Tap an underlined phrase, pick a tone — the drafts are real engine output.</p><div style={{ marginTop: 18 }}><PhraseRewriteDemo go={go} user={user} /></div></div>}
       {tab === 2 && <div className="tab-grid"><div><h3>Wherever you write.</h3><p>The extension brings live analysis into the conversations you already have — Gmail, Slack, WhatsApp, Upwork. Nothing is monitored or sent on its own.</p><div className="extension-actions" style={{ marginTop: 18 }}><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a><Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button></div></div><BeamDiagram /></div>}
       {tab === 3 && <div className="tab-grid"><div><h3>Practice in a safe conversation.</h3><p>A local demo chat where you can try a draft before it matters — nothing leaves the page.</p><div style={{ marginTop: 18 }}><Button onClick={() => go("demo-chat")} icon={Globe2}>Open the demo chat</Button></div></div><div className="tab-frame tab-chat"><div className="demo-message"><span className="demo-author">Alex</span><p>Hi! I wanted to check whether the homepage concepts will be ready today.</p></div><div className="demo-message freelancer"><span className="demo-author">You</span><p>Hi Alex, I am putting the final details together now.</p></div><span className="how-note">From the local demo chat — no account needed.</span></div></div>}
       {tab === 4 && <div><h3>Your work, in order.</h3><p>Every analysis is saved to your account — search it, reopen it, delete it.</p><div style={{ marginTop: 18 }}><ActivityTab go={go} user={user} /></div></div>}
+      </motion.div>
     </div>
   </section>;
 }
@@ -351,11 +356,12 @@ function DashboardPreview({ go }) {
    No prices are invented — Pro is coming soon, so its card says so and
    points at Contact instead of a checkout. */
 function PricingSection({ go }) {
+  const reduce = useReducedMotion();
   return <section id="pricing" className="pricing-section shell">
     <div className="center-heading"><div className="eyebrow">Simple, honest pricing</div><h2>Start free.<br /><em>Grow when you're ready.</em></h2><p>No card, no surprise charges. The extension is free — Pro unlocks more when you need it.</p></div>
     <div className="pricing-grid">
-      <article className="pricing-card"><h3>Free</h3><p className="pricing-tag">For trying it out</p><ul><li><Check size={14} /> Browser extension</li><li><Check size={14} /> Real backend analyses</li><li><Check size={14} /> All five politeness strategies</li><li><Check size={14} /> Saved drafts and history</li></ul><Button onClick={() => go("register")}>Create a free account</Button></article>
-      <article className="pricing-card pro"><span className="pricing-soon">Coming soon</span><h3>Pro</h3><p className="pricing-tag">For freelancers who write all day</p><ul><li><Check size={14} /> Unlimited analyses</li><li><Check size={14} /> Priority analysis</li><li><Check size={14} /> Everything in Free</li></ul><Button variant="outline" onClick={() => go("contact")}>Talk to us about Pro</Button></article>
+      <motion.article className="pricing-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, ease: "easeOut" }}><h3>Free</h3><p className="pricing-tag">For trying it out</p><ul><li><Check size={14} /> Browser extension</li><li><Check size={14} /> Real backend analyses</li><li><Check size={14} /> All five politeness strategies</li><li><Check size={14} /> Saved drafts and history</li></ul><Button onClick={() => go("register")}>Create a free account</Button></motion.article>
+      <motion.article className="pricing-card pro" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, delay: 0.12, ease: "easeOut" }}><span className="pricing-soon">Coming soon</span><h3>Pro</h3><p className="pricing-tag">For freelancers who write all day</p><ul><li><Check size={14} /> Unlimited analyses</li><li><Check size={14} /> Priority analysis</li><li><Check size={14} /> Everything in Free</li></ul><Button variant="outline" onClick={() => go("contact")}>Talk to us about Pro</Button></motion.article>
     </div>
     <div className="teams-strip"><span>Teams</span><p>Shared templates and a team workspace — coming later.</p><button className="link-button" onClick={() => go("contact")}>Tell me when it's ready <ArrowRight size={13} /></button></div>
   </section>;
@@ -396,7 +402,7 @@ function HalftoneFooter({ go }) {
           if (alpha < 0.08) continue;
           const distance = Math.hypot(x - pointer.x, y - pointer.y);
           const lift = Math.max(0, 1 - distance / 95) * alpha;
-          context.fillStyle = `rgb(${Math.round(10 + lift * 105)},${Math.round(10 + lift * 105)},${Math.round(10 + lift * 105)})`;
+          context.fillStyle = `rgb(${Math.round(38 + lift * 213)},${Math.round(30 + lift * 138)},${Math.round(22 + lift * 60)})`;
           context.beginPath();
           context.arc(x, y, Math.sqrt(alpha) * gap * 0.58, 0, Math.PI * 2);
           context.fill();
@@ -556,6 +562,12 @@ function PublicNav({ go, user }) {
 }
 
 function Landing({ go, user }) {
+  const reduce = useReducedMotion();
+  const fadeUp = (delay) => ({
+    initial: reduce ? false : { opacity: 0, y: 26 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.65, delay, ease: "easeOut" },
+  });
   const strategies = [
     ["Bald on Record", "Direct and clear. Best when the message is urgent, the relationship is close, or the imposition is low."],
     ["Positive Politeness", "Shows appreciation and shared ground. Best when you want the other person to feel valued and included."],
@@ -568,17 +580,17 @@ function Landing({ go, user }) {
     <main>
       <section className="hero shell">
         <div className="hero-dots" aria-hidden="true" />
-        <div className="hero-badge"><span className="pulse-dot" /> AI-based freelancer communication assistant</div>
-        <h1>Say it so <em>they say yes.</em></h1>
-        <p>Saylient AI reads the intent, tone and face concerns behind a message — and drafts a reply that still sounds like you.</p>
-        <div className="hero-console">
+        <motion.div className="hero-badge" {...fadeUp(0)}><span className="pulse-dot" /> AI-based freelancer communication assistant</motion.div>
+        <motion.h1 {...fadeUp(0.08)}>Say it so <em>they say yes.</em></motion.h1>
+        <motion.p {...fadeUp(0.16)}>Saylient AI reads the intent, tone and face concerns behind a message — and drafts a reply that still sounds like you.</motion.p>
+        <motion.div className="hero-console" {...fadeUp(0.26)}>
           <HeroAnalysisWindow go={go} user={user} />
           <div className="hero-tone">
             <div className="hero-tone-head"><span>Refine the tone</span><p>Tap an underlined phrase, then pick a tone — the drafts are real engine output.</p></div>
             <PhraseRewriteDemo go={go} user={user} />
           </div>
-        </div>
-        <div className="hero-note"><ShieldCheck size={14} /> Nothing is ever sent automatically. You always review before you send.</div>
+        </motion.div>
+        <motion.div className="hero-note" {...fadeUp(0.36)}><ShieldCheck size={14} /> Nothing is ever sent automatically. You always review before you send.</motion.div>
       </section>
 
       <Marquee />
@@ -592,12 +604,12 @@ function Landing({ go, user }) {
       <section id="theory" className="theory-strip shell">
         <div className="center-heading"><div className="eyebrow">Grounded in research</div><h2>The science of <em>being understood.</em></h2><p>Built on Brown and Levinson's Politeness Theory (1987) — five strategies, one reason each.</p></div>
         <div className="strategy-strip">
-          {strategies.map(([title, text], i) => <article className="strategy-chip" key={title}><span>{String(i + 1).padStart(2, "0")}</span><strong>{title}</strong><p>{text}</p></article>)}
+          {strategies.map(([title, text], i) => <motion.article className="strategy-chip" key={title} initial={reduce ? false : { opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.5, delay: i * 0.07, ease: "easeOut" }}><span>{String(i + 1).padStart(2, "0")}</span><strong>{title}</strong><p>{text}</p></motion.article>)}
         </div>
         <div className="center-heading" style={{ marginTop: 28 }}><Button variant="outline" onClick={() => go("theory")}>Explore politeness theory <ArrowRight size={15} /></Button></div>
       </section>
 
-      <section id="extension" className="extension-cta shell">
+      <motion.section id="extension" className="extension-cta shell" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.6, ease: "easeOut" }}>
         <div className="extension-head">
           <div className="browser-icon"><Globe2 size={26} /></div>
           <div><div className="eyebrow">In your browser</div><h2>Good communication,<br /><em>wherever work happens.</em></h2></div>
@@ -612,17 +624,17 @@ function Landing({ go, user }) {
             <ol className="download-steps"><li>Download and unzip the file.</li><li>Open <code>chrome://extensions</code> and turn on Developer mode.</li><li>Choose <strong>Load unpacked</strong> and select the unzipped folder.</li></ol>
           </div>
         </div>
-      </section>
+      </motion.section>
 
       <PricingSection go={go} />
 
       <section className="closing-cta shell">
-        <div className="closing-card">
+        <motion.div className="closing-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.6, ease: "easeOut" }}>
           <div className="eyebrow">Ready when you are</div>
           <h2>Your next message <em>starts here.</em></h2>
           <p>One analysis is all it takes to stop second-guessing the send button.</p>
           <Button onClick={() => go("assistant")} icon={WandSparkles}>Open the assistant</Button>
-        </div>
+        </motion.div>
       </section>
     </main>
     <HalftoneFooter go={go} />
