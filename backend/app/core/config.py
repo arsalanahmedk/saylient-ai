@@ -37,6 +37,18 @@ class Settings:
     smtp_password: str = ""
     smtp_from: str = "Saylient AI <noreply@saylient.ai>"
     smtp_use_tls: bool = True
+    # Google sign-in (OAuth 2.0 / OpenID Connect). All empty = Google
+    # sign-in is disabled and /auth/providers lists no providers. The
+    # client ID + secret come from Google Cloud Console (an OAuth client
+    # for a Web application); the redirect URI must match exactly what is
+    # registered there. Secrets live in the deployment environment only.
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = ""
+    # Failed-login lockout: this many failed sign-ins for one account
+    # inside the window locks it for the same window (see services/auth.py).
+    login_lockout_attempts: int = 5
+    login_lockout_window_minutes: int = 15
     ai_provider: str = ""
     ai_api_key: str = ""
     ai_model: str = ""
@@ -49,6 +61,16 @@ class Settings:
 
     def validate(self) -> None:
         """Fail fast on unsafe configuration unless this is local development."""
+        google_set = [
+            bool(self.google_client_id),
+            bool(self.google_client_secret),
+            bool(self.google_redirect_uri),
+        ]
+        if any(google_set) and not all(google_set):
+            raise ValueError(
+                "GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET and "
+                "GOOGLE_REDIRECT_URI must all be set together."
+            )
         if self.app_env != "development":
             if not self.app_secret_key:
                 raise RuntimeError(
@@ -124,6 +146,15 @@ def get_settings() -> Settings:
         ).strip()
         or "Saylient AI <noreply@saylient.ai>",
         smtp_use_tls=_bool_env("SMTP_USE_TLS", True),
+        google_client_id=os.environ.get("GOOGLE_CLIENT_ID", "").strip(),
+        google_client_secret=os.environ.get("GOOGLE_CLIENT_SECRET", "").strip(),
+        google_redirect_uri=os.environ.get("GOOGLE_REDIRECT_URI", "").strip(),
+        login_lockout_attempts=int(
+            os.environ.get("LOGIN_LOCKOUT_ATTEMPTS", "5") or 5
+        ),
+        login_lockout_window_minutes=int(
+            os.environ.get("LOGIN_LOCKOUT_WINDOW_MINUTES", "15") or 15
+        ),
         ai_provider=os.environ.get("AI_PROVIDER", "").strip(),
         ai_api_key=os.environ.get("AI_API_KEY", "").strip(),
         ai_model=os.environ.get("AI_MODEL", "").strip(),

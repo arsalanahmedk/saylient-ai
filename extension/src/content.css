@@ -214,3 +214,9 @@
 #saylient-ai-panel .sai-pw-rules li::before { content: "○ "; color: var(--sai-text-4); }
 #saylient-ai-panel .sai-pw-rules li.ok { color: var(--sai-text); }
 #saylient-ai-panel .sai-pw-rules li.ok::before { content: "✓ "; color: #10b981; }
+
+/* Continue with Google in the panel (opens the website login). */
+#saylient-ai-panel .sai-divider { display: flex; align-items: center; gap: 10px; margin: 16px 0 10px; color: var(--sai-text-3); font-size: 11px; }
+#saylient-ai-panel .sai-divider::before, #saylient-ai-panel .sai-divider::after { content: ""; flex: 1; height: 1px; background: var(--sai-border); }
+#saylient-ai-panel .sai-google-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 10px 12px; border: 1px solid var(--sai-border-strong); border-radius: 10px; background: var(--sai-white); color: var(--sai-text); font-size: 13px; font-weight: 600; font-family: inherit; cursor: pointer; }
+#saylient-ai-panel .sai-google-btn:hover { background: var(--sai-card); }

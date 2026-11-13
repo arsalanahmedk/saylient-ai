@@ -44,14 +44,35 @@ production.
 | `SESSION_COOKIE_SAMESITE` | `lax` | `lax` / `strict` / `none` — the deployed frontend (Vercel) calls this API (Render) cross-site, so production needs `none` + `SESSION_COOKIE_SECURE=true` (browsers reject SameSite=None without Secure) |
 | `APP_ORIGIN` | `http://127.0.0.1:5173` | Public origin of the web app; used to build password-reset links |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USERNAME` / `SMTP_PASSWORD` / `SMTP_FROM` / `SMTP_USE_TLS` | empty / `587` / empty / empty / `Saylient AI <noreply@saylient.ai>` / `true` | Password-reset email (SMTP). All optional — without `SMTP_HOST` no email is sent; in production forgot-password then answers honestly that reset by email is not set up (it never claims a link was sent). Set in the deployment environment (Render env vars), never commit credentials |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` | empty | Google sign-in (OAuth 2.0). All three must be set together or all empty — a partial set fails startup. All empty = Google sign-in disabled: `GET /auth/providers` returns no providers, the web app hides the Google button, and `GET /auth/google/login` answers 503. The client comes from Google Cloud Console (APIs & Services → Credentials → Create Credentials → OAuth client ID → Web application); the redirect URI registered there must match `GOOGLE_REDIRECT_URI` exactly — for this deployment: `https://saylient-ai-backend.onrender.com/api/v1/auth/google/callback`. Set in the deployment environment (Render env vars), never commit credentials |
+| `LOGIN_LOCKOUT_ATTEMPTS` / `LOGIN_LOCKOUT_WINDOW_MINUTES` | `5` / `15` | Failed-login lockout: this many failed sign-ins for one account inside the window locks it for the same window. The window slides on its own. |
 | `AI_PROVIDER` / `AI_API_KEY` / `AI_MODEL` | empty | Reserved for a future LLM provider adapter; the current engine makes **no** external calls |
+
+## Google sign-in (OAuth 2.0)
+
+`GET /auth/providers` lists configured providers. `GET /auth/google/login`
+redirects to Google with a random `state` (double-submit via a short-lived
+HttpOnly cookie); `GET /auth/google/callback` exchanges the code, fetches
+the profile from Google, and only accepts it when `email_verified` is true.
+The Google account links to the Saylient account with the same verified
+email (or a new account is created with no password); the Google `sub` is
+stored (`users.google_sub`, added by a startup migration — see `app/db.py`)
+so the link is pinned to that Google account. Success sets the same
+HttpOnly session cookie as password login and redirects to the workspace;
+any failure redirects to the sign-in page with no detail. Google-only
+accounts can set a password in Profile (no current password to check) so
+they can also sign in with email — including in the browser extension,
+which uses email sign-in (its Google button opens the website login).
 
 ## Endpoints (base `/api/v1`, JSON only) — 24 under `/api/v1`, plus `/health` = 25 routes
 
 **Auth** — `POST /auth/register` (201), `POST /auth/login`,
 `POST /auth/logout`, `POST /auth/forgot-password`, `POST /auth/reset-password`,
 `GET /auth/me`, `PATCH /auth/me` (display name; password change with the
-current password, revokes every other session). Sessions are opaque tokens
+current password, revokes every other session), `GET /auth/providers`,
+`GET /auth/google/login` and `GET /auth/google/callback` (Google sign-in,
+see above). Five failed sign-ins for one account inside 15 minutes lock
+it for 15 minutes (`LOGIN_LOCKOUT_*`). Sessions are opaque tokens
 (only the SHA-256 hash is stored) issued two ways at once: an HttpOnly
 session cookie (`saylient_session`) for the web app and the `token` field
 in the JSON body for Bearer clients (the browser extension, which cannot

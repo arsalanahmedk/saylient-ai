@@ -9,7 +9,7 @@ import {
   UserRound, WandSparkles, X, Zap
 } from "lucide-react";
 import "./styles.css";
-import { api, friendlyError, prettyLabel, GOAL_VALUES, GOAL_LABELS, TONE_OPTIONS, DIRECTNESS_OPTIONS, CONFIDENCE_NOTE } from "./api";
+import { api, friendlyError, googleLoginUrl, prettyLabel, GOAL_VALUES, GOAL_LABELS, TONE_OPTIONS, DIRECTNESS_OPTIONS, CONFIDENCE_NOTE } from "./api";
 
 function initials(name) {
   const parts = String(name || "?").trim().split(/\s+/);
@@ -1159,22 +1159,30 @@ function ProfilePage({ user, go, onSignOut, onUserChanged }) {
     e.preventDefault();
     setBusy(true); setPwNote(""); setPwError("");
     try {
-      await api.patchMe({ current_password: currentPassword, new_password: newPassword });
-      setPwNote("Password changed. Your other signed-in sessions were signed out.");
+      // Google-only accounts have no current password to check — the live
+      // session itself is the proof, and setting one is what lets them
+      // sign in with email (including in the browser extension).
+      if (user.has_password === false) {
+        await api.patchMe({ new_password: newPassword });
+        setPwNote("Password set. You can now sign in with email too.");
+      } else {
+        await api.patchMe({ current_password: currentPassword, new_password: newPassword });
+        setPwNote("Password changed. Your other signed-in sessions were signed out.");
+      }
       setCurrentPassword(""); setNewPassword("");
     } catch (err) { setPwError(friendlyError(err)); }
     setBusy(false);
   };
   return <><PageHeader eyebrow="Workspace" title="Profile" text="Your communication workspace."><Button onClick={() => go("assistant")} icon={Plus}>New analysis</Button></PageHeader>
     <div className="history-list">
-      <section className="panel history-item"><div><div className="profile-avatar" style={{ width: 56, height: 56, fontSize: 16 }}>{initials(user.display_name || user.email)}</div><h3 style={{ marginTop: 12 }}>{user.display_name || "No display name set"}</h3><p>{user.email}</p><div className="analysis-tags"><span>Member since {new Date(user.created_at).toLocaleDateString()}</span><span>Status: {user.status}</span>{analyses !== null && <span>{analyses} {analyses === 1 ? "analysis" : "analyses"} saved</span>}</div></div><button className="secondary-action" onClick={onSignOut}><LogOut size={15} /> Sign out</button></section>
+      <section className="panel history-item"><div><div className="profile-avatar" style={{ width: 56, height: 56, fontSize: 16 }}>{initials(user.display_name || user.email)}</div><h3 style={{ marginTop: 12 }}>{user.display_name || "No display name set"}</h3><p>{user.email}</p><div className="analysis-tags"><span>Member since {new Date(user.created_at).toLocaleDateString()}</span><span>Status: {user.status}</span>{user.google_linked && <span>Signed in with Google</span>}{analyses !== null && <span>{analyses} {analyses === 1 ? "analysis" : "analyses"} saved</span>}</div></div><button className="secondary-action" onClick={onSignOut}><LogOut size={15} /> Sign out</button></section>
       <section className="panel history-item"><div><small>Profile</small><h3>Display name</h3><p>This is the name shown across your workspace.</p>{nameError && <div className="form-error">{nameError}</div>}{nameNote && <div className="form-note">{nameNote}</div>}</div>
         <form onSubmit={saveName} style={{ display: "flex", gap: 8, alignItems: "center" }}><input className="field select-field" value={name} onChange={e => setName(e.target.value)} maxLength={100} placeholder="Your display name" /><button className="secondary-action" type="submit" disabled={busy}>Save</button></form></section>
-      <section className="panel history-item"><div><small>Security</small><h3>Change password</h3><p>Changing your password signs out your other sessions.</p>{pwError && <div className="form-error">{pwError}</div>}{pwNote && <div className="form-note">{pwNote}</div>}</div>
+      <section className="panel history-item"><div><small>Security</small><h3>{user.has_password === false ? "Set a password" : "Change password"}</h3><p>{user.has_password === false ? "Your account uses Google sign-in, so it has no password yet. Set one to sign in with email — including in the browser extension." : "Changing your password signs out your other sessions."}</p>{pwError && <div className="form-error">{pwError}</div>}{pwNote && <div className="form-note">{pwNote}</div>}</div>
         <form onSubmit={changePassword} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <PasswordField value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Current password" autoComplete="current-password" inputClassName="field select-field" />
+          {user.has_password !== false && <PasswordField value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Current password" autoComplete="current-password" inputClassName="field select-field" />}
           <PasswordField value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password (8+ chars)" minLength={8} autoComplete="new-password" showMeter inputClassName="field select-field" />
-          <button className="secondary-action" type="submit" disabled={busy || !currentPassword || newPassword.length < 8}>Change password</button>
+          <button className="secondary-action" type="submit" disabled={busy || (user.has_password !== false && !currentPassword) || newPassword.length < 8}>{user.has_password === false ? "Set password" : "Change password"}</button>
         </form></section>
       <section className="panel history-item"><div><small>Privacy</small><h3>Your data, your call</h3><p>Export everything or delete the account from Settings.</p></div><button className="secondary-action" onClick={() => go("settings")}><Settings size={15} /> Open settings</button></section>
     </div></>;
@@ -1279,6 +1287,11 @@ function PasswordField({ value, onChange, placeholder, autoComplete, minLength, 
   </>;
 }
 
+/* The standard four-colour Google "G" for the Continue with Google button. */
+function GoogleMark() {
+  return <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z" /><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24z" /><path fill="#FBBC05" d="M5.27 14.29A7.2 7.2 0 0 1 4.89 12c0-.8.14-1.57.38-2.29V6.62H1.29a12 12 0 0 0 0 10.76l3.98-3.09z" /><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42A11.98 11.98 0 0 0 12 0 11.99 11.99 0 0 0 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z" /></svg>;
+}
+
 function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken }) {
   const [isLogin, setIsLogin] = useState(mode !== "register");
   const [name, setName] = useState("");
@@ -1290,6 +1303,12 @@ function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken }) {
   const [forgot, setForgot] = useState(mode === "reset");
   const [resetToken, setResetToken] = useState(initialToken || "");
   const [newPassword, setNewPassword] = useState("");
+  const [googleAvailable, setGoogleAvailable] = useState(false);
+  useEffect(() => {
+    // The button only appears when the backend has Google configured —
+    // a visitor never sees a sign-in option that cannot work.
+    api.getAuthProviders().then(r => setGoogleAvailable((r.providers || []).includes("google"))).catch(() => setGoogleAvailable(false));
+  }, []);
   const submit = async (e) => {
     e.preventDefault();
     setError(""); setMessage(""); setBusy(true);
@@ -1324,6 +1343,10 @@ function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken }) {
     <p>{notice || "Your analyses, drafts and templates live in your account — not just in this browser."}</p>
     {error && <div className="form-error">{error}</div>}
     {message && <div className="form-note">{message}</div>}
+    {googleAvailable && !forgot && <>
+      <a className="google-button" href={googleLoginUrl}><GoogleMark /> Continue with Google</a>
+      <div className="auth-divider"><span>or continue with email</span></div>
+    </>}
     <form onSubmit={submit}>
       {!isLogin && !forgot && <label>Display name<input value={name} onChange={e => setName(e.target.value)} placeholder="Arsalan Ahmed Khan" maxLength={100} /></label>}
       <label>Email<input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" /></label>

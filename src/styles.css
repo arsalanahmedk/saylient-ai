@@ -706,6 +706,12 @@ section[id] { scroll-margin-top: 120px; }
 .pw-rule { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 400; color: var(--text-2); }
 .pw-rule.ok { color: var(--text-1); }
 .pw-rule .pw-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
+
+/* Continue with Google button on the sign-in / create-account page. */
+.google-button { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; min-height: 46px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 12px; background: #ffffff; color: #0f172a; font-size: 14px; font-weight: 600; text-decoration: none; cursor: pointer; }
+.google-button:hover { background: #f8fafc; border-color: var(--border-strong, var(--border)); }
+.auth-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0 4px; color: var(--text-3); font-size: 12px; }
+.auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 .empty-result h3 { font-size: 26px; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 12px; }
 .empty-result p { max-width: 290px; color: var(--text-2); font-size: 13px; line-height: 1.7; }
 .mini-points { display: flex; gap: 14px; margin-top: 23px; color: var(--text-2); font-size: 12px; }

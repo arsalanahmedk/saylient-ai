@@ -13,7 +13,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
@@ -82,6 +82,22 @@ class UserOut(BaseModel):
     display_name: str
     status: str
     created_at: datetime
+    # Populated from the ORM row but never serialised: lets the computed
+    # fields below read them without exposing a password hash.
+    password_hash: str | None = Field(default=None, exclude=True)
+    google_sub: str | None = Field(default=None, exclude=True)
+
+    @computed_field
+    @property
+    def has_password(self) -> bool:
+        """False for accounts created with Google sign-in (no password set)."""
+        return self.password_hash is not None
+
+    @computed_field
+    @property
+    def google_linked(self) -> bool:
+        """True when a Google account is linked to this account."""
+        return self.google_sub is not None
 
 
 class AuthResponse(BaseModel):
@@ -97,11 +113,20 @@ class ForgotPasswordResponse(BaseModel):
     reset_token: str | None = None
 
 
+class ProvidersResponse(BaseModel):
+    """GET /auth/providers: which external sign-in providers are configured
+    (empty when none are — the frontend hides the buttons then)."""
+
+    providers: list[str] = []
+
+
 class ProfilePatchRequest(BaseModel):
     """PATCH /auth/me: display name and/or password change.
 
-    Changing the password requires the current password and revokes
-    every other session (see app/services/auth.py ``update_profile``).
+    Changing the password requires the current password, except for
+    accounts created with Google sign-in, which have no password yet —
+    the service enforces that per account (see services/auth.py
+    ``update_profile``), so this schema only rejects empty updates.
     """
 
     display_name: str | None = Field(default=None, min_length=1, max_length=100)
@@ -110,8 +135,6 @@ class ProfilePatchRequest(BaseModel):
 
     @model_validator(mode="after")
     def check_password_change(self) -> "ProfilePatchRequest":
-        if self.new_password is not None and not self.current_password:
-            raise ValueError("current_password is required to change the password.")
         if (
             self.current_password is not None
             and self.new_password is None

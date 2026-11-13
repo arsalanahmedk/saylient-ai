@@ -90,6 +90,29 @@ def register_user(
     return user, token
 
 
+def _recent_failed_logins(
+    db: DbSession, user_id: str, *, attempts: int, window_minutes: int
+) -> int:
+    """How many of the user's most recent failed sign-ins fall inside the
+    lockout window. Compared in Python: SQLite stores datetimes naive, so
+    SQL-side aware comparisons are unreliable (see ensure_aware)."""
+    from datetime import timedelta
+
+    cutoff = utcnow() - timedelta(minutes=window_minutes)
+    events = (
+        db.query(SecurityEvent)
+        .filter(
+            SecurityEvent.user_id == user_id,
+            SecurityEvent.event_type == "login",
+            SecurityEvent.result == "failure",
+        )
+        .order_by(SecurityEvent.created_at.desc())
+        .limit(attempts)
+        .all()
+    )
+    return sum(1 for e in events if ensure_aware(e.created_at) >= cutoff)
+
+
 def authenticate_user(
     db: DbSession,
     *,
@@ -97,8 +120,33 @@ def authenticate_user(
     password: str,
     ttl_days: int,
     request_id: str | None,
+    lockout_attempts: int = 5,
+    lockout_window_minutes: int = 15,
 ) -> tuple[User, str]:
     user = db.query(User).filter(User.email == email).first()
+    if user is not None:
+        # Brute-force lockout: too many failed sign-ins for this account
+        # inside the window blocks further attempts until it slides past.
+        # The window slides on its own; a successful sign-in does not need
+        # to clear it (the failures age out within minutes).
+        failures = _recent_failed_logins(
+            db,
+            user.id,
+            attempts=lockout_attempts,
+            window_minutes=lockout_window_minutes,
+        )
+        if failures >= lockout_attempts:
+            _record_event(
+                db,
+                user_id=user.id,
+                event_type="login_lockout",
+                result="blocked",
+                request_id=request_id,
+            )
+            db.commit()
+            raise UnauthenticatedError(
+                "Too many failed sign-in attempts. Please try again in a few minutes."
+            )
     if user is None or not verify_password(password, user.password_hash):
         _record_event(
             db,
@@ -186,17 +234,22 @@ def update_profile(
     if display_name is not None:
         user.display_name = display_name.strip()[:100]
     if new_password is not None:
-        if not current_password or not verify_password(
-            current_password, user.password_hash
+        had_password = user.password_hash is not None
+        if had_password and (
+            not current_password
+            or not verify_password(current_password, user.password_hash)
         ):
             raise UnauthenticatedError("Your current password is incorrect.")
+        # No current password to check for accounts created with Google
+        # sign-in: the live session itself is the proof, and setting a
+        # password is what lets them use the browser extension.
         user.password_hash = hash_password(new_password)
         user.reset_token_hash = None
         user.reset_token_expires_at = None
         _record_event(
             db,
             user_id=user.id,
-            event_type="password_change",
+            event_type="password_set" if not had_password else "password_change",
             result="success",
             request_id=request_id,
         )

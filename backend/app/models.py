@@ -48,6 +48,10 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
     # Nullable for external identity providers (see DATA_DICTIONARY.md).
     password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    # Google account this user signed in with (the OAuth "sub" claim).
+    # NULL for password-only accounts; unique so one Google account links
+    # to exactly one Saylient account.
+    google_sub: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     display_name: Mapped[str] = mapped_column(String(100), nullable=False, default="")
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="active")
     reset_token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)

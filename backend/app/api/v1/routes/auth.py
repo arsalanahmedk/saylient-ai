@@ -15,10 +15,12 @@ stored server-side.
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request, Response
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session as DbSession
 
 from app.api.v1.deps import SESSION_COOKIE_NAME, get_current_user, get_db
 from app.core.config import get_settings
+from app.core.errors import AppError, UnauthenticatedError
 from app.models import User
 from app.schemas import (
     AuthResponse,
@@ -27,6 +29,7 @@ from app.schemas import (
     GenericMessageResponse,
     LoginRequest,
     ProfilePatchRequest,
+    ProvidersResponse,
     RegisterRequest,
     ResetPasswordRequest,
     UserOut,
@@ -40,8 +43,25 @@ from app.services.auth import (
     update_profile,
 )
 from app.services.email import build_reset_email, get_email_provider
+from app.services.oauth import (
+    OAuthError,
+    build_authorization_url,
+    complete_google_login,
+    fetch_google_profile,
+    google_enabled,
+    new_state,
+    verify_state,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+_OAUTH_STATE_COOKIE = "saylient_oauth_state"
+
+
+class _NotConfiguredError(AppError):
+    status_code = 503
+    code = "NOT_CONFIGURED"
+    message = "Google sign-in is not set up on this deployment yet."
 
 _FORGOT_MESSAGE = (
     "If an account exists for that email, a password reset link has been sent."
@@ -117,9 +137,91 @@ def login(
         password=payload.password,
         ttl_days=settings.session_ttl_days,
         request_id=_request_id(request),
+        lockout_attempts=settings.login_lockout_attempts,
+        lockout_window_minutes=settings.login_lockout_window_minutes,
     )
     _set_session_cookie(response, token, settings.session_ttl_days)
     return AuthResponse(token=token, user=UserOut.model_validate(user))
+
+
+@router.get("/providers", response_model=ProvidersResponse)
+def providers() -> ProvidersResponse:
+    """Which external sign-in providers are configured. The web app hides
+    the Google button when the list is empty, so a visitor never sees a
+    sign-in option that cannot work."""
+    settings = get_settings()
+    return ProvidersResponse(providers=["google"] if google_enabled(settings) else [])
+
+
+@router.get("/google/login")
+def google_login():
+    """Start Google sign-in: redirect to accounts.google.com.
+
+    A random ``state`` is stored in a short-lived HttpOnly cookie so the
+    callback can verify the redirect came from this login start. The
+    cookie is SameSite=lax: the Google redirect back is a top-level
+    navigation, which carries lax cookies.
+    """
+    settings = get_settings()
+    if not google_enabled(settings):
+        raise _NotConfiguredError()
+    state = new_state()
+    redirect = RedirectResponse(
+        url=build_authorization_url(settings, state), status_code=302
+    )
+    redirect.set_cookie(
+        key=_OAUTH_STATE_COOKIE,
+        value=state,
+        httponly=True,
+        secure=settings.session_cookie_secure,
+        samesite="lax",
+        path="/api/v1/auth/google",
+        max_age=600,
+    )
+    return redirect
+
+
+@router.get("/google/callback")
+def google_callback(request: Request, db: DbSession = Depends(get_db)):
+    """Google redirects here with ?code=...&state=... .
+
+    Any failure (disabled provider, bad state, denied consent, Google
+    error, already-linked account) redirects to the sign-in page with no
+    detail — the reason is logged server-side, never shown to the
+    visitor. Success sets the same HttpOnly session cookie as password
+    login and lands the user in the workspace.
+    """
+    settings = get_settings()
+    login_url = f"{settings.app_origin}/#login"
+    overview_url = f"{settings.app_origin}/#overview"
+
+    def _fail():
+        failed = RedirectResponse(url=login_url, status_code=302)
+        failed.delete_cookie(key=_OAUTH_STATE_COOKIE, path="/api/v1/auth/google")
+        return failed
+
+    if not google_enabled(settings):
+        return _fail()
+    code = request.query_params.get("code")
+    if not code or not verify_state(
+        request.query_params.get("state"),
+        request.cookies.get(_OAUTH_STATE_COOKIE),
+    ):
+        return _fail()
+    try:
+        profile = fetch_google_profile(code, settings)
+        _, token = complete_google_login(
+            db,
+            profile=profile,
+            ttl_days=settings.session_ttl_days,
+            request_id=_request_id(request),
+        )
+    except (OAuthError, UnauthenticatedError):
+        return _fail()
+    redirect = RedirectResponse(url=overview_url, status_code=302)
+    redirect.delete_cookie(key=_OAUTH_STATE_COOKIE, path="/api/v1/auth/google")
+    _set_session_cookie(redirect, token, settings.session_ttl_days)
+    return redirect
 
 
 @router.post("/logout", response_model=GenericMessageResponse)

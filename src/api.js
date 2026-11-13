@@ -96,7 +96,12 @@ export function prettyLabel(value) {
 /** Confidence is uncalibrated keyword-match strength — label it honestly wherever numbers are shown. */
 export const CONFIDENCE_NOTE = "keyword-match strength (uncalibrated)";
 
+/** Full-page navigation to the backend's Google sign-in start (OAuth
+    redirect flow — not a fetch, the browser must follow the redirects). */
+export const googleLoginUrl = `${API_BASE}/auth/google/login`;
+
 export const api = {
+  getAuthProviders: () => request("/auth/providers"),
   register: (email, password, display_name) => request("/auth/register", { method: "POST", body: { email, password, display_name } }),
   login: (email, password) => request("/auth/login", { method: "POST", body: { email, password } }),
   logout: () => request("/auth/logout", { method: "POST", body: {} }),

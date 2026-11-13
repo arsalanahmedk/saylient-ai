@@ -298,7 +298,20 @@
       signinForm.hidden = false;
       registerToggle.hidden = false;
     });
-    auth.append(signinForm, registerToggle, registerForm, backToggle);
+    /* Google sign-in needs a full-page OAuth redirect, so it happens on
+       the website: this opens the site login in a new tab. A Google-only
+       account has no password, so the panel's email sign-in needs a
+       password set in Profile first — the note says so. */
+    const googleDivider = el("div", "sai-divider", "or");
+    const googleButton = document.createElement("button");
+    googleButton.type = "button";
+    googleButton.className = "sai-google-btn";
+    googleButton.innerHTML = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\"><path fill=\"#4285F4\" d=\"M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z\"/><path fill=\"#34A853\" d=\"M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24z\"/><path fill=\"#FBBC05\" d=\"M5.27 14.29A7.2 7.2 0 0 1 4.89 12c0-.8.14-1.57.38-2.29V6.62H1.29a12 12 0 0 0 0 10.76l3.98-3.09z\"/><path fill=\"#EA4335\" d=\"M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42A11.98 11.98 0 0 0 12 0 11.99 11.99 0 0 0 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z\"/></svg> Continue with Google";
+    googleButton.addEventListener("click", () => {
+      window.open(`${SAYLIENT_APP_ORIGIN}/#login`, "_blank", "noopener");
+    });
+    const googleNote = el("p", "sai-note", "Google sign-in opens the website. If your account uses Google only, set a password in Profile first, then sign in here with email.");
+    auth.append(signinForm, registerToggle, registerForm, backToggle, googleDivider, googleButton, googleNote);
     root.append(auth);
 
     // Signed-in account row.

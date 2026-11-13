@@ -48,3 +48,28 @@ def init_db(engine: Engine) -> None:
     import app.models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
+    _migrate_add_google_sub(engine)
+
+
+def _migrate_add_google_sub(engine: Engine) -> None:
+    """Lightweight additive migration for the ``google_sub`` column.
+
+    ``create_all`` never alters existing tables, so a column added to the
+    model needs an explicit ALTER on databases created before it existed.
+    Idempotent and safe to run at every startup; a no-op on fresh
+    databases (where ``create_all`` already made the column).
+    """
+    from sqlalchemy import inspect, text
+
+    inspector = inspect(engine)
+    columns = {c["name"] for c in inspector.get_columns("users")}
+    if "google_sub" in columns:
+        return
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE users ADD COLUMN google_sub VARCHAR(255)"))
+        conn.execute(
+            text(
+                "CREATE UNIQUE INDEX IF NOT EXISTS ix_users_google_sub "
+                "ON users (google_sub)"
+            )
+        )
