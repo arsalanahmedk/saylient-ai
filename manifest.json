@@ -2,15 +2,17 @@
   "manifest_version": 3,
   "name": "Saylient AI — Communication Assistant",
   "version": "0.1.0",
-  "description": "Analyze a message from the Saylient AI demo workspace and get a clearer draft — only when you click Analyze.",
+  "description": "Click the icon to open Saylient AI, or analyze the text on any page with real backend analysis — only when you click Analyze. Nothing is monitored or sent automatically.",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "contextMenus",
+    "scripting"
   ],
   "host_permissions": [
+    "https://*/*",
     "http://localhost/*",
     "http://127.0.0.1/*",
-    "https://saylient-ai.vercel.app/*",
     "https://saylient-ai-backend.onrender.com/*"
   ],
   "web_accessible_resources": [
@@ -19,15 +21,14 @@
         "content.css"
       ],
       "matches": [
+        "https://*/*",
         "http://localhost/*",
-        "http://127.0.0.1/*",
-        "https://saylient-ai.vercel.app/*"
+        "http://127.0.0.1/*"
       ]
     }
   ],
   "action": {
-    "default_title": "Open Saylient AI",
-    "default_popup": "popup.html"
+    "default_title": "Open Saylient AI"
   },
   "background": {
     "service_worker": "background.js"
@@ -35,9 +36,9 @@
   "content_scripts": [
     {
       "matches": [
+        "https://*/*",
         "http://localhost/*",
-        "http://127.0.0.1/*",
-        "https://saylient-ai.vercel.app/*"
+        "http://127.0.0.1/*"
       ],
       "js": [
         "config.js",

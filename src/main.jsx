@@ -257,7 +257,7 @@ function HalftoneFooter() {
           if (alpha < 0.08) continue;
           const distance = Math.hypot(x - pointer.x, y - pointer.y);
           const warmth = Math.max(0, 1 - distance / 95) * alpha;
-          context.fillStyle = `rgb(${Math.round(139 + warmth * 116)},${Math.round(92 + warmth * 163)},${Math.round(246 + warmth * 9)})`;
+          context.fillStyle = `rgb(${Math.round(110 - warmth * 94)},${Math.round(231 - warmth * 46)},${Math.round(183 - warmth * 54)})`;
           context.beginPath();
           context.arc(x, y, Math.sqrt(alpha) * gap * 0.58, 0, Math.PI * 2);
           context.fill();
@@ -442,7 +442,13 @@ function Landing({ go, user }) {
       <section id="extension" className="extension-cta shell">
         <div className="browser-icon"><Globe2 size={26} /></div>
         <div><div className="eyebrow">In your browser</div><h2>Good communication,<br /><em>wherever work happens.</em></h2></div>
-        <div className="extension-copy"><p>Bring Saylient AI into the conversations you already have. Sign in once in the popup, pick a message, and get a live analysis — nothing is monitored or sent on its own.</p><Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button></div>
+        <div className="extension-copy"><p>Click the ✦ button on any page, sign in once, and get a live analysis of the text on your screen — intent, strategy, and a draft you can insert. Nothing is monitored or sent on its own.</p>
+          <div className="extension-actions">
+            <a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a>
+            <Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button>
+          </div>
+          <ol className="download-steps"><li>Download and unzip the file.</li><li>Open <code>chrome://extensions</code> and turn on Developer mode.</li><li>Choose <strong>Load unpacked</strong> and select the unzipped folder.</li></ol>
+        </div>
       </section>
 
       <section className="final-cta"><div className="shell center-heading"><div className="eyebrow">Your next message starts here</div><h2>Say it better.<br /><em>Feel the difference.</em></h2><Button onClick={() => go("assistant")} icon={Sparkles}>Try Saylient AI free <ArrowRight size={15} /></Button></div></section>
@@ -490,7 +496,7 @@ function Dashboard({ go, user, onOpen }) {
     {error && <div className="form-error panel">{error}</div>}
     {loading ? <div className="panel placeholder-page"><div className="placeholder-icon"><Sparkles size={25} /></div><h2>Loading your overview…</h2></div> : <>
       <div className="stats-grid">
-        <Stat title="Messages analyzed" value={stats?.total ?? 0} change={`${stats?.this_week ?? 0} this week`} icon={MessageSquare} color="purple" />
+        <Stat title="Messages analyzed" value={stats?.total ?? 0} change={`${stats?.this_week ?? 0} this week`} icon={MessageSquare} color="accent" />
         <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="green" />
         <Stat title="Flagged face concerns" value={stats?.fta_count ?? 0} change={stats?.total ? `${Math.round((stats.fta_count / stats.total) * 100)}% of messages` : "No analyses yet"} icon={Clock3} color="orange" />
         <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="cyan" />
@@ -498,8 +504,8 @@ function Dashboard({ go, user, onOpen }) {
       <div className="dashboard-grid">
         <section className="panel activity-panel"><div className="panel-heading"><div><h3>Communication activity</h3><p>Your analyses over the last 30 days</p></div></div>
           <div className="fake-chart"><div className="chart-y">{yTicks.map(t => <span key={t}>{t}</span>)}</div><div className="chart-area"><div className="grid-lines"><i /><i /><i /><i /><i /></div>
-            <svg viewBox="0 0 600 170" preserveAspectRatio="none"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stopColor="#8b5cf6" stopOpacity=".3" /><stop offset="1" stopColor="#8b5cf6" stopOpacity="0" /></linearGradient></defs>
-              {(stats?.total || 0) > 0 ? <><path d={area} fill="url(#chartFill)" /><path d={line} fill="none" stroke="#a78bfa" strokeWidth="3" /></> : <text x="300" y="85" textAnchor="middle" fill="#94a3b8" fontSize="13">No analyses yet — try the assistant.</text>}
+            <svg viewBox="0 0 600 170" preserveAspectRatio="none"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style={{ stopColor: "var(--accent)" }} stopOpacity=".3" /><stop offset="1" style={{ stopColor: "var(--accent)" }} stopOpacity="0" /></linearGradient></defs>
+              {(stats?.total || 0) > 0 ? <><path d={area} fill="url(#chartFill)" /><path d={line} fill="none" style={{ stroke: "var(--accent)" }} strokeWidth="3" /></> : <text x="300" y="85" textAnchor="middle" style={{ fill: "var(--text-2)" }} fontSize="13">No analyses yet — try the assistant.</text>}
             </svg><div className="chart-x"><span>30 days ago</span><span>24 days</span><span>18 days</span><span>12 days</span><span>Today</span></div></div></div>
         </section>
         <section className="panel insights-panel"><div className="panel-heading"><div><h3>Recent AI insights</h3><p>From your actual analyses</p></div></div>
@@ -646,7 +652,7 @@ function Assistant({ go, openAnalysis, clearOpen }) {
 
   return <><PageHeader eyebrow="Message assistant" title="Find the right words." text="Add a little context, and we'll help you say what you mean."><span className="demo-badge"><span /> Live analysis · real backend</span></PageHeader>
     <div className="assistant-layout">
-      <section className="panel assistant-form"><div className="assistant-title"><div className="panel-icon purple"><MessageSquare size={17} /></div><div><h3>Your message</h3><p>Context is user supplied; predictions are labelled.</p></div></div>
+      <section className="panel assistant-form"><div className="assistant-title"><div className="panel-icon accent"><MessageSquare size={17} /></div><div><h3>Your message</h3><p>Context is user supplied; predictions are labelled.</p></div></div>
         {error && <div className="form-error">{error}</div>}
         <div className="context-editor">
           <label>Conversation context <span>Optional — earlier messages, newest last</span></label>
@@ -963,7 +969,7 @@ function ProfilePage({ user, go, onSignOut, onUserChanged }) {
 }
 
 function ExtensionPage({ go }) {
-  return <><PageHeader eyebrow="Workspace" title="Good communication, wherever work happens." text="A thoughtful layer for your browser."><Button onClick={() => go("demo-chat")} icon={Globe2}>Open local demo chat</Button></PageHeader><div className="placeholder-page panel"><div className="placeholder-icon"><Globe2 size={25} /></div><h2>Review suggestions without leaving your workflow.</h2><p>Load the extension from the repo's extension/dist folder in Chrome (Developer mode → Load unpacked), sign in from the extension popup, open the demo chat, and click the Saylient AI button. Pick the message you want analyzed — the extension calls the real backend and shows the live intent, strategy and draft. It never monitors the page and never sends anything automatically.</p><Button variant="outline" onClick={() => go("demo-chat")}>Open local demo chat <ArrowRight size={15} /></Button></div></>;
+  return <><PageHeader eyebrow="Workspace" title="Good communication, wherever work happens." text="A thoughtful layer for your browser."><Button onClick={() => go("demo-chat")} icon={Globe2}>Open local demo chat</Button></PageHeader><div className="placeholder-page panel"><div className="placeholder-icon"><Globe2 size={25} /></div><h2>Review suggestions without leaving your workflow.</h2><p>Download the extension below, unzip it, and load it in Chrome (chrome://extensions → Developer mode → Load unpacked). Clicking the extension icon opens this site; on any page, click the floating ✦ button to analyze the text on your screen — sign in once in the panel, then Analyze. The extension calls the real backend and shows the live intent, strategy and draft. It never monitors the page and never sends anything automatically.</p><div className="extension-actions"><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension (.zip)</span></a><Button variant="outline" onClick={() => go("demo-chat")}>Open local demo chat <ArrowRight size={15} /></Button></div></div></>;
 }
 
 function DemoChat({ go }) {

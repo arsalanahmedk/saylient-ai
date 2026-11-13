@@ -1,63 +1,84 @@
-/* Saylient AI popup — dark premium. System font stack only; nothing remote. */
+/* Saylient AI popup — dark premium. System font stack only; nothing remote.
+   All colours live in :root, so a palette swap is a single edit.
+   Note: the toolbar icon no longer opens this popup — it opens the Saylient
+   AI hero page, and sign-in lives in the in-page panel (content.js). This
+   file is kept for reference and for the sign-in flow it documents. */
+:root {
+  /* Deep teal + mint palette (chosen 2026-11-13). */
+  --bg: #06231f;
+  --panel: #0b2e2a;
+  --card: #103b34;
+  --text: #f2f7f5;
+  --text-2: #a8bfb8;
+  --text-3: #7a938c;
+  --accent: #6ee7b7;
+  --accent-hover: #a7f3d0;
+  --accent-deep: #10b981;
+  --white: #ffffff;
+  --border: rgba(255, 255, 255, 0.08);
+  --error: #f43f5e;
+  --error-bg: rgba(244, 63, 94, 0.08);
+  --error-border: rgba(244, 63, 94, 0.25);
+}
 * { box-sizing: border-box; }
 body {
   margin: 0;
   width: 360px;
-  background: #08090a;
-  color: #f7f8f8;
+  background: var(--bg);
+  color: var(--text);
   font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 main { padding: 20px; }
 header { display: flex; align-items: center; gap: 12px; }
 header strong { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.5px; }
-header strong span { color: #8b5cf6; }
-header small { display: block; color: #a1a1aa; font-size: 11px; margin-top: 3px; }
+header strong span { color: var(--accent); }
+header small { display: block; color: var(--text-2); font-size: 11px; margin-top: 3px; }
 .brand-mark {
   width: 38px; height: 38px; border-radius: 10px;
   display: grid; place-items: center;
-  background: #8b5cf6; color: #fff; font-size: 20px;
+  background: var(--accent); color: var(--white); font-size: 20px;
 }
-.rule { height: 1px; background: rgba(255,255,255,0.08); margin: 18px 0; }
+.rule { height: 1px; background: var(--border); margin: 18px 0; }
 .eyebrow {
-  color: #8b5cf6; font-size: 10px; font-weight: 700;
+  color: var(--accent); font-size: 10px; font-weight: 700;
   letter-spacing: 0.12em; margin: 0 0 8px;
 }
 h1 { font-size: 17px; margin: 0 0 6px; letter-spacing: -0.3px; }
-.lede { color: #a1a1aa; font-size: 12px; line-height: 1.6; margin: 0 0 16px; }
+.lede { color: var(--text-2); font-size: 12px; line-height: 1.6; margin: 0 0 16px; }
 form label {
-  display: block; color: #a1a1aa; font-size: 11px; font-weight: 600;
+  display: block; color: var(--text-2); font-size: 11px; font-weight: 600;
   margin-bottom: 12px;
 }
 input {
   display: block; width: 100%; margin-top: 6px;
   padding: 11px 12px;
-  background: #141516; color: #f7f8f8;
-  border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+  background: var(--card); color: var(--text);
+  border: 1px solid var(--border); border-radius: 10px;
   font-size: 13px; font-family: inherit; outline: none;
 }
-input:focus { border-color: #8b5cf6; }
-input::placeholder { color: #52525b; }
+input:focus { border-color: var(--accent); }
+input::placeholder { color: var(--text-3); }
 .error {
-  color: #f87171; font-size: 12px; line-height: 1.5;
-  background: rgba(248,113,113,0.08);
-  border: 1px solid rgba(248,113,113,0.25);
+  color: var(--error); font-size: 12px; line-height: 1.5;
+  background: var(--error-bg);
+  border: 1px solid var(--error-border);
   border-radius: 10px; padding: 10px 12px; margin: 0 0 12px;
 }
 .account-card {
   display: flex; align-items: center; gap: 12px;
-  background: #141516; border: 1px solid rgba(255,255,255,0.08);
+  background: var(--card); border: 1px solid var(--border);
   border-radius: 16px; padding: 14px; margin-bottom: 14px;
 }
 .account-avatar {
   width: 36px; height: 36px; border-radius: 10px;
   display: grid; place-items: center; flex-shrink: 0;
-  background: #8b5cf6; color: #fff; font-size: 18px;
+  background: var(--accent); color: var(--white); font-size: 18px;
 }
 .account-card b { display: block; font-size: 13px; word-break: break-all; }
-.account-card small { display: block; color: #a1a1aa; font-size: 11px; margin-top: 3px; }
+.account-card small { display: block; color: var(--text-2); font-size: 11px; margin-top: 3px; }
 .note {
-  color: #a1a1aa; font-size: 12px; line-height: 1.6;
-  background: #0f1011; border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-2); font-size: 12px; line-height: 1.6;
+  background: var(--panel); border: 1px solid var(--border);
   border-radius: 16px; padding: 12px 14px; margin: 0 0 14px;
 }
 .primary, .secondary {
@@ -66,19 +87,19 @@ input::placeholder { color: #52525b; }
   cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
 .primary {
-  border: 1px solid #8b5cf6; background: #8b5cf6; color: #fff;
+  border: 1px solid var(--accent); background: var(--accent); color: var(--white);
   margin-bottom: 10px;
 }
-.primary:hover:not(:disabled) { background: #7c3aed; }
+.primary:hover:not(:disabled) { background: var(--accent-deep); }
 .primary:disabled { opacity: 0.6; cursor: wait; }
 .primary:active:not(:disabled) { transform: translateY(1px); }
 .secondary {
-  border: 1px solid rgba(255,255,255,0.08); background: transparent; color: #f7f8f8;
+  border: 1px solid var(--border); background: transparent; color: var(--text);
 }
-.secondary:hover { background: #141516; }
+.secondary:hover { background: var(--card); }
 .secondary:active { transform: translateY(1px); }
 #settings { margin-top: 4px; }
 footer {
   display: flex; justify-content: space-between;
-  color: #52525b; font-size: 10px; margin-top: 18px;
+  color: var(--text-3); font-size: 10px; margin-top: 18px;
 }

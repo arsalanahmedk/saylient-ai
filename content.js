@@ -1,17 +1,22 @@
-// Saylient AI content script — click-to-analyze only.
+// Saylient AI content script — screen analysis, click-to-analyze only.
 //
 // Rules this script follows:
-//  - One check on load: if the page has demo messages, add the floating
-//    trigger button. Nothing else happens automatically.
-//  - No observer watching the DOM, no auto-scan, no auto-analyze on open or on
-//    new messages. The user picks WHICH message to analyze.
-//  - Analysis runs only when the user clicks "Analyze message", and only
-//    against the real backend API with the stored Bearer token.
-//  - Insert into composer is click-only and never auto-sends.
-//  - Detected message text is user data: it is only ever inserted via
-//    textContent / escapeHtml, never as raw innerHTML.
+//  - The floating ✦ button is always present on the page. Nothing is read
+//    from the page until the user opens the panel.
+//  - Text is collected only when the panel opens (or when the user picks
+//    "Analyze with Saylient AI" from the context menu): the current text
+//    selection first, otherwise the page's main readable text, capped at
+//    2000 characters. The collected text is shown verbatim in the textarea
+//    with a character count, and the user can edit it before anything is sent.
+//  - No observer watching the DOM, no auto-scan, no auto-analyze. Analysis
+//    runs only when the user clicks "Analyze", and only against the real
+//    backend API with the stored Bearer token.
+//  - Insert into a field is click-only and never auto-sends.
+//  - Page text is user data: it is only ever inserted via textContent /
+//    escapeHtml, never as raw innerHTML.
 
 (function () {
+  const MAX_CHARS = 2000;
   const GOALS = [
     { value: "set_boundary", label: "Set a boundary" },
     { value: "request_payment", label: "Request payment" },
@@ -20,6 +25,12 @@
     { value: "respond_to_criticism", label: "Respond to criticism" },
     { value: "negotiate_budget", label: "Negotiate budget" },
     { value: "resolve_disagreement", label: "Resolve disagreement" },
+  ];
+  const TONE_OPTIONS = ["Professional", "Friendly", "Diplomatic", "Assertive", "Empathetic"];
+  const DIRECTNESS_OPTIONS = [
+    { value: "direct", label: "Direct" },
+    { value: "balanced", label: "Balanced" },
+    { value: "gentle", label: "Gentle" },
   ];
 
   const escapeHtml = (text) =>
@@ -38,14 +49,59 @@
     return node;
   };
 
-  // Demo messages on the page (read-only snapshot at open time).
-  const findMessages = () =>
-    [...document.querySelectorAll("[data-demo-message], .demo-message")]
-      .map((node) => ({ node, text: node.textContent.trim() }))
-      .filter((item) => item.text);
+  const prettyLabel = (value) =>
+    value
+      ? String(value).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+      : "Unknown";
 
+  // --- text collection: runs only when the panel opens -------------------
+  // Selected text wins. Otherwise the page's main readable text: the long
+  // blocks of the main/article region (whole page as a fallback), in reading
+  // order, capped at MAX_CHARS.
+  function collectFrom(scope) {
+    if (!scope) return "";
+    const nodes = scope.querySelectorAll("p, li, blockquote, td, h1, h2, h3");
+    const seen = new Set();
+    const parts = [];
+    let length = 0;
+    for (const node of nodes) {
+      const text = node.textContent.trim().replace(/\s+/g, " ");
+      if (text.length < 40 || seen.has(text)) continue;
+      // Skip a block already covered by a longer block collected earlier.
+      if (parts.some((part) => part.includes(text))) continue;
+      seen.add(text);
+      if (length + text.length + 2 > MAX_CHARS) break;
+      parts.push(text);
+      length += text.length + 2;
+    }
+    return parts.join("\n\n");
+  }
+
+  function collectPageText() {
+    const selection = window.getSelection?.()?.toString().trim();
+    if (selection) return selection.slice(0, MAX_CHARS);
+    const main = collectFrom(document.querySelector("main, article"));
+    if (main) return main;
+    return collectFrom(document.body);
+  }
+
+  // --- state --------------------------------------------------------------
   let panel = null;
   let lastDraft = "";
+  let currentAnalysisId = null;
+  let lastFocusedEditable = null;
+
+  const isEditable = (node) =>
+    node instanceof HTMLElement &&
+    (node instanceof HTMLTextAreaElement ||
+      node instanceof HTMLInputElement ||
+      node.isContentEditable);
+
+  // Remember which field the user was typing in, so Insert knows where to
+  // go. This only records the element reference — it never reads page content.
+  document.addEventListener("focusin", (event) => {
+    if (isEditable(event.target)) lastFocusedEditable = event.target;
+  });
 
   function addTrigger() {
     if (!document.body || document.querySelector("#saylient-ai-trigger")) return;
@@ -54,22 +110,23 @@
     trigger.type = "button";
     trigger.textContent = "✦";
     trigger.title = "Open Saylient AI assistant";
-    trigger.addEventListener("click", openPanel);
+    trigger.addEventListener("click", () => openPanel());
     document.body.append(trigger);
   }
 
-  // One-time check at document_idle: add the trigger only if demo
-  // messages exist on this page.
-  function checkOnce() {
-    if (findMessages().length > 0) addTrigger();
-  }
-
-  function openPanel() {
+  // --- panel ---------------------------------------------------------------
+  function openPanel(prefillText) {
     if (panel) {
       panel.hidden = false;
-      renderMessagePicker();
+      if (typeof prefillText === "string" && prefillText.trim()) {
+        setMessageText(prefillText);
+      } else {
+        refreshDetectedTextIfEmpty();
+      }
+      refreshAuthState();
       return;
     }
+
     const root = document.createElement("aside");
     root.id = "saylient-ai-panel";
 
@@ -81,21 +138,78 @@
     closeBtn.setAttribute("aria-label", "Close");
     closeBtn.addEventListener("click", closePanel);
     head.append(title, closeBtn);
+    root.append(head);
 
-    root.append(
-      head,
-      el("p", "sai-kicker", "MESSAGE ANALYSIS"),
-      el("h2", null, "Pick a message to analyze."),
-    );
+    root.append(el("p", "sai-kicker", "MESSAGE ANALYSIS"));
+    root.append(el("h2", null, "Analyze what's on your screen."));
 
-    const picker = el("div", "sai-picker");
-    picker.append(el("small", null, "CHOOSE A MESSAGE"));
-    const options = el("div", "sai-options");
-    options.setAttribute("data-options", "");
-    picker.append(options);
-    root.append(picker);
+    // Sign-in view (shown when signed out).
+    const auth = el("section", "sai-auth");
+    auth.setAttribute("data-auth", "");
+    auth.append(el("p", "sai-auth-lede", "Sign in with your Saylient AI account to analyze. The token stays in this browser only."));
+    const signinForm = el("form", "sai-signin-form");
+    signinForm.setAttribute("data-signin-form", "");
+    const emailLabel = el("label", "sai-field-label", "Email");
+    const emailInput = document.createElement("input");
+    emailInput.type = "email";
+    emailInput.required = true;
+    emailInput.autocomplete = "email";
+    emailInput.placeholder = "you@example.com";
+    emailInput.setAttribute("data-email", "");
+    emailLabel.append(emailInput);
+    const passwordLabel = el("label", "sai-field-label", "Password");
+    const passwordInput = document.createElement("input");
+    passwordInput.type = "password";
+    passwordInput.required = true;
+    passwordInput.autocomplete = "current-password";
+    passwordInput.placeholder = "Your password";
+    passwordInput.setAttribute("data-password", "");
+    passwordLabel.append(passwordInput);
+    const signinError = el("p", "sai-error");
+    signinError.setAttribute("data-signin-error", "");
+    signinError.hidden = true;
+    const signinSubmit = el("button", "sai-primary", "Sign in");
+    signinSubmit.type = "submit";
+    signinSubmit.setAttribute("data-signin-submit", "");
+    signinForm.append(emailLabel, passwordLabel, signinError, signinSubmit);
+    signinForm.addEventListener("submit", signIn);
+    auth.append(signinForm);
+    root.append(auth);
 
-    const goalLabel = el("label", "sai-goal-label", "Goal");
+    // Signed-in account row.
+    const account = el("div", "sai-account");
+    account.setAttribute("data-account", "");
+    account.hidden = true;
+    const accountEmail = el("b");
+    accountEmail.setAttribute("data-account-email", "");
+    const signoutBtn = el("button", "sai-signout", "Sign out");
+    signoutBtn.type = "button";
+    signoutBtn.setAttribute("data-signout", "");
+    signoutBtn.addEventListener("click", signOut);
+    account.append(accountEmail, signoutBtn);
+    root.append(account);
+
+    // Compose view (shown when signed in).
+    const compose = el("div", "sai-compose");
+    compose.setAttribute("data-compose", "");
+    compose.hidden = true;
+
+    const messageLabel = el("label", "sai-field-label", "Text to analyze");
+    const messageInput = document.createElement("textarea");
+    messageInput.className = "sai-textarea";
+    messageInput.rows = 5;
+    messageInput.maxLength = MAX_CHARS;
+    messageInput.placeholder = "Select text on the page, or paste a message here.";
+    messageInput.setAttribute("data-message", "");
+    messageInput.addEventListener("input", updateCount);
+    messageLabel.append(messageInput);
+    compose.append(messageLabel);
+
+    const count = el("p", "sai-count");
+    count.setAttribute("data-count", "");
+    compose.append(count);
+
+    const goalLabel = el("label", "sai-field-label", "Goal");
     const goalSelect = document.createElement("select");
     goalSelect.setAttribute("data-goal", "");
     for (const goal of GOALS) {
@@ -105,94 +219,160 @@
       goalSelect.append(option);
     }
     goalLabel.append(goalSelect);
-    root.append(goalLabel);
+    compose.append(goalLabel);
 
-    const signinNote = el(
-      "p",
-      "sai-signin-note",
-      "Sign in from the extension popup to analyze."
-    );
-    signinNote.setAttribute("data-signin-note", "");
-    signinNote.hidden = true;
-    root.append(signinNote);
+    const toneRow = el("div", "sai-tone-row");
+    const toneLabel = el("label", "sai-field-label", "Tone");
+    const toneSelect = document.createElement("select");
+    toneSelect.setAttribute("data-tone", "");
+    for (const tone of TONE_OPTIONS) {
+      const option = document.createElement("option");
+      option.value = tone;
+      option.textContent = tone;
+      if (tone === "Diplomatic") option.selected = true;
+      toneSelect.append(option);
+    }
+    toneLabel.append(toneSelect);
+    const directnessLabel = el("label", "sai-field-label", "Directness");
+    const directnessSelect = document.createElement("select");
+    directnessSelect.setAttribute("data-directness", "");
+    for (const directness of DIRECTNESS_OPTIONS) {
+      const option = document.createElement("option");
+      option.value = directness.value;
+      option.textContent = directness.label;
+      if (directness.value === "balanced") option.selected = true;
+      directnessSelect.append(option);
+    }
+    directnessLabel.append(directnessSelect);
+    toneRow.append(toneLabel, directnessLabel);
+    compose.append(toneRow);
 
-    const analyzeBtn = el("button", "sai-analyze", "Analyze message");
+    const analyzeBtn = el("button", "sai-analyze", "Analyze");
     analyzeBtn.type = "button";
     analyzeBtn.setAttribute("data-analyze", "");
-    analyzeBtn.addEventListener("click", analyzeSelected);
-    root.append(analyzeBtn);
+    analyzeBtn.addEventListener("click", analyze);
+    compose.append(analyzeBtn);
 
     const progress = el("div", "sai-progress");
     progress.setAttribute("data-progress", "");
     progress.hidden = true;
     progress.append(el("span"));
-    root.append(progress);
+    compose.append(progress);
 
     const error = el("p", "sai-error");
     error.setAttribute("data-error", "");
     error.hidden = true;
-    root.append(error);
+    compose.append(error);
 
     const result = el("div", "sai-result");
     result.setAttribute("data-result", "");
     result.hidden = true;
-    root.append(result);
+    compose.append(result);
+
+    root.append(compose);
 
     root.append(
       el(
         "p",
         "sai-note",
-        "Analysis runs only when you click Analyze. Nothing is monitored or sent automatically."
+        "Analysis runs only when you click Analyze. Nothing is monitored or sent automatically. Suggestions come from the Saylient AI backend analysis (rule-based prototype v0.1) — review before you send."
       )
     );
 
     document.body.append(root);
     panel = root;
-    renderMessagePicker();
+    refreshDetectedTextIfEmpty();
     refreshAuthState();
   }
 
-  function renderMessagePicker() {
+  function setMessageText(text) {
     if (!panel) return;
-    const container = panel.querySelector("[data-options]");
-    container.innerHTML = "";
-    const messages = findMessages();
-    if (messages.length === 0) {
-      container.append(el("p", "sai-empty", "No messages found on this page."));
-      return;
-    }
-    // No radio is pre-checked: the user picks which message to analyze.
-    messages.forEach((item, index) => {
-      const label = el("label", "sai-option");
-      const input = document.createElement("input");
-      input.type = "radio";
-      input.name = "sai-message";
-      input.value = String(index);
-      const snippet = el(
-        "span",
-        null,
-        item.text.length > 140 ? `${item.text.slice(0, 140)}…` : item.text
-      );
-      label.append(input, snippet);
-      container.append(label);
-    });
+    const input = panel.querySelector("[data-message]");
+    input.value = String(text).slice(0, MAX_CHARS);
+    updateCount();
+  }
+
+  function refreshDetectedTextIfEmpty() {
+    if (!panel) return;
+    const input = panel.querySelector("[data-message]");
+    if (input.value.trim()) return;
+    setMessageText(collectPageText());
+  }
+
+  function updateCount() {
+    if (!panel) return;
+    const input = panel.querySelector("[data-message]");
+    const count = panel.querySelector("[data-count]");
+    count.textContent = `${input.value.length} / ${MAX_CHARS} characters · sent exactly as shown`;
   }
 
   async function refreshAuthState() {
     if (!panel) return;
-    const { "saylient-token": token } = await chrome.storage.local.get("saylient-token");
-    const note = panel.querySelector("[data-signin-note]");
-    const button = panel.querySelector("[data-analyze]");
+    const { "saylient-token": token, "saylient-email": email } =
+      await chrome.storage.local.get(["saylient-token", "saylient-email"]);
+    const auth = panel.querySelector("[data-auth]");
+    const account = panel.querySelector("[data-account]");
+    const compose = panel.querySelector("[data-compose]");
     if (token) {
-      note.hidden = true;
-      button.hidden = false;
+      auth.hidden = true;
+      account.hidden = false;
+      compose.hidden = false;
+      panel.querySelector("[data-account-email]").textContent = email || "Signed in";
     } else {
-      note.hidden = false;
-      button.hidden = true;
+      auth.hidden = false;
+      account.hidden = true;
+      compose.hidden = true;
     }
   }
 
-  async function analyzeSelected() {
+  async function signIn(event) {
+    event.preventDefault();
+    if (!panel) return;
+    const email = panel.querySelector("[data-email]").value.trim();
+    const password = panel.querySelector("[data-password]").value;
+    const errorEl = panel.querySelector("[data-signin-error]");
+    const submit = panel.querySelector("[data-signin-submit]");
+    errorEl.hidden = true;
+    submit.disabled = true;
+    submit.textContent = "Signing in…";
+    try {
+      const res = await fetch(`${SAYLIENT_API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(
+          errData?.error?.message || errData?.detail || errData?.message || `Sign-in failed (${res.status}).`
+        );
+      }
+      const data = await res.json();
+      await chrome.storage.local.set({ "saylient-token": data.token, "saylient-email": email });
+      refreshAuthState();
+    } catch (err) {
+      errorEl.textContent =
+        err instanceof TypeError
+          ? "Could not reach the Saylient AI backend. Check your connection and try again."
+          : err?.message || "Sign-in failed.";
+      errorEl.hidden = false;
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Sign in";
+    }
+  }
+
+  async function signOut() {
+    await chrome.storage.local.remove(["saylient-token", "saylient-email"]);
+    refreshAuthState();
+  }
+
+  function apiErrorMessage(err) {
+    if (err instanceof TypeError) return "Could not reach the Saylient AI backend. Check your connection and try again.";
+    return err?.message || "Could not reach the Saylient AI backend.";
+  }
+
+  async function analyze() {
     if (!panel) return;
     const errorEl = panel.querySelector("[data-error]");
     const resultEl = panel.querySelector("[data-result]");
@@ -201,23 +381,19 @@
     errorEl.hidden = true;
     resultEl.hidden = true;
 
-    const selected = panel.querySelector('input[name="sai-message"]:checked');
-    if (!selected) {
-      errorEl.textContent = "Choose a message to analyze first.";
-      errorEl.hidden = false;
-      return;
-    }
-    const message = findMessages()[Number(selected.value)];
+    const message = panel.querySelector("[data-message]").value.trim();
     if (!message) {
-      errorEl.textContent = "That message is no longer on the page. Reopen the panel and pick again.";
+      errorEl.textContent = "Add or select some text to analyze first.";
       errorEl.hidden = false;
       return;
     }
     const goal = panel.querySelector("[data-goal]").value;
+    const tone = panel.querySelector("[data-tone]").value;
+    const directness = panel.querySelector("[data-directness]").value;
 
     const { "saylient-token": token } = await chrome.storage.local.get("saylient-token");
     if (!token) {
-      errorEl.textContent = "Sign in from the extension popup to analyze.";
+      errorEl.textContent = "Sign in above to analyze.";
       errorEl.hidden = false;
       return;
     }
@@ -235,41 +411,82 @@
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          message: message.text,
+          message,
           conversation_context: [],
           goal,
           context: { power: "unknown", social_distance: "unknown", imposition: "unknown" },
+          tone,
+          directness,
         }),
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         throw new Error(
-          errData.detail || errData.message || `Analysis failed (HTTP ${res.status}).`
+          errData?.error?.message || errData?.detail || errData?.message || `Analysis failed (HTTP ${res.status}).`
         );
       }
       data = await res.json();
     } catch (err) {
-      errorEl.textContent =
-        err instanceof TypeError
-          ? "Could not reach the Saylient AI backend. Check your connection and try again."
-          : err?.message || "Could not reach the Saylient AI backend.";
+      errorEl.textContent = apiErrorMessage(err);
       errorEl.hidden = false;
       button.disabled = false;
-      button.textContent = "Analyze message";
+      button.textContent = "Analyze";
       progress.hidden = true;
       return;
     }
 
     button.disabled = false;
-    button.textContent = "Analyze message";
+    button.textContent = "Analyze";
     progress.hidden = true;
     renderResult(data);
+  }
+
+  async function regenerate() {
+    if (!panel || !currentAnalysisId) return;
+    const errorEl = panel.querySelector("[data-error]");
+    const resultEl = panel.querySelector("[data-result]");
+    const button = panel.querySelector("[data-regenerate]");
+    errorEl.hidden = true;
+    const tone = panel.querySelector("[data-tone]").value;
+    const directness = panel.querySelector("[data-directness]").value;
+    const { "saylient-token": token } = await chrome.storage.local.get("saylient-token");
+    if (!token) {
+      errorEl.textContent = "Sign in above to analyze.";
+      errorEl.hidden = false;
+      return;
+    }
+    button.disabled = true;
+    button.textContent = "Regenerating…";
+    try {
+      const res = await fetch(`${SAYLIENT_API_BASE}/analyses/${currentAnalysisId}/regenerate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ tone, directness }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(
+          errData?.error?.message || errData?.detail || errData?.message || `Regenerate failed (HTTP ${res.status}).`
+        );
+      }
+      renderResult(await res.json());
+    } catch (err) {
+      errorEl.textContent = apiErrorMessage(err);
+      errorEl.hidden = false;
+    } finally {
+      button.disabled = false;
+      button.textContent = "Regenerate with these settings";
+    }
   }
 
   function renderResult(data) {
     const resultEl = panel.querySelector("[data-result]");
     resultEl.innerHTML = "";
     lastDraft = typeof data?.draft === "string" ? data.draft : "";
+    currentAnalysisId = typeof data?.id === "string" ? data.id : null;
 
     const pct = (value) =>
       typeof value === "number" ? `${Math.round(value * 100)}%` : "—";
@@ -277,8 +494,8 @@
 
     const chips = el("div", "sai-chips");
     chips.append(
-      el("span", null, `Intent · ${data?.intent?.label ?? "unknown"} ${pct(data?.intent?.confidence)}`),
-      el("span", null, `Tone · ${data?.tone?.label ?? "unknown"} ${pct(data?.tone?.confidence)}`),
+      el("span", null, `Intent · ${prettyLabel(data?.intent?.label)} ${pct(data?.intent?.confidence)}`),
+      el("span", null, `Tone · ${prettyLabel(data?.tone?.label)} ${pct(data?.tone?.confidence)}`),
     );
     resultEl.append(chips);
     resultEl.append(el("small", "sai-conf-note", `Confidence shown is ${confNote}.`));
@@ -298,8 +515,18 @@
       resultEl.append(el("p", null, "None listed."));
     }
 
+    const cf = data?.context_factors || {};
+    resultEl.append(el("small", null, "RELATIONSHIP CONTEXT (P / D / R)"));
+    resultEl.append(
+      el(
+        "p",
+        null,
+        `Power · ${prettyLabel(cf.power)} — Social distance · ${prettyLabel(cf.social_distance)} — Imposition · ${prettyLabel(cf.imposition)}`
+      )
+    );
+
     resultEl.append(el("small", null, "STRATEGY"));
-    resultEl.append(el("p", "sai-strategy", data?.strategy?.label ?? "Unknown strategy"));
+    resultEl.append(el("p", "sai-strategy", prettyLabel(data?.strategy?.label)));
     if (data?.strategy?.rationale) resultEl.append(el("p", null, data.strategy.rationale));
 
     resultEl.append(el("small", null, "SUGGESTED RESPONSE"));
@@ -314,7 +541,7 @@
     }
 
     if (data?.model_version) {
-      resultEl.append(el("small", "sai-model", `Model: ${data.model_version}`));
+      resultEl.append(el("small", "sai-model", `Model: ${data.model_version} (rule-based prototype)`));
     }
 
     const copyBtn = el("button", "sai-copy", "Copy response");
@@ -323,31 +550,53 @@
       await navigator.clipboard.writeText(lastDraft);
       copyBtn.textContent = "Copied";
     });
-    const insertBtn = el("button", "sai-insert", "Insert into composer");
+    const insertBtn = el("button", "sai-insert", "Insert into field");
     insertBtn.type = "button";
-    insertBtn.addEventListener("click", () => insertIntoComposer(lastDraft));
-    resultEl.append(copyBtn, insertBtn);
+    insertBtn.addEventListener("click", () => insertIntoField(lastDraft));
+    const regenBtn = el("button", "sai-regenerate", "Regenerate with these settings");
+    regenBtn.type = "button";
+    regenBtn.setAttribute("data-regenerate", "");
+    regenBtn.addEventListener("click", regenerate);
+    resultEl.append(copyBtn, insertBtn, regenBtn);
 
     resultEl.hidden = false;
   }
 
-  function insertIntoComposer(text) {
-    const composer = document.querySelector("[data-demo-composer]");
-    if (!composer) return;
-    // React-controlled textarea: use the native value setter so React
-    // picks up the change, then fire an input event. Never auto-sends.
-    if (composer instanceof HTMLTextAreaElement || composer instanceof HTMLInputElement) {
-      const setter = Object.getOwnPropertyDescriptor(
-        Object.getPrototypeOf(composer),
-        "value"
-      )?.set;
-      if (setter) setter.call(composer, text);
-      else composer.value = text;
-      composer.dispatchEvent(new Event("input", { bubbles: true }));
-    } else {
-      composer.textContent = text;
+  function findInsertTarget() {
+    if (lastFocusedEditable?.isConnected && isEditable(lastFocusedEditable)) {
+      return lastFocusedEditable;
     }
-    composer.focus();
+    if (isEditable(document.activeElement)) return document.activeElement;
+    const demo = document.querySelector("[data-demo-composer]");
+    if (demo) return demo;
+    return (
+      [...document.querySelectorAll("textarea, input[type='text'], input:not([type]), [contenteditable='true']")].find(
+        (node) => node.offsetParent !== null
+      ) || null
+    );
+  }
+
+  function insertIntoField(text) {
+    if (!panel) return;
+    const errorEl = panel.querySelector("[data-error]");
+    const target = findInsertTarget();
+    if (!target) {
+      errorEl.textContent = "No text field found on this page to insert into. Copy the draft instead.";
+      errorEl.hidden = false;
+      return;
+    }
+    // React-controlled field: use the native value setter so React picks up
+    // the change, then fire an input event. Never auto-sends.
+    if (target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement) {
+      const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(target), "value")?.set;
+      if (setter) setter.call(target, text);
+      else target.value = text;
+      target.dispatchEvent(new Event("input", { bubbles: true }));
+    } else {
+      target.textContent = text;
+      target.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+    target.focus();
   }
 
   function closePanel() {
@@ -360,9 +609,10 @@
   });
 
   chrome.runtime.onMessage.addListener((message) => {
-    if (message?.type === "SAYLIENT_OPEN") openPanel();
+    if (message?.type === "SAYLIENT_OPEN") openPanel(message.text);
   });
 
-  // Single one-time check. No re-scan.
-  checkOnce();
+  // The trigger is always present. Nothing is read from the page until the
+  // user opens the panel.
+  addTrigger();
 })();
