@@ -103,7 +103,7 @@ body {
 input, textarea, select, button { font: inherit; color: inherit; }
 button { cursor: pointer; }
 h1, h2, h3, h4, p, ul, ol { margin: 0; max-width: 100%; }
-h1, h2, h3, h4 { font-family: var(--font-display); }
+h1, h2, h3, h4 { font-family: var(--font-display); word-spacing: 0.12em; /* Clash Display's space glyph is unusually narrow (0.14em) — without this, words run together at display sizes. */ }
 a { color: inherit; text-decoration: none; }
 a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
   outline: 2px solid var(--accent-hover);
