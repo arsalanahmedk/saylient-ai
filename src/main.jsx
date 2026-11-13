@@ -534,7 +534,7 @@ function HeroAnalysisWindow({ go, user }) {
           </div>
           {isDemo && <button className="link-button" onClick={() => go("login")}>Sign in to analyze your own messages <ArrowRight size={13} /></button>}
         </div>}
-        {!shown && !running && <div className="analyzer-empty"><div className="empty-spark"><Sparkles size={25} /></div><h3>Your analysis appears here.</h3><p>Paste a message and run the analyzer — intent, tone, strategy and a draft you can edit.</p></div>}
+        {!shown && !running && <div className="analyzer-empty"><div className="empty-spark"><LogoMark /></div><h3>Your analysis appears here.</h3><p>Paste a message and run the analyzer — intent, tone, strategy and a draft you can edit.</p></div>}
       </div>
     </div>
   </div>;
@@ -542,7 +542,7 @@ function HeroAnalysisWindow({ go, user }) {
 
 /* Integrations marquee: the extension works on
    any HTTPS page, so the strip names the places people actually write. */
-const MARQUEE_ITEMS = ["Browser extension", "Gmail", "Upwork", "Fiverr", "LinkedIn", "Slack", "WhatsApp Web", "Google Docs", "Instagram", "Telegram", "Messenger", "Discord", "X", "TikTok"];
+const MARQUEE_ITEMS = ["Browser extension", "Gmail", "Upwork", "Fiverr", "LinkedIn", "Slack", "WhatsApp Web", "Google Docs", "Instagram", "Telegram", "Facebook Messenger", "Discord", "X", "TikTok", "Snapchat", "Microsoft Teams"];
 
 function Marquee() {
   const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
@@ -870,7 +870,7 @@ function Assistant({ go, openAnalysis, clearOpen }) {
       </section>
 
       <section className="panel result-panel">
-        {!analysis ? <div className="empty-result"><div className="empty-spark"><Sparkles size={25} /></div><h3>Your thoughtful response<br />starts here.</h3><p>We'll look at intent, tone, possible face concerns, and strategy without pretending to know the recipient's feelings.</p><div className="mini-points"><span><Check size={13} /> Context-aware</span><span><Check size={13} /> Review before sending</span></div></div> : <>
+        {!analysis ? <div className="empty-result"><div className="empty-spark"><LogoMark /></div><h3>Your thoughtful response<br />starts here.</h3><p>We'll look at intent, tone, possible face concerns, and strategy without pretending to know the recipient's feelings.</p><div className="mini-points"><span><Check size={13} /> Context-aware</span><span><Check size={13} /> Review before sending</span></div></div> : <>
           <div className="pipeline-card">
             <div className="pipeline-nodes">
               {PIPELINE_STAGES.map((s, i) => <div key={s.name} className={`pipeline-node-item${stage > i ? " done" : ""}${stage === i && loading ? " active" : ""}`}>

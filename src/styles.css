@@ -685,6 +685,10 @@ select.select-field option { background: var(--input); }
 
 .empty-result { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 430px; padding: 25px; text-align: center; }
 .empty-spark { display: grid; place-items: center; width: 56px; height: 56px; margin-bottom: 20px; border-radius: 16px; background: var(--card); color: var(--accent-hover); box-shadow: 0 0 40px var(--accent-30); }
+.empty-spark svg { width: 28px; height: 24px; }
+
+/* Anchored sections must clear the sticky nav pill when jumped to. */
+section[id] { scroll-margin-top: 120px; }
 .empty-result h3 { font-size: 26px; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 12px; }
 .empty-result p { max-width: 290px; color: var(--text-2); font-size: 13px; line-height: 1.7; }
 .mini-points { display: flex; gap: 14px; margin-top: 23px; color: var(--text-2); font-size: 12px; }
