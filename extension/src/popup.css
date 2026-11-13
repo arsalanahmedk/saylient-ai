@@ -1,24 +1,24 @@
-/* Saylient AI popup — light ivory. System font stack only; nothing remote.
+/* Saylient AI popup — monochrome. System font stack only; nothing remote.
    All colours live in :root, so a palette swap is a single edit.
    Note: the toolbar icon no longer opens this popup — it opens the Saylient
    AI hero page, and sign-in lives in the in-page panel (content.js). This
    file is kept for reference and for the sign-in flow it documents. */
 :root {
-  /* Elegant Luxury palette (ivory + oxblood). */
-  --bg: #faf7f5;
+  /* Monochrome Premium palette (black / white / grey). */
+  --bg: #ffffff;
   --panel: #ffffff;
-  --card: #f0ebe8;
-  --text: #1a1a1a;
-  --text-2: #57534e;
-  --text-3: #8a837c;
-  --accent: #9b2c2c;
-  --accent-hover: #991b1b;
-  --accent-deep: #991b1b;
+  --card: #fafafa;
+  --text: #0a0a0a;
+  --text-2: #525252;
+  --text-3: #737373;
+  --accent: #0a0a0a;
+  --accent-hover: #171717;
+  --accent-deep: #000000;
   --white: #ffffff;
-  --border: rgba(26, 26, 26, 0.12);
-  --error: #f43f5e;
-  --error-bg: rgba(244, 63, 94, 0.08);
-  --error-border: rgba(244, 63, 94, 0.25);
+  --border: rgba(10, 10, 10, 0.12);
+  --error: #0a0a0a;
+  --error-bg: rgba(10, 10, 10, 0.08);
+  --error-border: rgba(10, 10, 10, 0.25);
 }
 * { box-sizing: border-box; }
 body {

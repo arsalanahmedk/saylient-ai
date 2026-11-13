@@ -1,35 +1,35 @@
-/* Saylient AI panel — light ivory. System font stack only.
+/* Saylient AI panel — monochrome. System font stack only.
    All colours live in :root as --sai-* variables, so a palette swap is a
    single edit. (Names are --sai-* prefixed: this stylesheet is injected
    into host pages, so its variables must not collide with theirs.) */
 :root {
-  --sai-bg: #faf7f5;
+  --sai-bg: #ffffff;
   --sai-card: #ffffff;
-  --sai-elevated: #f0ebe8;
-  --sai-track: #e7dfd8;
-  --sai-text: #1a1a1a;
-  --sai-text-2: #57534e;
-  --sai-text-3: #57534e;
-  --sai-text-4: #8a837c;
-  --sai-accent: #9b2c2c;
-  --sai-accent-deep: #991b1b;
-  --sai-accent-light: #991b1b;
-  --sai-accent-pale: #991b1b;
+  --sai-elevated: #fafafa;
+  --sai-track: #e5e5e5;
+  --sai-text: #0a0a0a;
+  --sai-text-2: #525252;
+  --sai-text-3: #525252;
+  --sai-text-4: #737373;
+  --sai-accent: #0a0a0a;
+  --sai-accent-deep: #171717;
+  --sai-accent-light: #525252;
+  --sai-accent-pale: #0a0a0a;
   --sai-white: #ffffff;
-  --sai-border: rgba(26, 26, 26, 0.12);
-  --sai-border-strong: rgba(26, 26, 26, 0.2);
-  --sai-accent-soft: rgba(155, 44, 44, 0.08);
-  --sai-accent-softer: rgba(155, 44, 44, 0.08);
-  --sai-accent-glow: rgba(155, 44, 44, 0.35);
-  --sai-accent-glow-soft: rgba(155, 44, 44, 0.25);
-  --sai-accent-glow-clear: rgba(155, 44, 44, 0);
-  --sai-error: #f43f5e;
-  --sai-error-bg: rgba(244, 63, 94, 0.08);
-  --sai-error-border: rgba(244, 63, 94, 0.25);
-  --sai-warn: #f59e0b;
-  --sai-warn-bg: rgba(245, 158, 11, 0.08);
-  --sai-warn-border: rgba(245, 158, 11, 0.25);
-  --sai-shadow: rgba(26, 26, 26, 0.18);
+  --sai-border: rgba(10, 10, 10, 0.12);
+  --sai-border-strong: rgba(10, 10, 10, 0.2);
+  --sai-accent-soft: rgba(10, 10, 10, 0.08);
+  --sai-accent-softer: rgba(10, 10, 10, 0.08);
+  --sai-accent-glow: rgba(10, 10, 10, 0.35);
+  --sai-accent-glow-soft: rgba(10, 10, 10, 0.25);
+  --sai-accent-glow-clear: rgba(10, 10, 10, 0);
+  --sai-error: #0a0a0a;
+  --sai-error-bg: rgba(10, 10, 10, 0.08);
+  --sai-error-border: rgba(10, 10, 10, 0.25);
+  --sai-warn: #525252;
+  --sai-warn-bg: rgba(82, 82, 82, 0.08);
+  --sai-warn-border: rgba(82, 82, 82, 0.25);
+  --sai-shadow: rgba(10, 10, 10, 0.18);
 }
 #saylient-ai-trigger {
   position: fixed; right: 22px; bottom: 22px; z-index: 2147483646;

@@ -1,84 +1,83 @@
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500;1,9..144,600&family=Instrument+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap");
 
 :root {
-  /* Elegant Luxury palette (2026-11-13 — Folio-inspired light theme:
-     warm ivory paper + ink + deep oxblood wax-seal accent). Every colour
-     in this file is one of these variables — a palette swap is a single
-     edit here. */
-  --bg: #faf7f5;
+  /* Monochrome Premium palette (2026-11-13 — Folio layout, black /
+     white / grey only, zero colour). Every colour in this file is one of
+     these variables — a palette swap is a single edit here. */
+  --bg: #ffffff;
   --panel: #ffffff;
   --card: #ffffff;
-  --elevated: #f0ebe8;
+  --elevated: #fafafa;
   --input: #ffffff;
-  --border: #e7dfd8;
-  --border-strong: #d8cec4;
-  --text: #1a1a1a;
-  --text-2: #57534e;
-  --text-3: #8a837c;
-  --accent: #9b2c2c;
-  --accent-hover: #991b1b;
-  --accent-deep: #7f1d1d;
-  --accent-tint: rgba(155, 44, 44, 0.08);
-  --success: #9b2c2c;
-  --pending: #f59e0b;
-  --error: #f43f5e;
-  --info: #fdf2d6;
+  --border: #e5e5e5;
+  --border-strong: #d4d4d4;
+  --text: #0a0a0a;
+  --text-2: #525252;
+  --text-3: #737373;
+  --accent: #0a0a0a;
+  --accent-hover: #171717;
+  --accent-deep: #000000;
+  --accent-tint: rgba(10, 10, 10, 0.06);
+  --success: #0a0a0a;
+  --pending: #525252;
+  --error: #0a0a0a;
+  --info: #f5f5f5;
   --white: #ffffff;
   /* Accent tints, named by alpha. */
-  --accent-03: rgba(155, 44, 44, 0.03);
-  --accent-08: rgba(155, 44, 44, 0.08);
-  --accent-10: rgba(155, 44, 44, 0.1);
-  --accent-12: rgba(155, 44, 44, 0.12);
-  --accent-14: rgba(155, 44, 44, 0.14);
-  --accent-15: rgba(155, 44, 44, 0.15);
-  --accent-16: rgba(155, 44, 44, 0.16);
-  --accent-18: rgba(155, 44, 44, 0.18);
-  --accent-20: rgba(155, 44, 44, 0.2);
-  --accent-24: rgba(155, 44, 44, 0.24);
-  --accent-25: rgba(155, 44, 44, 0.25);
-  --accent-30: rgba(155, 44, 44, 0.3);
-  --accent-35: rgba(155, 44, 44, 0.35);
-  --accent-40: rgba(155, 44, 44, 0.4);
-  --accent-45: rgba(155, 44, 44, 0.45);
-  --accent-50: rgba(155, 44, 44, 0.5);
-  --accent-deep-28: rgba(127, 29, 29, 0.28);
+  --accent-03: rgba(10, 10, 10, 0.03);
+  --accent-08: rgba(10, 10, 10, 0.08);
+  --accent-10: rgba(10, 10, 10, 0.1);
+  --accent-12: rgba(10, 10, 10, 0.12);
+  --accent-14: rgba(10, 10, 10, 0.14);
+  --accent-15: rgba(10, 10, 10, 0.15);
+  --accent-16: rgba(10, 10, 10, 0.16);
+  --accent-18: rgba(10, 10, 10, 0.18);
+  --accent-20: rgba(10, 10, 10, 0.2);
+  --accent-24: rgba(10, 10, 10, 0.24);
+  --accent-25: rgba(10, 10, 10, 0.25);
+  --accent-30: rgba(10, 10, 10, 0.3);
+  --accent-35: rgba(10, 10, 10, 0.35);
+  --accent-40: rgba(10, 10, 10, 0.4);
+  --accent-45: rgba(10, 10, 10, 0.45);
+  --accent-50: rgba(10, 10, 10, 0.5);
+  --accent-deep-28: rgba(0, 0, 0, 0.28);
   /* Status tints. */
-  --success-09: rgba(155, 44, 44, 0.09);
-  --success-12: rgba(155, 44, 44, 0.12);
-  --success-13: rgba(155, 44, 44, 0.13);
-  --success-30: rgba(155, 44, 44, 0.3);
-  --success-50: rgba(155, 44, 44, 0.5);
-  --success-00: rgba(155, 44, 44, 0);
-  --success-text: #991b1b;
-  --error-10: rgba(244, 63, 94, 0.1);
-  --error-35: rgba(244, 63, 94, 0.35);
-  --error-text: #be123c;
-  --cyan: #a89a7f;
-  --cyan-05: rgba(168, 154, 127, 0.08);
-  --cyan-10: rgba(168, 154, 127, 0.12);
-  --green-light: #991b1b;
-  --amber-light: #d97706;
-  --amber-10: rgba(245, 158, 11, 0.1);
-  /* Neutrals and shadows — soft warm shadows on ivory. */
-  --white-05: rgba(26, 26, 26, 0.05);
-  --white-06: rgba(26, 26, 26, 0.06);
-  --white-07: rgba(26, 26, 26, 0.07);
-  --white-10: rgba(26, 26, 26, 0.1);
-  --white-32: rgba(26, 26, 26, 0.32);
-  --white-35: rgba(26, 26, 26, 0.35);
-  --black-35: rgba(26, 26, 26, 0.1);
-  --black-45: rgba(26, 26, 26, 0.14);
-  --black-50: rgba(26, 26, 26, 0.16);
-  --black-60: rgba(26, 26, 26, 0.2);
-  --nav-bg: rgba(250, 247, 245, 0.85);
-  --scrollbar: #d8cfc7;
-  --dot-neutral: #d8cfc7;
+  --success-09: rgba(10, 10, 10, 0.09);
+  --success-12: rgba(10, 10, 10, 0.12);
+  --success-13: rgba(10, 10, 10, 0.13);
+  --success-30: rgba(10, 10, 10, 0.3);
+  --success-50: rgba(10, 10, 10, 0.5);
+  --success-00: rgba(10, 10, 10, 0);
+  --success-text: #0a0a0a;
+  --error-10: rgba(10, 10, 10, 0.08);
+  --error-35: rgba(10, 10, 10, 0.35);
+  --error-text: #0a0a0a;
+  --cyan: #737373;
+  --cyan-05: rgba(115, 115, 115, 0.08);
+  --cyan-10: rgba(115, 115, 115, 0.12);
+  --green-light: #0a0a0a;
+  --amber-light: #525252;
+  --amber-10: rgba(82, 82, 82, 0.1);
+  /* Neutrals and shadows — soft neutral shadows on white. */
+  --white-05: rgba(10, 10, 10, 0.05);
+  --white-06: rgba(10, 10, 10, 0.06);
+  --white-07: rgba(10, 10, 10, 0.07);
+  --white-10: rgba(10, 10, 10, 0.1);
+  --white-32: rgba(10, 10, 10, 0.32);
+  --white-35: rgba(10, 10, 10, 0.35);
+  --black-35: rgba(10, 10, 10, 0.1);
+  --black-45: rgba(10, 10, 10, 0.14);
+  --black-50: rgba(10, 10, 10, 0.16);
+  --black-60: rgba(10, 10, 10, 0.2);
+  --nav-bg: rgba(255, 255, 255, 0.85);
+  --scrollbar: #d4d4d4;
+  --dot-neutral: #d4d4d4;
   --radius-card: 16px;
   --radius-inner: 12px;
   --radius-input: 10px;
-  --font-sans: "Instrument Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: "Fraunces", Georgia, serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 * { box-sizing: border-box; }
@@ -288,10 +287,10 @@ select.select-field option { background: var(--input); }
    Short serif headline, then the Analyzer console dominating the fold.
    A subtle dot grid and field lines (CSS-only). No glow washes, no gradients. */
 .hero { position: relative; padding: 120px 24px 40px; text-align: center; overflow: hidden; }
-.hero-dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(155, 44, 44, 0.13) 1px, transparent 1px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); pointer-events: none; }
+.hero-dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(10, 10, 10, 0.13) 1px, transparent 1px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); pointer-events: none; }
 .hero-badge { position: relative; }
 .hero h1 { position: relative; max-width: 900px; margin: 0 auto; font-family: var(--font-display); font-size: 68px; line-height: 1.05; font-weight: 600; letter-spacing: -0.01em; }
-.hero h1 em { font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 500; color: var(--accent); }
+.hero h1 em { font-family: "Space Grotesk", "Inter", sans-serif; font-style: normal; font-weight: 600; color: var(--accent); }
 .hero > p { position: relative; max-width: 580px; margin: 22px auto 0; color: var(--text-2); font-size: 18px; line-height: 1.55; }
 .hero-note { position: relative; justify-content: center; }
 
@@ -372,7 +371,7 @@ select.select-field option { background: var(--input); }
 
 .center-heading { max-width: 580px; margin: 0 auto 48px; text-align: center; }
 .center-heading h2 { font-size: 40px; line-height: 1.06; font-weight: 700; letter-spacing: -0.01em; }
-.center-heading h2 em, .section-heading h2 em, .theory-strip h2 em, .extension-cta h2 em, .pricing-section h2 em { font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 500; color: var(--accent); }
+.center-heading h2 em, .section-heading h2 em, .theory-strip h2 em, .extension-cta h2 em, .pricing-section h2 em { font-family: "Space Grotesk", "Inter", sans-serif; font-style: normal; font-weight: 600; color: var(--accent); }
 .center-heading p, .section-heading p { margin-top: 16px; color: var(--text-2); font-size: 17px; line-height: 1.55; }
 
 
@@ -578,7 +577,7 @@ select.select-field option { background: var(--input); }
 /* ---------- dashboard ---------- */
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; }
 .stat-card { position: relative; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); animation: riseIn 0.6s ease both; overflow: hidden; }
-/* KPI rhythm: a thin oxblood rule across the top of each card,
+/* KPI rhythm: a thin black rule across the top of each card,
    so the four stats read as one dashboard row. */
 .stat-card::before { content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: 2px; border-radius: 2px; background: var(--accent); opacity: 0.7; }
 .stat-card:nth-child(2) { animation-delay: 0.08s; }
@@ -586,9 +585,9 @@ select.select-field option { background: var(--input); }
 .stat-card:nth-child(4) { animation-delay: 0.24s; }
 .stat-icon { display: grid; place-items: center; width: 36px; height: 36px; margin-bottom: 18px; border-radius: var(--radius-inner); }
 .stat-icon.accent { color: var(--accent-hover); background: var(--accent-14); }
-.stat-icon.sand { color: var(--cyan); background: var(--cyan-10); }
-.stat-icon.oxblood { color: var(--green-light); background: var(--success-12); }
-.stat-icon.orange { color: var(--amber-light); background: var(--amber-10); }
+.stat-icon.grey { color: var(--cyan); background: var(--cyan-10); }
+.stat-icon.black { color: var(--green-light); background: var(--success-12); }
+.stat-icon.slate { color: var(--amber-light); background: var(--amber-10); }
 .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.1; overflow-wrap: anywhere; }
 .stat-title { margin-top: 6px; color: var(--text-2); font-size: 12px; }
 .stat-change { margin-top: 10px; color: var(--success); font-size: 11px; }
@@ -676,7 +675,7 @@ select.select-field option { background: var(--input); }
 
 /* Score ring (Assistant result): the SVG circles MUST have fill:none —
    without it a bare <circle> renders with the default black fill and
-   the gauge looks like a solid black disc. The value arc is the oxblood
+   the gauge looks like a solid black disc. The value arc is the black
    brand colour on a translucent track; the label is absolutely centred
    inside the ring, and the (long) confidence note lives BELOW the ring
    as .ring-caption so it can never collide with the live log. */
@@ -940,7 +939,7 @@ select.select-field option { background: var(--input); }
 .closing-cta { padding: 40px 24px 120px; }
 .closing-card { padding: 64px 32px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); text-align: center; }
 .closing-card h2 { font-size: 40px; font-weight: 600; margin-bottom: 12px; }
-.closing-card h2 em { font-family: "Fraunces", Georgia, serif; font-style: italic; font-weight: 500; color: var(--accent); }
+.closing-card h2 em { font-family: "Space Grotesk", "Inter", sans-serif; font-style: normal; font-weight: 600; color: var(--accent); }
 .closing-card p { max-width: 480px; margin: 0 auto 28px; color: var(--text-2); font-size: 17px; line-height: 1.55; }
 
 /* ---------- collapsible sidebar ---------- */

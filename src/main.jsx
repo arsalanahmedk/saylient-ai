@@ -86,7 +86,7 @@ const PIPELINE_STAGES = [
 /* The Saylient mark: a geometric "S" (two cubic bowls on a 24-unit grid)
    followed by three vertical bars of decreasing height (7, 4, 2) — the
    voice fading into silence. One flat colour (currentColor, so it follows
-   the palette: oxblood on a white tile, oxblood everywhere else).
+   the palette: black on a white tile, black everywhere else).
    The S is deliberately unclosed: the message pauses before it is sent. */
 const LOGO_S_PATH = "M17.5 7C17.5 4.2 15 2.5 12 2.5C9 2.5 6.5 4.2 6.5 7C6.5 9.8 9 11.5 12 11.5C15 11.5 17.5 13.2 17.5 16C17.5 18.8 15 20.5 12 20.5C9 20.5 6.5 18.8 6.5 16";
 const LOGO_WAVE_PATH = "M20.5 8.5V15.5M23 10V14M25.5 11V13";
@@ -245,7 +245,7 @@ function PhraseRewriteDemo({ go, user }) {
 }
 
 /* Magic UI-style animated beam: the places people write feed into Saylient.
-   CSS-only — an oxblood dot travels along each connector. */
+   CSS-only — a black dot travels along each connector. */
 const BEAM_APPS = ["Gmail", "Slack", "WhatsApp", "Upwork"];
 
 function BeamDiagram() {
@@ -337,9 +337,9 @@ function DashboardPreview({ go }) {
     {error && <div className="form-error">{error}</div>}
     <div className="stats-grid">
       <Stat title="Messages analyzed" value={stats?.total ?? 0} change={`${stats?.this_week ?? 0} this week`} icon={MessageSquare} color="accent" />
-      <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="oxblood" />
-      <Stat title="Flagged face concerns" value={stats?.fta_count ?? 0} change={stats?.total ? `${Math.round((stats.fta_count / stats.total) * 100)}% of messages` : "No analyses yet"} icon={Clock3} color="orange" />
-      <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="sand" />
+      <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="black" />
+      <Stat title="Flagged face concerns" value={stats?.fta_count ?? 0} change={stats?.total ? `${Math.round((stats.fta_count / stats.total) * 100)}% of messages` : "No analyses yet"} icon={Clock3} color="slate" />
+      <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="grey" />
     </div>
     <div className="panel recent-panel"><div className="panel-heading"><div><h3>Recent conversations</h3><p>Your latest analyses</p></div><button className="link-button" onClick={() => go("history")}>View all <ArrowRight size={14} /></button></div>
       {recent.length ? <div className="conversation-table">{recent.map(c => <div className="conversation-row" key={c.id}><div className="conversation-icon"><MessageSquare size={16} /></div><div className="conversation-name"><strong>{prettyLabel(c.intent?.label)}</strong><span>{c.message}</span></div><span className="conversation-date">{new Date(c.created_at).toLocaleDateString()}</span><div className="score-pill"><span /> {Math.round((c.intent?.confidence || 0) * 100)}%</div></div>)}</div> : <div className="placeholder-page" style={{ minHeight: 160 }}><div className="placeholder-icon"><History size={25} /></div><h2>No analyses yet.</h2><p>Your first analysis will appear here.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>}
@@ -384,7 +384,7 @@ function HalftoneFooter({ go }) {
       mask.width = rect.width;
       mask.height = rect.height;
       const maskContext = mask.getContext("2d");
-      maskContext.font = `600 ${fontSize}px "Fraunces", Georgia, serif`;
+      maskContext.font = `600 ${fontSize}px "Space Grotesk", "Inter", sans-serif`;
       maskContext.textAlign = "center";
       maskContext.textBaseline = "alphabetic";
       maskContext.fillStyle = "#fff";
@@ -395,8 +395,8 @@ function HalftoneFooter({ go }) {
           const alpha = pixels[(Math.floor(y) * rect.width + Math.floor(x)) * 4 + 3] / 255;
           if (alpha < 0.08) continue;
           const distance = Math.hypot(x - pointer.x, y - pointer.y);
-          const warmth = Math.max(0, 1 - distance / 95) * alpha;
-          context.fillStyle = `rgb(${Math.round(155 + warmth * 0)},${Math.round(44 + warmth * -15)},${Math.round(44 + warmth * -15)})`;
+          const lift = Math.max(0, 1 - distance / 95) * alpha;
+          context.fillStyle = `rgb(${Math.round(10 + lift * 105)},${Math.round(10 + lift * 105)},${Math.round(10 + lift * 105)})`;
           context.beginPath();
           context.arc(x, y, Math.sqrt(alpha) * gap * 0.58, 0, Math.PI * 2);
           context.fill();
@@ -670,9 +670,9 @@ function Dashboard({ go, user, onOpen }) {
     {loading ? <div className="panel placeholder-page"><div className="placeholder-icon"><Sparkles size={25} /></div><h2>Loading your overview…</h2></div> : <>
       <div className="stats-grid">
         <Stat title="Messages analyzed" value={stats?.total ?? 0} change={`${stats?.this_week ?? 0} this week`} icon={MessageSquare} color="accent" />
-        <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="oxblood" />
-        <Stat title="Flagged face concerns" value={stats?.fta_count ?? 0} change={stats?.total ? `${Math.round((stats.fta_count / stats.total) * 100)}% of messages` : "No analyses yet"} icon={Clock3} color="orange" />
-        <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="sand" />
+        <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="black" />
+        <Stat title="Flagged face concerns" value={stats?.fta_count ?? 0} change={stats?.total ? `${Math.round((stats.fta_count / stats.total) * 100)}% of messages` : "No analyses yet"} icon={Clock3} color="slate" />
+        <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="grey" />
       </div>
       <div className="dashboard-grid">
         <section className="panel activity-panel"><div className="panel-heading"><div><h3>Communication activity</h3><p>Your analyses over the last 30 days</p></div><span className="live-pill"><span className="pulse-dot" /> Live · your data</span></div>
