@@ -17,7 +17,7 @@
   --accent-hover: #e8c468;
   --accent-deep: #b8912f;
   --accent-tint: rgba(212, 168, 83, 0.1);
-  --success: #10b981;
+  --success: #d4a853;
   --pending: #f59e0b;
   --error: #f43f5e;
   --info: #3b82f6;
@@ -44,13 +44,13 @@
   --accent-50: rgba(212, 168, 83, 0.5);
   --accent-deep-28: rgba(184, 145, 47, 0.28);
   /* Status tints. */
-  --success-09: rgba(16, 185, 129, 0.09);
-  --success-12: rgba(16, 185, 129, 0.12);
-  --success-13: rgba(16, 185, 129, 0.13);
-  --success-30: rgba(16, 185, 129, 0.3);
-  --success-50: rgba(16, 185, 129, 0.5);
-  --success-00: rgba(16, 185, 129, 0);
-  --success-text: #34d399;
+  --success-09: rgba(212, 168, 83, 0.09);
+  --success-12: rgba(212, 168, 83, 0.12);
+  --success-13: rgba(212, 168, 83, 0.13);
+  --success-30: rgba(212, 168, 83, 0.3);
+  --success-50: rgba(212, 168, 83, 0.5);
+  --success-00: rgba(212, 168, 83, 0);
+  --success-text: #e8c468;
   --error-10: rgba(244, 63, 94, 0.1);
   --error-35: rgba(244, 63, 94, 0.35);
   --error-text: #fda4af;
