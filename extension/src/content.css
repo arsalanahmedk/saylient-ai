@@ -195,3 +195,22 @@
   50% { box-shadow: 0 8px 24px var(--sai-accent-glow), 0 0 0 9px var(--sai-accent-glow-clear); }
 }
 @keyframes saiProgress { from { transform: translateX(-100%); } to { transform: translateX(220%); } }
+
+/* Password field: show/hide eye toggle + strength meter (register form). */
+#saylient-ai-panel .sai-field-label .sai-pw-wrap { position: relative; display: block; margin-top: 6px; }
+#saylient-ai-panel .sai-field-label .sai-pw-wrap input { margin-top: 0; padding-right: 40px; }
+#saylient-ai-panel .sai-pw-toggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 28px; height: 28px; padding: 0; border: none; border-radius: 7px; background: transparent; color: var(--sai-text-3); cursor: pointer; }
+#saylient-ai-panel .sai-pw-toggle:hover { background: var(--sai-elevated); color: var(--sai-text); }
+#saylient-ai-panel .sai-pw-toggle svg { display: block; }
+#saylient-ai-panel .sai-pw-meter { margin: 2px 0 14px; }
+#saylient-ai-panel .sai-pw-bar { height: 5px; border-radius: 999px; background: var(--sai-track); overflow: hidden; }
+#saylient-ai-panel .sai-pw-bar i { display: block; height: 100%; background: #ef4444; transition: width 0.25s ease, background 0.25s ease; }
+#saylient-ai-panel .sai-pw-meter[data-level="2"] .sai-pw-bar i { background: #f59e0b; }
+#saylient-ai-panel .sai-pw-meter[data-level="3"] .sai-pw-bar i { background: #0ea5e9; }
+#saylient-ai-panel .sai-pw-meter[data-level="4"] .sai-pw-bar i { background: #10b981; }
+#saylient-ai-panel .sai-pw-label { margin: 6px 0 0; font-size: 11px; font-weight: 600; color: var(--sai-text); }
+#saylient-ai-panel .sai-pw-rules { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 3px 12px; }
+#saylient-ai-panel .sai-pw-rules li { font-size: 11px; color: var(--sai-text-2); }
+#saylient-ai-panel .sai-pw-rules li::before { content: "○ "; color: var(--sai-text-4); }
+#saylient-ai-panel .sai-pw-rules li.ok { color: var(--sai-text); }
+#saylient-ai-panel .sai-pw-rules li.ok::before { content: "✓ "; color: #10b981; }

@@ -3,7 +3,7 @@ import { createRoot } from "react-dom/client";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight, BarChart3, BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp,
-  Clipboard, Clock3, Copy, Download, Gauge, Github, Globe2, History, LayoutDashboard,
+  Clipboard, Clock3, Copy, Download, Eye, EyeOff, Gauge, Github, Globe2, History, LayoutDashboard,
   Lightbulb, Linkedin, LoaderCircle, LogOut, Mail, Menu, MessageSquare, MoreHorizontal, PenLine,
   Plus, RotateCw, Search, Send, Settings, ShieldCheck, Sparkles, Target, Trash2,
   UserRound, WandSparkles, X, Zap
@@ -1127,7 +1127,7 @@ function SettingsPage({ user, go, onSignOut }) {
     <div className="history-list">
       <section className="panel history-item"><div><small>Account</small><h3>{user.display_name || user.email}</h3><p>{user.email} · Member since {new Date(user.created_at).toLocaleDateString()} · Status: {user.status}</p></div><button className="secondary-action" onClick={() => go("profile")}><UserRound size={15} /> View profile</button></section>
       <section className="panel history-item"><div><small>Privacy · your data</small><h3>Export my data</h3><p>Downloads a JSON file with your profile, analyses, drafts and templates.</p>{exportError && <div className="form-error">{exportError}</div>}{exportDone && <div className="form-note">{exportDone}</div>}</div><button className="secondary-action" onClick={doExport} disabled={exportBusy}><Download size={15} /> {exportBusy ? "Preparing..." : "Download export"}</button></section>
-      <section className="panel history-item"><div><small>Privacy · danger zone</small><h3>Delete my account</h3><p>This permanently deletes your account, analyses, drafts and templates. It cannot be undone.</p>{deleteError && <div className="form-error">{deleteError}</div>}</div>{confirmDelete ? <div style={{ display: "flex", gap: 8, alignItems: "center" }}><input type="password" className="field select-field" value={password} onChange={e => setPassword(e.target.value)} placeholder="Confirm your password" /><button className="secondary-action" onClick={doDelete}><Trash2 size={15} /> Delete forever</button><button className="secondary-action" onClick={() => { setConfirmDelete(false); setPassword(""); }}>Cancel</button></div> : <button className="secondary-action" onClick={() => setConfirmDelete(true)}><Trash2 size={15} /> Delete account</button>}</section>
+      <section className="panel history-item"><div><small>Privacy · danger zone</small><h3>Delete my account</h3><p>This permanently deletes your account, analyses, drafts and templates. It cannot be undone.</p>{deleteError && <div className="form-error">{deleteError}</div>}</div>{confirmDelete ? <div style={{ display: "flex", gap: 8, alignItems: "center" }}><PasswordField value={password} onChange={e => setPassword(e.target.value)} placeholder="Confirm your password" inputClassName="field select-field" /><button className="secondary-action" onClick={doDelete}><Trash2 size={15} /> Delete forever</button><button className="secondary-action" onClick={() => { setConfirmDelete(false); setPassword(""); }}>Cancel</button></div> : <button className="secondary-action" onClick={() => setConfirmDelete(true)}><Trash2 size={15} /> Delete account</button>}</section>
     </div></>;
 }
 
@@ -1172,8 +1172,8 @@ function ProfilePage({ user, go, onSignOut, onUserChanged }) {
         <form onSubmit={saveName} style={{ display: "flex", gap: 8, alignItems: "center" }}><input className="field select-field" value={name} onChange={e => setName(e.target.value)} maxLength={100} placeholder="Your display name" /><button className="secondary-action" type="submit" disabled={busy}>Save</button></form></section>
       <section className="panel history-item"><div><small>Security</small><h3>Change password</h3><p>Changing your password signs out your other sessions.</p>{pwError && <div className="form-error">{pwError}</div>}{pwNote && <div className="form-note">{pwNote}</div>}</div>
         <form onSubmit={changePassword} style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <input type="password" className="field select-field" value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Current password" autoComplete="current-password" />
-          <input type="password" className="field select-field" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password (8+ chars)" minLength={8} autoComplete="new-password" />
+          <PasswordField value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} placeholder="Current password" autoComplete="current-password" inputClassName="field select-field" />
+          <PasswordField value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password (8+ chars)" minLength={8} autoComplete="new-password" showMeter inputClassName="field select-field" />
           <button className="secondary-action" type="submit" disabled={busy || !currentPassword || newPassword.length < 8}>Change password</button>
         </form></section>
       <section className="panel history-item"><div><small>Privacy</small><h3>Your data, your call</h3><p>Export everything or delete the account from Settings.</p></div><button className="secondary-action" onClick={() => go("settings")}><Settings size={15} /> Open settings</button></section>
@@ -1244,6 +1244,41 @@ function DemoChat({ go }) {
   return <div className="demo-chat-page"><div className="demo-chat-header"><button className="link-button" onClick={() => go("landing")}>← Back</button><div className="profile-avatar">AM</div><div><strong>Alex Morgan</strong><small>Client · Website redesign</small></div><span className="online-dot" /> <span className="demo-label">Extension demo</span></div><div className="demo-messages">{messages.map(([role, text, time], index) => <div className={`demo-message ${role}`} data-demo-message data-message-id={index} key={`${index}-${text}`}><span className="demo-author">{role === "client" ? "Alex" : "You"}</span><p>{text}</p><small>{time}</small></div>)}</div><div className="demo-composer"><textarea data-demo-composer value={draft} onChange={event => setDraft(event.target.value)} placeholder="Write a message..." /><button onClick={send}><Send size={16} /> Send</button></div><p className="demo-disclaimer"><ShieldCheck size={13} /> Local demo only · Saylient AI never sends messages automatically</p></div>;
 }
 
+/* Password strength, scored honestly from length + character variety.
+   A higher score means harder to guess — never unbreakable. The meter only
+   guides; the backend still only requires 8+ characters. */
+const PW_RULES = [
+  { label: "8+ characters", test: (pw) => pw.length >= 8 },
+  { label: "A capital letter", test: (pw) => /[A-Z]/.test(pw) },
+  { label: "A small letter", test: (pw) => /[a-z]/.test(pw) },
+  { label: "A number", test: (pw) => /[0-9]/.test(pw) },
+  { label: "A symbol", test: (pw) => /[^A-Za-z0-9]/.test(pw) },
+];
+function passwordStrength(pw) {
+  if (!pw) return { passed: 0, level: 0, label: "" };
+  const passed = PW_RULES.filter((r) => r.test(pw)).length;
+  const level = passed <= 2 ? 1 : passed === 3 ? 2 : passed === 4 ? 3 : 4;
+  return { passed, level, label: ["", "Weak", "Fair", "Good", "Strong"][level] };
+}
+
+/* Password input with a show/hide eye button, and — for new passwords — a
+   live strength meter with the five rules that make a password stronger. */
+function PasswordField({ value, onChange, placeholder, autoComplete, minLength, required, showMeter, inputClassName }) {
+  const [show, setShow] = useState(false);
+  const strength = passwordStrength(value);
+  return <>
+    <span className="pw-wrap">
+      <input type={show ? "text" : "password"} className={inputClassName} required={required} value={value} onChange={onChange} placeholder={placeholder} minLength={minLength} autoComplete={autoComplete} />
+      <button type="button" className="pw-toggle" aria-label={show ? "Hide password" : "Show password"} title={show ? "Hide password" : "Show password"} onClick={() => setShow((v) => !v)}>{show ? <EyeOff size={16} /> : <Eye size={16} />}</button>
+    </span>
+    {showMeter && value.length > 0 && <span className="pw-meter" data-level={strength.level}>
+      <span className="pw-bar"><i style={{ width: `${strength.level * 25}%` }} /></span>
+      <span className="pw-label">{strength.label} password — {strength.passed} of {PW_RULES.length} rules met</span>
+      <span className="pw-rules">{PW_RULES.map((r) => <span key={r.label} className={r.test(value) ? "pw-rule ok" : "pw-rule"}>{r.test(value) ? <Check size={12} /> : <span className="pw-dot" />} {r.label}</span>)}</span>
+    </span>}
+  </>;
+}
+
 function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken }) {
   const [isLogin, setIsLogin] = useState(mode !== "register");
   const [name, setName] = useState("");
@@ -1292,9 +1327,9 @@ function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken }) {
     <form onSubmit={submit}>
       {!isLogin && !forgot && <label>Display name<input value={name} onChange={e => setName(e.target.value)} placeholder="Arsalan Ahmed Khan" maxLength={100} /></label>}
       <label>Email<input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" /></label>
-      {!forgot && <label>Password<input type="password" required value={password} onChange={e => setPassword(e.target.value)} placeholder={isLogin ? "Your password" : "At least 8 characters"} minLength={isLogin ? 1 : 8} autoComplete={isLogin ? "current-password" : "new-password"} /></label>}
+      {!forgot && <label>Password<PasswordField required value={password} onChange={e => setPassword(e.target.value)} placeholder={isLogin ? "Your password" : "At least 8 characters"} minLength={isLogin ? 1 : 8} autoComplete={isLogin ? "current-password" : "new-password"} showMeter={!isLogin} /></label>}
       {forgot && resetToken && <label>Reset token<input value={resetToken} readOnly /></label>}
-      {forgot && resetToken && <label>New password<input type="password" required value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="At least 8 characters" minLength={8} autoComplete="new-password" /></label>}
+      {forgot && resetToken && <label>New password<PasswordField required value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="At least 8 characters" minLength={8} autoComplete="new-password" showMeter /></label>}
       <Button type="submit" icon={Sparkles}>{busy ? "Please wait..." : forgot ? (resetToken ? "Set new password" : "Send reset link") : isLogin ? "Sign in" : "Create account"}</Button>
     </form>
     <div className="auth-links">

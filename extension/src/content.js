@@ -54,6 +54,42 @@
     return node;
   };
 
+  /* Password strength, same 5 rules as the website: length + character
+     variety. A higher score means harder to guess — never unbreakable. */
+  const EYE_SVG = "<svg viewBox=\"0 0 24 24\" width=\"17\" height=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>";
+  const EYE_OFF_SVG = "<svg viewBox=\"0 0 24 24\" width=\"17\" height=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9.88 9.88a3 3 0 1 0 4.24 4.24\"/><path d=\"M10.73 5.08A10.43 10.43 0 0 1 12 5c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68\"/><path d=\"M6.61 6.61A13.526 13.526 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61\"/><line x1=\"2\" y1=\"2\" x2=\"22\" y2=\"22\"/></svg>";
+  const PW_RULES = [
+    { label: "8+ characters", test: (pw) => pw.length >= 8 },
+    { label: "A capital letter", test: (pw) => /[A-Z]/.test(pw) },
+    { label: "A small letter", test: (pw) => /[a-z]/.test(pw) },
+    { label: "A number", test: (pw) => /[0-9]/.test(pw) },
+    { label: "A symbol", test: (pw) => /[^A-Za-z0-9]/.test(pw) },
+  ];
+  const passwordStrength = (pw) => {
+    if (!pw) return { passed: 0, level: 0, label: "" };
+    const passed = PW_RULES.filter((r) => r.test(pw)).length;
+    const level = passed <= 2 ? 1 : passed === 3 ? 2 : passed === 4 ? 3 : 4;
+    return { passed, level, label: ["", "Weak", "Fair", "Good", "Strong"][level] };
+  };
+  /* Eye button that shows/hides a password field. Returns a wrapper span
+     holding the input + button, so the input keeps its field styling. */
+  const wrapPasswordInput = (input) => {
+    const wrap = el("span", "sai-pw-wrap");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sai-pw-toggle";
+    btn.innerHTML = EYE_SVG;
+    btn.setAttribute("aria-label", "Show password");
+    btn.addEventListener("click", () => {
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.innerHTML = show ? EYE_OFF_SVG : EYE_SVG;
+      btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    });
+    wrap.append(input, btn);
+    return wrap;
+  };
+
   const prettyLabel = (value) =>
     value
       ? String(value).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
@@ -174,7 +210,7 @@
     passwordInput.autocomplete = "current-password";
     passwordInput.placeholder = "Your password";
     passwordInput.setAttribute("data-password", "");
-    passwordLabel.append(passwordInput);
+    passwordLabel.append(wrapPasswordInput(passwordInput));
     const signinError = el("p", "sai-error");
     signinError.setAttribute("data-signin-error", "");
     signinError.hidden = true;
@@ -216,14 +252,35 @@
     regPasswordInput.placeholder = "At least 8 characters";
     regPasswordInput.minLength = 8;
     regPasswordInput.setAttribute("data-register-password", "");
-    regPasswordLabel.append(regPasswordInput);
+    regPasswordLabel.append(wrapPasswordInput(regPasswordInput));
+    /* Live strength meter for the new password: coloured bar + label +
+       the five rules, updated on every keystroke. Guidance only — the
+       backend still only requires 8+ characters. */
+    const meter = el("div", "sai-pw-meter");
+    meter.hidden = true;
+    const meterBar = el("div", "sai-pw-bar");
+    const meterFill = document.createElement("i");
+    meterBar.append(meterFill);
+    const meterLabel = el("p", "sai-pw-label", "");
+    const meterRules = el("ul", "sai-pw-rules");
+    PW_RULES.forEach((r) => meterRules.append(el("li", "", r.label)));
+    meter.append(meterBar, meterLabel, meterRules);
+    regPasswordInput.addEventListener("input", () => {
+      const pw = regPasswordInput.value;
+      const s = passwordStrength(pw);
+      meter.hidden = pw.length === 0;
+      meter.setAttribute("data-level", String(s.level));
+      meterFill.style.width = `${s.level * 25}%`;
+      meterLabel.textContent = `${s.label} password — ${s.passed} of ${PW_RULES.length} rules met`;
+      [...meterRules.children].forEach((li, i) => li.classList.toggle("ok", PW_RULES[i].test(pw)));
+    });
     const registerError = el("p", "sai-error");
     registerError.setAttribute("data-register-error", "");
     registerError.hidden = true;
     const registerSubmit = el("button", "sai-primary", "Create account");
     registerSubmit.type = "submit";
     registerSubmit.setAttribute("data-register-submit", "");
-    registerForm.append(nameLabel, regEmailLabel, regPasswordLabel, registerError, registerSubmit);
+    registerForm.append(nameLabel, regEmailLabel, regPasswordLabel, meter, registerError, registerSubmit);
     registerForm.addEventListener("submit", registerAccount);
     const backToggle = el("button", "sai-toggle", "Already have an account? Sign in");
     backToggle.type = "button";

@@ -689,6 +689,23 @@ select.select-field option { background: var(--input); }
 
 /* Anchored sections must clear the sticky nav pill when jumped to. */
 section[id] { scroll-margin-top: 120px; }
+
+/* Password field: show/hide eye toggle + strength meter. */
+.pw-wrap { position: relative; display: block; flex: 1 1 180px; min-width: 0; margin-top: 8px; }
+.pw-wrap input { width: 100%; margin-top: 0; padding-right: 42px; }
+.pw-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: none; border-radius: 8px; background: transparent; color: var(--text-2); cursor: pointer; }
+.pw-toggle:hover { background: var(--card); color: var(--text-1); }
+.pw-meter { display: block; flex: 1 1 100%; margin-top: 10px; }
+.pw-bar { display: block; height: 6px; border-radius: 999px; background: var(--border); overflow: hidden; }
+.pw-bar i { display: block; height: 100%; border-radius: 999px; background: #ef4444; transition: width 0.25s ease, background 0.25s ease; }
+.pw-meter[data-level="2"] .pw-bar i { background: #f59e0b; }
+.pw-meter[data-level="3"] .pw-bar i { background: #0ea5e9; }
+.pw-meter[data-level="4"] .pw-bar i { background: #10b981; }
+.pw-label { display: block; margin-top: 6px; font-size: 12px; font-weight: 600; color: var(--text-1); }
+.pw-rules { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; }
+.pw-rule { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 400; color: var(--text-2); }
+.pw-rule.ok { color: var(--text-1); }
+.pw-rule .pw-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); }
 .empty-result h3 { font-size: 26px; font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; margin-bottom: 12px; }
 .empty-result p { max-width: 290px; color: var(--text-2); font-size: 13px; line-height: 1.7; }
 .mini-points { display: flex; gap: 14px; margin-top: 23px; color: var(--text-2); font-size: 12px; }
