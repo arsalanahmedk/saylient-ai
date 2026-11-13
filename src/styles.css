@@ -312,9 +312,10 @@ select.select-field option { background: var(--input); }
 .hero-frame .hero-window { position: relative; }
 
 /* Integrations marquee: the extension works on any HTTPS page. */
-.marquee { display: flex; align-items: center; gap: 28px; max-width: 1120px; margin: 60px auto 0; padding: 0 24px; overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent); }
-.marquee-label { flex: none; color: var(--text-3); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
-.marquee-track { display: flex; animation: marquee 32s linear infinite; }
+.marquee { max-width: 1120px; margin: 60px auto 0; padding: 0 24px; text-align: center; }
+.marquee-label { display: block; margin-bottom: 18px; color: var(--text-3); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.marquee-viewport { overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent); }
+.marquee-track { display: flex; width: max-content; animation: marquee 32s linear infinite; }
 .marquee:hover .marquee-track { animation-play-state: paused; }
 .marquee-item { flex: none; padding-right: 44px; color: var(--text-2); font-size: 15px; font-weight: 600; white-space: nowrap; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }

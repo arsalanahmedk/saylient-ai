@@ -373,8 +373,10 @@ function Marquee() {
   const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
   return <div className="marquee" aria-label="Works wherever you write">
     <span className="marquee-label">Works wherever you write</span>
+    <div className="marquee-viewport">
     <div className="marquee-track">
       {items.map((item, i) => <span className="marquee-item" key={`${item}-${i}`} aria-hidden={i >= MARQUEE_ITEMS.length}>{item}</span>)}
+    </div>
     </div>
   </div>;
 }
