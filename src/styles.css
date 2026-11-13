@@ -1,48 +1,48 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 :root {
-  /* Deep teal + mint palette (chosen 2026-11-13). Every colour in this file
+  /* Midnight Navy + Gold palette (chosen 2026-11-13). Every colour in this file
      is one of these variables — a palette swap is a single edit here. */
-  --bg: #06231f;
-  --panel: #0b2e2a;
-  --card: #103b34;
-  --elevated: #155047;
-  --input: #155047;
+  --bg: #081120;
+  --panel: #0c1a2e;
+  --card: #10233c;
+  --elevated: #16304f;
+  --input: #16304f;
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.14);
   --text: #f2f7f5;
-  --text-2: #a8bfb8;
-  --text-3: #7a938c;
-  --accent: #6ee7b7;
-  --accent-hover: #a7f3d0;
-  --accent-deep: #10b981;
-  --accent-tint: rgba(110, 231, 183, 0.1);
+  --text-2: #9db0c6;
+  --text-3: #6b7e96;
+  --accent: #d4a853;
+  --accent-hover: #e8c468;
+  --accent-deep: #b8912f;
+  --accent-tint: rgba(212, 168, 83, 0.1);
   --success: #10b981;
   --pending: #f59e0b;
   --error: #f43f5e;
   --info: #3b82f6;
   --white: #ffffff;
-  /* Brand gradient (mint -> teal). Used in exactly 3 places: the logo, the
+  /* Brand gradient (gold -> deep gold). Used in exactly 3 places: the logo, the
      primary button, and the headline key phrase. */
   --brand-gradient: linear-gradient(135deg, var(--accent), var(--accent-deep));
   /* Accent tints, named by alpha. */
-  --accent-03: rgba(110, 231, 183, 0.03);
-  --accent-08: rgba(110, 231, 183, 0.08);
-  --accent-10: rgba(110, 231, 183, 0.1);
-  --accent-12: rgba(110, 231, 183, 0.12);
-  --accent-14: rgba(110, 231, 183, 0.14);
-  --accent-15: rgba(110, 231, 183, 0.15);
-  --accent-16: rgba(110, 231, 183, 0.16);
-  --accent-18: rgba(110, 231, 183, 0.18);
-  --accent-20: rgba(110, 231, 183, 0.2);
-  --accent-24: rgba(110, 231, 183, 0.24);
-  --accent-25: rgba(110, 231, 183, 0.25);
-  --accent-30: rgba(110, 231, 183, 0.3);
-  --accent-35: rgba(110, 231, 183, 0.35);
-  --accent-40: rgba(110, 231, 183, 0.4);
-  --accent-45: rgba(110, 231, 183, 0.45);
-  --accent-50: rgba(110, 231, 183, 0.5);
-  --accent-deep-28: rgba(16, 185, 129, 0.28);
+  --accent-03: rgba(212, 168, 83, 0.03);
+  --accent-08: rgba(212, 168, 83, 0.08);
+  --accent-10: rgba(212, 168, 83, 0.1);
+  --accent-12: rgba(212, 168, 83, 0.12);
+  --accent-14: rgba(212, 168, 83, 0.14);
+  --accent-15: rgba(212, 168, 83, 0.15);
+  --accent-16: rgba(212, 168, 83, 0.16);
+  --accent-18: rgba(212, 168, 83, 0.18);
+  --accent-20: rgba(212, 168, 83, 0.2);
+  --accent-24: rgba(212, 168, 83, 0.24);
+  --accent-25: rgba(212, 168, 83, 0.25);
+  --accent-30: rgba(212, 168, 83, 0.3);
+  --accent-35: rgba(212, 168, 83, 0.35);
+  --accent-40: rgba(212, 168, 83, 0.4);
+  --accent-45: rgba(212, 168, 83, 0.45);
+  --accent-50: rgba(212, 168, 83, 0.5);
+  --accent-deep-28: rgba(184, 145, 47, 0.28);
   /* Status tints. */
   --success-09: rgba(16, 185, 129, 0.09);
   --success-12: rgba(16, 185, 129, 0.12);
@@ -50,14 +50,14 @@
   --success-30: rgba(16, 185, 129, 0.3);
   --success-50: rgba(16, 185, 129, 0.5);
   --success-00: rgba(16, 185, 129, 0);
-  --success-text: #6ee7b7;
+  --success-text: #34d399;
   --error-10: rgba(244, 63, 94, 0.1);
   --error-35: rgba(244, 63, 94, 0.35);
   --error-text: #fda4af;
-  --cyan: #22d3ee;
-  --cyan-05: rgba(34, 211, 238, 0.05);
-  --cyan-10: rgba(34, 211, 238, 0.1);
-  --green-light: #34d399;
+  --cyan: #8FA8C8;
+  --cyan-05: rgba(143, 168, 200, 0.05);
+  --cyan-10: rgba(143, 168, 200, 0.1);
+  --green-light: #E8C468;
   --amber-light: #fbbf24;
   --amber-10: rgba(245, 158, 11, 0.1);
   /* Neutrals and shadows. */
@@ -71,10 +71,10 @@
   --black-45: rgba(0, 0, 0, 0.45);
   --black-50: rgba(0, 0, 0, 0.5);
   --black-60: rgba(0, 0, 0, 0.6);
-  --nav-bg: rgba(6, 35, 31, 0.82);
-  --scrollbar: #1e5a4f;
-  --dot-neutral: #33584f;
-  --tunnel-bg: #04100e;
+  --nav-bg: rgba(8, 17, 32, 0.82);
+  --scrollbar: #24466b;
+  --dot-neutral: #2e4258;
+  --tunnel-bg: #050a14;
   --radius-card: 16px;
   --radius-inner: 12px;
   --radius-input: 10px;
@@ -133,7 +133,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   border: 0;
   border-radius: 100px;
   background: var(--brand-gradient);
-  color: var(--white);
+  color: #081120;
   font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
@@ -246,6 +246,7 @@ select.select-field option { background: var(--input); }
 
 /* ---------- logo ---------- */
 .logo { display: inline-flex; align-items: center; gap: 9px; color: var(--text); font-size: 18px; font-weight: 700; letter-spacing: -0.02em; background: none; border: 0; padding: 0; text-align: left; }
+.logo-ai { color: var(--accent); }
 .logo-icon {
   display: inline-grid;
   place-items: center;
@@ -253,9 +254,9 @@ select.select-field option { background: var(--input); }
   height: 30px;
   border-radius: 9px;
   background: var(--brand-gradient);
-  color: var(--white);
+  color: #081120;
 }
-.logo-icon svg { width: 16px; height: 16px; }
+.logo-icon svg { width: 20px; height: 16px; }
 
 /* ---------- landing ---------- */
 .landing { min-height: 100vh; background: var(--bg); }
@@ -277,8 +278,8 @@ select.select-field option { background: var(--input); }
   -webkit-backdrop-filter: blur(18px);
 }
 .landing-nav-links { display: flex; align-items: center; gap: 8px; }
-.landing-nav-links a { padding: 8px 12px; border-radius: 100px; color: var(--text-2); font-size: 14px; transition: color 0.2s ease, background 0.2s ease; }
-.landing-nav-links a:hover { color: var(--text); background: var(--white-06); }
+.landing-nav-links a, .landing-nav-links button { padding: 8px 12px; border: 0; border-radius: 100px; background: none; color: var(--text-2); font-size: 14px; font-family: inherit; cursor: pointer; transition: color 0.2s ease, background 0.2s ease; }
+.landing-nav-links a:hover, .landing-nav-links button:hover { color: var(--text); background: var(--white-06); }
 .nav-user {
   max-width: 260px;
   overflow: hidden;
@@ -293,13 +294,13 @@ select.select-field option { background: var(--input); }
   white-space: nowrap;
 }
 
-/* ---------- lamp hero (Aceternity Lamp, recoloured mint on deep teal) ----------
+/* ---------- lamp hero (Aceternity Lamp, recoloured gold on midnight navy) ----------
    A bright glow cone shines down from the top centre, like a lamp over the
    headline; the interactive analysis window sits below in a browser frame
    (Qronos hero rhythm), with an integrations marquee underneath. */
 .hero-lamp { position: relative; padding: 112px 24px 8px; text-align: center; }
-.lamp-glow { position: absolute; top: -160px; left: 50%; width: 920px; max-width: 130vw; height: 440px; transform: translateX(-50%); background: radial-gradient(ellipse 50% 62% at 50% 0%, rgba(110, 231, 183, 0.22), rgba(110, 231, 183, 0.05) 55%, transparent 75%); pointer-events: none; }
-.lamp-beam { position: absolute; top: 0; left: 50%; width: 540px; max-width: 92vw; height: 350px; transform: translateX(-50%); clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); background: linear-gradient(to bottom, rgba(110, 231, 183, 0.32), rgba(110, 231, 183, 0.07) 55%, transparent); filter: blur(18px); pointer-events: none; }
+.lamp-glow { position: absolute; top: -160px; left: 50%; width: 920px; max-width: 130vw; height: 440px; transform: translateX(-50%); background: radial-gradient(ellipse 50% 62% at 50% 0%, rgba(212, 168, 83, 0.22), rgba(212, 168, 83, 0.05) 55%, transparent 75%); pointer-events: none; }
+.lamp-beam { position: absolute; top: 0; left: 50%; width: 540px; max-width: 92vw; height: 350px; transform: translateX(-50%); clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); background: linear-gradient(to bottom, rgba(212, 168, 83, 0.32), rgba(212, 168, 83, 0.07) 55%, transparent); filter: blur(18px); pointer-events: none; }
 .hero-lamp .hero-badge { position: relative; }
 .hero-lamp h1 { position: relative; max-width: 840px; margin: 0 auto; font-size: 68px; line-height: 1.03; font-weight: 700; letter-spacing: -0.04em; }
 .hero-lamp h1 em { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; font-style: italic; }
@@ -308,7 +309,7 @@ select.select-field option { background: var(--input); }
 .hero-lamp .hero-note { position: relative; justify-content: center; }
 
 .hero-frame { position: relative; max-width: 880px; margin: 52px auto 0; padding: 0 24px; }
-.hero-frame-glow { position: absolute; inset: -48px -70px; background: radial-gradient(ellipse 60% 55% at 50% 40%, rgba(110, 231, 183, 0.14), transparent 70%); pointer-events: none; }
+.hero-frame-glow { position: absolute; inset: -48px -70px; background: radial-gradient(ellipse 60% 55% at 50% 40%, rgba(212, 168, 83, 0.14), transparent 70%); pointer-events: none; }
 .hero-frame .hero-window { position: relative; }
 
 /* Integrations marquee: the extension works on any HTTPS page. */
@@ -434,7 +435,7 @@ select.select-field option { background: var(--input); }
 .section-heading { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: end; margin-bottom: 48px; }
 .section-heading h2 { font-size: 40px; line-height: 1.08; font-weight: 700; letter-spacing: -0.04em; }
 .section-heading p { color: var(--text-2); font-size: 16px; line-height: 1.55; }
-/* ---------- bento grid (Aceternity Bento Grid, inverted to deep teal) ----------
+/* ---------- bento grid (Aceternity Bento Grid, inverted to midnight navy) ----------
    Skewed / asymmetric: one large anchor cell (the live before/after rewrite
    demo) spans 2 columns and 2 rows, surrounded by smaller uneven cells. */
 .bento-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(190px, auto); gap: 16px; }
@@ -488,15 +489,15 @@ select.select-field option { background: var(--input); }
 /* ---------- perspective tunnel (scroll section) ----------
    Scroll-driven 3D tunnel (see PerspectiveTunnelHero in main.jsx): the
    section is 320vh tall, the hero sticks to the viewport while the page
-   scrolls, and the image cards fly toward the viewer. Mint glow and rings
-   on the deep teal background. */
+   scrolls, and the image cards fly toward the viewer. Gold glow and rings
+   on the midnight navy background. */
 .tunnel-scroll { position: relative; height: 320vh; margin: 40px 0 0; }
 .tunnel-hero { position: sticky; top: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; background: var(--tunnel-bg); }
-.tunnel-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(110, 231, 183, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(110, 231, 183, 0.05) 1px, transparent 1px); background-size: 72px 72px; -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000, transparent 75%); mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000, transparent 75%); }
-.tunnel-glow { position: absolute; left: 50%; top: 50%; width: 720px; height: 720px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(110, 231, 183, 0.16), transparent 65%); pointer-events: none; }
-.tunnel-ring { position: absolute; left: 50%; top: 50%; border: 1px solid rgba(110, 231, 183, 0.18); border-radius: 50%; transform: translate(-50%, -50%); }
+.tunnel-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(212, 168, 83, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(212, 168, 83, 0.05) 1px, transparent 1px); background-size: 72px 72px; -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000, transparent 75%); mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000, transparent 75%); }
+.tunnel-glow { position: absolute; left: 50%; top: 50%; width: 720px; height: 720px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(212, 168, 83, 0.16), transparent 65%); pointer-events: none; }
+.tunnel-ring { position: absolute; left: 50%; top: 50%; border: 1px solid rgba(212, 168, 83, 0.18); border-radius: 50%; transform: translate(-50%, -50%); }
 .tunnel-ring-small { width: 420px; height: 420px; }
-.tunnel-ring-large { width: 760px; height: 760px; border-color: rgba(110, 231, 183, 0.09); }
+.tunnel-ring-large { width: 760px; height: 760px; border-color: rgba(212, 168, 83, 0.09); }
 .tunnel-title { position: relative; z-index: 5; max-width: 840px; padding: 0 24px; text-align: center; }
 .tunnel-title p { color: var(--accent-hover); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
 .tunnel-title h1 { margin-top: 14px; font-size: 64px; line-height: 1.04; font-weight: 700; letter-spacing: -0.04em; }
@@ -552,6 +553,26 @@ select.select-field option { background: var(--input); }
 }
 .halftone-footer-inner .logo { color: var(--text); font-size: 15px; }
 .halftone-footer small { color: var(--text-3); }
+.halftone-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px; max-width: 1120px; margin: 0 auto; padding: 56px 24px 40px; }
+.halftone-top > div { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.halftone-top small { color: var(--text-3); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.halftone-top a, .halftone-top button { background: none; border: 0; padding: 0; color: var(--text-2); font-size: 14px; font-family: inherit; text-align: left; cursor: pointer; }
+.halftone-top a:hover, .halftone-top button:hover { color: var(--text); }
+.halftone-top span { color: var(--text-2); font-size: 14px; }
+.halftone-rule { display: flex; justify-content: space-between; gap: 16px; max-width: 1120px; margin: 0 auto; padding: 18px 24px 28px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 12px; }
+
+/* ---------- contact page ---------- */
+.contact-page { padding-top: 56px; padding-bottom: 80px; }
+.contact-grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px; align-items: start; }
+.contact-card h2, .contact-form h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.02em; margin: 14px 0 8px; }
+.contact-card p, .contact-form > p { color: var(--text-2); font-size: 14px; line-height: 1.6; margin-bottom: 18px; }
+.contact-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.contact-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; }
+.contact-list svg { flex: none; color: var(--accent); }
+.contact-list a { color: var(--text); overflow-wrap: anywhere; }
+.contact-list a:hover { color: var(--accent); }
+.contact-form label { margin-bottom: 16px; }
+.contact-form .btn { margin-top: 4px; }
 
 .profile { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 20px; padding: 14px 6px 0; border-top: 1px solid var(--border); background: none; color: var(--text); text-align: left; }
 .profile-avatar {
@@ -660,7 +681,7 @@ select.select-field option { background: var(--input); }
 /* ---------- dashboard ---------- */
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; }
 .stat-card { position: relative; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); animation: riseIn 0.6s ease both; overflow: hidden; }
-/* Qronos "Agent Insights" KPI rhythm: a thin mint rule across the top of
+/* Qronos "Agent Insights" KPI rhythm: a thin gold rule across the top of
    each card, so the four stats read as one dashboard row. */
 .stat-card::before { content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--accent), transparent 75%); opacity: 0.7; }
 .stat-card:nth-child(2) { animation-delay: 0.08s; }
@@ -758,7 +779,7 @@ select.select-field option { background: var(--input); }
 
 /* Score ring (Assistant result): the SVG circles MUST have fill:none —
    without it a bare <circle> renders with the default black fill and
-   the gauge looks like a solid black disc. The value arc is the mint
+   the gauge looks like a solid black disc. The value arc is the gold
    brand colour on a translucent track; the label is absolutely centred
    inside the ring, and the (long) confidence note lives BELOW the ring
    as .ring-caption so it can never collide with the live log. */
@@ -885,7 +906,7 @@ select.select-field option { background: var(--input); }
 .demo-composer { display: flex; gap: 10px; padding: 15px; border-top: 1px solid var(--border); }
 .demo-composer textarea { flex: 1; height: 44px; padding: 11px; border: 1px solid var(--border); border-radius: var(--radius-input); background: var(--input); color: var(--text); font-size: 13px; resize: none; outline: none; }
 .demo-composer textarea:focus { border-color: var(--accent); }
-.demo-composer button { display: flex; align-self: stretch; align-items: center; gap: 7px; padding: 0 15px; border: 0; border-radius: var(--radius-input); background: var(--accent-deep); color: var(--white); font-size: 13px; font-weight: 600; }
+.demo-composer button { display: flex; align-self: stretch; align-items: center; gap: 7px; padding: 0 15px; border: 0; border-radius: var(--radius-input); background: var(--accent-deep); color: #081120; font-size: 13px; font-weight: 600; }
 .demo-disclaimer { display: flex; justify-content: center; align-items: center; gap: 5px; margin: 0 0 16px; color: var(--text-3); font-size: 11px; }
 
 /* ---------- responsive ---------- */
@@ -916,6 +937,8 @@ select.select-field option { background: var(--input); }
   .dashboard-content { padding: 35px 25px; }
   .app-header { padding: 0 25px; }
   .tunnel-title h1 { font-size: 44px; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .halftone-top { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 600px) {
   .shell { padding: 0 18px; }
@@ -949,6 +972,7 @@ select.select-field option { background: var(--input); }
   .assistant-form, .result-panel { padding: 18px; }
   .conversation-date { display: none; }
   .field-row, .field-row.three { grid-template-columns: 1fr; }
+  .halftone-top { grid-template-columns: 1fr; }
   .result-cards, .analysis-breakdown { grid-template-columns: 1fr; }
   .result-actions { justify-content: stretch; }
   .result-actions .button, .result-actions .btn { flex: 1; }

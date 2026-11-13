@@ -3,8 +3,8 @@ import { createRoot } from "react-dom/client";
 import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
 import {
   ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleHelp,
-  Clipboard, Clock3, Copy, Download, Gauge, Globe2, History, LayoutDashboard,
-  Lightbulb, LoaderCircle, LogOut, Menu, MessageSquare, Moon, MoreHorizontal, PenLine,
+  Clipboard, Clock3, Copy, Download, Gauge, Github, Globe2, History, LayoutDashboard,
+  Lightbulb, Linkedin, LoaderCircle, LogOut, Mail, Menu, MessageSquare, Moon, MoreHorizontal, PenLine,
   Plus, RotateCw, Search, Send, Settings, ShieldCheck, Sparkles, Target, Trash2,
   UserRound, WandSparkles, X, Zap
 } from "lucide-react";
@@ -27,6 +27,7 @@ const navItems = [
   ["templates", "Saved templates", Clipboard],
   ["theory", "Politeness theory", BookOpen],
   ["extension", "Browser extension", Globe2],
+  ["contact", "Contact", Mail],
   ["settings", "Settings", Settings],
   ["profile", "Profile", UserRound],
 ];
@@ -91,8 +92,28 @@ const PIPELINE_STAGES = [
   { name: "Draft", log: "Drafting a response you can edit…" },
 ];
 
+/* The Saylient mark: a geometric "S" (two cubic bowls on a 24-unit grid)
+   followed by three vertical bars of decreasing height (7, 4, 2) — the
+   voice fading into silence. One flat colour (currentColor, so it follows
+   the palette: dark navy in the gold tile, gold on dark everywhere else).
+   The S is deliberately unclosed: the message pauses before it is sent. */
+const LOGO_S_PATH = "M17.5 7C17.5 4.2 15 2.5 12 2.5C9 2.5 6.5 4.2 6.5 7C6.5 9.8 9 11.5 12 11.5C15 11.5 17.5 13.2 17.5 16C17.5 18.8 15 20.5 12 20.5C9 20.5 6.5 18.8 6.5 16";
+const LOGO_WAVE_PATH = "M20.5 8.5V15.5M23 10V14M25.5 11V13";
+
+function LogoMark() {
+  return <svg viewBox="0 0 30 24" aria-hidden="true"><g fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><path d={LOGO_S_PATH} /><path d={LOGO_WAVE_PATH} /></g></svg>;
+}
+
 function Logo() {
-  return <div className="logo"><span className="logo-mark"><Sparkles size={16} /></span><span>saylient<span className="logo-ai">.ai</span></span></div>;
+  return <div className="logo"><span className="logo-icon"><LogoMark /></span><span>Saylient<span className="logo-ai">AI</span></span></div>;
+}
+
+/* Section links on the landing used plain #hash anchors, which the hash
+   router reads as page names — clicking one kicked the visitor to the
+   sign-in page. Route through go() and scroll after the render. */
+function goSection(go, id) {
+  go("landing");
+  window.setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }), 60);
 }
 
 function Button({ children, variant = "primary", onClick, icon: Icon, type = "button", disabled }) {
@@ -222,7 +243,7 @@ function TunnelCard({ src, title, index, total, progress, pointerX, pointerY, st
   </motion.div>;
 }
 
-function HalftoneFooter() {
+function HalftoneFooter({ go }) {
   const canvasRef = useRef(null);
   const rootRef = useRef(null);
   useEffect(() => {
@@ -257,7 +278,7 @@ function HalftoneFooter() {
           if (alpha < 0.08) continue;
           const distance = Math.hypot(x - pointer.x, y - pointer.y);
           const warmth = Math.max(0, 1 - distance / 95) * alpha;
-          context.fillStyle = `rgb(${Math.round(110 - warmth * 94)},${Math.round(231 - warmth * 46)},${Math.round(183 - warmth * 54)})`;
+          context.fillStyle = `rgb(${Math.round(212 + warmth * 20)},${Math.round(168 + warmth * 28)},${Math.round(83 + warmth * 21)})`;
           context.beginPath();
           context.arc(x, y, Math.sqrt(alpha) * gap * 0.58, 0, Math.PI * 2);
           context.fill();
@@ -283,9 +304,9 @@ function HalftoneFooter() {
   return <footer ref={rootRef} className="halftone-footer">
     <canvas ref={canvasRef} aria-hidden="true" />
     <div className="halftone-top">
-      <div><strong>Saylient AI studio</strong><span>© 2026 · Context / Tone / Clarity</span></div>
-      <div><small>Explore</small><a href="#features">Product</a><a href="#how">How it works</a><a href="#theory">The framework</a></div>
-      <div><small>Connect</small><a href="mailto:hello@saylient.ai">hello@saylient.ai</a><a href="#extension">Browser extension</a><a href="#assistant">Start a conversation</a></div>
+      <div><Logo /><span>© 2026 · Context / Tone / Clarity</span></div>
+      <div><small>Explore</small><button type="button" onClick={() => goSection(go, "features")}>Product</button><button type="button" onClick={() => goSection(go, "how")}>How it works</button><button type="button" onClick={() => goSection(go, "theory")}>The framework</button><button type="button" onClick={() => goSection(go, "extension")}>Browser extension</button></div>
+      <div><small>Connect</small><a href="mailto:arsalanahmeda813@gmail.com">arsalanahmeda813@gmail.com</a><button type="button" onClick={() => go("contact")}>Contact</button><a href="https://www.linkedin.com/in/arsalan-ahmed-khan-b4a9a2310" target="_blank" rel="noreferrer">LinkedIn</a><a href="https://github.com/arsalanahmedk" target="_blank" rel="noreferrer">GitHub</a></div>
       <div><small>Studio</small><span>Made for messages that matter.</span><button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Back to top ↑</button></div>
     </div>
     <div className="halftone-rule"><span>saylient.ai / communication studio</span><span>Keep the intent. Change the impact.</span></div>
@@ -399,6 +420,17 @@ function RewriteDemoCell() {
   </article>;
 }
 
+/* Shared public navigation (landing + contact page). Section links route
+   through goSection, not #hash anchors, so the hash router cannot mistake
+   them for page names. */
+function PublicNav({ go, user }) {
+  return <nav className="landing-nav" aria-label="Primary navigation">
+    <Logo />
+    <div className="landing-nav-links"><button type="button" onClick={() => goSection(go, "features")}>Product</button><button type="button" onClick={() => goSection(go, "how")}>How it works</button><button type="button" onClick={() => goSection(go, "theory")}>Framework</button><button type="button" onClick={() => goSection(go, "extension")}>Extension</button><button type="button" onClick={() => go("contact")}>Contact</button></div>
+    {user ? <button className="nav-user" onClick={() => go("overview")}>{user.display_name || user.email} · Workspace</button> : <Button onClick={() => go("login")}>Sign in</Button>}
+  </nav>;
+}
+
 function Landing({ go, user }) {
   const steps = [
     ["01", "Paste the message", "Share the message and a little context — who it's for and what you want."],
@@ -422,11 +454,7 @@ function Landing({ go, user }) {
     ["Avoidance", "Says nothing, or delays. Sometimes the kindest and safest move."],
   ];
   return <div className="landing">
-    <nav className="landing-nav" aria-label="Primary navigation">
-      <Logo />
-      <div className="landing-nav-links"><a href="#features">Product</a><a href="#how">How it works</a><a href="#theory">Framework</a><a href="#extension">Extension</a></div>
-      {user ? <button className="nav-user" onClick={() => go("overview")}>{user.display_name || user.email} · Workspace</button> : <Button onClick={() => go("login")}>Sign in</Button>}
-    </nav>
+    <PublicNav go={go} user={user} />
     <main>
       <section className="hero-lamp shell">
         <div className="lamp-glow" aria-hidden="true" />
@@ -497,7 +525,7 @@ function Landing({ go, user }) {
 
       <section className="final-cta"><div className="shell center-heading"><div className="eyebrow">Your next message starts here</div><h2>Say it better.<br /><em>Feel the difference.</em></h2><Button onClick={() => go("assistant")} icon={Sparkles}>Try Saylient AI free <ArrowRight size={15} /></Button></div></section>
     </main>
-    <HalftoneFooter />
+    <HalftoneFooter go={go} />
   </div>;
 }
 
@@ -1016,6 +1044,56 @@ function ExtensionPage({ go }) {
   return <><PageHeader eyebrow="Workspace" title="Good communication, wherever work happens." text="A thoughtful layer for your browser."><Button onClick={() => go("demo-chat")} icon={Globe2}>Open local demo chat</Button></PageHeader><div className="placeholder-page panel"><div className="placeholder-icon"><Globe2 size={25} /></div><h2>Review suggestions without leaving your workflow.</h2><p>Download the extension below, unzip it, and load it in Chrome (chrome://extensions → Developer mode → Load unpacked). Clicking the extension icon opens this site; on any page, click the floating ✦ button to analyze the text on your screen — sign in once in the panel, then Analyze. The extension calls the real backend and shows the live intent, strategy and draft. It never monitors the page and never sends anything automatically.</p><div className="extension-actions"><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension (.zip)</span></a><Button variant="outline" onClick={() => go("demo-chat")}>Open local demo chat <ArrowRight size={15} /></Button></div></div></>;
 }
 
+/* Contact — a public page (no sign-in needed), reached from the landing
+   nav, the footer, and the workspace sidebar. The form has no backend:
+   submitting opens the visitor's email client via mailto, and the page
+   says so plainly — nothing is sent or stored by Saylient AI. */
+const CONTACT_EMAIL = "arsalanahmeda813@gmail.com";
+const CONTACT_LINKEDIN = "https://www.linkedin.com/in/arsalan-ahmed-khan-b4a9a2310";
+const CONTACT_GITHUB = "https://github.com/arsalanahmedk";
+
+function ContactPage({ go, user }) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [opened, setOpened] = useState(false);
+  const submit = (e) => {
+    e.preventDefault();
+    const subject = encodeURIComponent(`Saylient AI — message from ${name.trim() || "a visitor"}`);
+    const body = encodeURIComponent(`${message.trim()}\n\n— ${name.trim()}${email.trim() ? ` (${email.trim()})` : ""}`);
+    window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`;
+    setOpened(true);
+  };
+  return <div className="landing">
+    <PublicNav go={go} user={user} />
+    <main className="shell contact-page">
+      <PageHeader eyebrow="Contact" title="Talk to the person behind Saylient AI." text="Questions, feedback, or a collaboration idea — write to Arsalan directly."><Button variant="outline" onClick={() => go("landing")}>Back to the landing page</Button></PageHeader>
+      <div className="contact-grid">
+        <div className="panel contact-card">
+          <div className="panel-icon accent"><UserRound size={18} /></div>
+          <h2>Arsalan Ahmed Khan</h2>
+          <p>Artificial Intelligence student at PAF-IAST, building Saylient AI — a communication assistant for freelancers.</p>
+          <ul className="contact-list">
+            <li><Mail size={15} /><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
+            <li><Linkedin size={15} /><a href={CONTACT_LINKEDIN} target="_blank" rel="noreferrer">linkedin.com/in/arsalan-ahmed-khan-b4a9a2310</a></li>
+            <li><Github size={15} /><a href={CONTACT_GITHUB} target="_blank" rel="noreferrer">github.com/arsalanahmedk</a></li>
+          </ul>
+        </div>
+        <form className="panel contact-form" onSubmit={submit}>
+          <h2>Send a message</h2>
+          <p>This opens your email app with the message addressed to Arsalan — nothing is sent or stored by Saylient AI.</p>
+          <label>Your name<input className="field" value={name} onChange={e => setName(e.target.value)} placeholder="Your name" maxLength={100} /></label>
+          <label>Your email<input className="field" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" /></label>
+          <label>Message<textarea className="field" value={message} onChange={e => setMessage(e.target.value)} placeholder="Hi Arsalan — …" required maxLength={2000} /></label>
+          <Button type="submit" icon={Send}>Open email app</Button>
+          {opened && <div className="form-note">Your email app should have opened with the message ready to send. If nothing opened, write directly to {CONTACT_EMAIL}.</div>}
+        </form>
+      </div>
+    </main>
+    <HalftoneFooter go={go} />
+  </div>;
+}
+
 function DemoChat({ go }) {
   const [messages, setMessages] = useState([
     ["client", "Hi! I wanted to check whether the homepage concepts will be ready today.", "10:32 AM"],
@@ -1125,6 +1203,7 @@ function App() {
   const onAuthed = (auth) => { setUser(auth.user); go("overview"); };
   const openInAssistant = (analysis) => { setOpenAnalysis(analysis); go("assistant"); };
   if (page === "landing") return <Landing go={go} user={user} />;
+  if (page === "contact") return <ContactPage go={go} user={user} />;
   if (page === "login") return user ? <AuthPage mode="login" go={go} onAuthed={onAuthed} notice="You are already signed in — this will switch to another account." /> : <AuthPage mode="login" go={go} onAuthed={onAuthed} />;
   if (page === "register") return user ? <AuthPage mode="register" go={go} onAuthed={onAuthed} notice="You are already signed in — this will switch to another account." /> : <AuthPage mode="register" go={go} onAuthed={onAuthed} />;
   if (page === "reset-password") return <AuthPage mode="reset" go={go} onAuthed={onAuthed} resetToken={route.token} />;
