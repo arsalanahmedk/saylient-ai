@@ -35,10 +35,13 @@
   position: fixed; right: 22px; bottom: 22px; z-index: 2147483646;
   width: 52px; height: 52px; border: 1px solid var(--sai-border-strong);
   border-radius: 50%; background: linear-gradient(135deg, #38bdf8, #22d3ee 55%, #ec4899); color: #ffffff;
-  font-size: 22px; font-weight: 700; cursor: pointer;
+  padding: 0; overflow: hidden; cursor: pointer;
   box-shadow: 0 8px 24px var(--sai-accent-glow);
   animation: saiPulse 2.4s infinite;
 }
+/* The Saylient logo fills the round trigger — the white tile crops to a
+   circle, so the gradient S reads crisply at any size. */
+#saylient-ai-trigger img { width: 100%; height: 100%; display: block; border-radius: 50%; object-fit: cover; }
 #saylient-ai-trigger:hover { filter: brightness(1.07); }
 
 #saylient-ai-panel {
@@ -54,6 +57,8 @@
   display: flex; justify-content: space-between; align-items: center;
   font-size: 17px; font-weight: 700;
 }
+/* Small logo mark inline with the "saylient.ai" panel title. */
+#saylient-ai-panel .sai-head img.sai-title-logo { width: 20px; height: 20px; border-radius: 6px; vertical-align: -4px; margin-right: 2px; }
 #saylient-ai-panel .sai-head span { color: var(--sai-accent); }
 #saylient-ai-panel .sai-head button {
   border: 0; background: none; color: var(--sai-text-2);

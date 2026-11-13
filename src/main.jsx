@@ -246,18 +246,24 @@ function PhraseRewriteDemo({ go, user }) {
 }
 
 /* Magic UI-style animated beam: the places people write feed into Saylient.
-   CSS-only — a black dot travels along each connector. */
-const BEAM_APPS = ["Gmail", "Slack", "WhatsApp", "Upwork"];
+   The extension works on any HTTPS page, so these are the chats and
+   workspaces it brings live analysis into — not integrations or
+   partnerships. CSS-only — a black dot travels along the connector. */
+const BEAM_GROUPS = [
+  { label: "Chats", apps: ["WhatsApp", "Instagram", "Facebook Messenger", "Telegram", "Snapchat", "TikTok", "Discord", "X"] },
+  { label: "Work", apps: ["Gmail", "Slack", "LinkedIn", "Microsoft Teams", "Upwork", "Fiverr"] },
+];
 
 function BeamDiagram() {
   return <div className="beam-diagram">
-    <div className="beam-apps">
-      {BEAM_APPS.map((app, i) => <div className="beam-row" key={app}>
-        <span className="beam-app">{app}</span>
-        <span className="beam-track"><i style={{ animationDelay: `${i * 0.55}s` }} /></span>
+    <div className="beam-center"><span className="beam-center-mark"><LogoMark /></span><strong>Saylient</strong><small>Live analysis</small></div>
+    <span className="beam-track beam-track-wide"><i /></span>
+    <div className="beam-groups">
+      {BEAM_GROUPS.map(g => <div className="beam-group" key={g.label}>
+        <span className="beam-group-label">{g.label}</span>
+        <div className="beam-chips">{g.apps.map(app => <span className="beam-app" key={app}>{app}</span>)}</div>
       </div>)}
     </div>
-    <div className="beam-center"><span className="beam-center-mark">✦</span><strong>Saylient</strong><small>Live analysis</small></div>
   </div>;
 }
 
@@ -316,7 +322,7 @@ function FeatureTabs({ go, user }) {
       <motion.div key={tab} initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: "easeOut" }}>
       {tab === 0 && <div className="tab-grid"><div><h3>See what a message really asks for.</h3><p>The engine reads intent, tone and social dynamics without guessing what anyone feels — and tells you how sure it is.</p><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><span className="how-note">Precomputed demo · prototype-0.1</span><div style={{ marginTop: 18 }}><Button onClick={() => go("assistant")} icon={WandSparkles}>Open the analyzer</Button></div></div><div className="tab-frame"><ScoreRing value={0.87} /><span className="how-note">Intent confidence · boundary preset · precomputed demo</span></div></div>}
       {tab === 1 && <div><h3>Three ways to say the same thing.</h3><p>Tap an underlined phrase, pick a tone — the drafts are real engine output.</p><div style={{ marginTop: 18 }}><PhraseRewriteDemo go={go} user={user} /></div></div>}
-      {tab === 2 && <div className="tab-grid"><div><h3>Wherever you write.</h3><p>The extension brings live analysis into the conversations you already have — Gmail, Slack, WhatsApp, Upwork. Nothing is monitored or sent on its own.</p><div className="extension-actions" style={{ marginTop: 18 }}><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a><Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button></div></div><BeamDiagram /></div>}
+      {tab === 2 && <div className="tab-grid"><div><h3>Wherever you write.</h3><p>The extension brings live analysis into the conversations you already have — every chat: WhatsApp, Instagram, Messenger, Telegram, LinkedIn, X, Discord, and more. Nothing is monitored or sent on its own.</p><div className="extension-actions" style={{ marginTop: 18 }}><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a><Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button></div></div><BeamDiagram /></div>}
       {tab === 3 && <div className="tab-grid"><div><h3>Practice in a safe conversation.</h3><p>A local demo chat where you can try a draft before it matters — nothing leaves the page.</p><div style={{ marginTop: 18 }}><Button onClick={() => go("demo-chat")} icon={Globe2}>Open the demo chat</Button></div></div><div className="tab-frame tab-chat"><div className="demo-message"><span className="demo-author">Alex</span><p>Hi! I wanted to check whether the homepage concepts will be ready today.</p></div><div className="demo-message freelancer"><span className="demo-author">You</span><p>Hi Alex, I am putting the final details together now.</p></div><span className="how-note">From the local demo chat — no account needed.</span></div></div>}
       {tab === 4 && <div><h3>Your work, in order.</h3><p>Every analysis is saved to your account — search it, reopen it, delete it.</p><div style={{ marginTop: 18 }}><ActivityTab go={go} user={user} /></div></div>}
       </motion.div>
@@ -536,7 +542,7 @@ function HeroAnalysisWindow({ go, user }) {
 
 /* Integrations marquee: the extension works on
    any HTTPS page, so the strip names the places people actually write. */
-const MARQUEE_ITEMS = ["Browser extension", "Gmail", "Upwork", "Fiverr", "LinkedIn", "Slack", "WhatsApp Web", "Google Docs"];
+const MARQUEE_ITEMS = ["Browser extension", "Gmail", "Upwork", "Fiverr", "LinkedIn", "Slack", "WhatsApp Web", "Google Docs", "Instagram", "Telegram", "Messenger", "Discord", "X", "TikTok"];
 
 function Marquee() {
   const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
@@ -617,7 +623,7 @@ function Landing({ go, user }) {
         </div>
         <div className="extension-grid">
           <BeamDiagram />
-          <div className="extension-copy"><p>Click the ✦ button on any page, sign in once, and get a live analysis of the text on your screen — intent, strategy, and a draft you can insert. Nothing is monitored or sent on its own.</p>
+          <div className="extension-copy"><p>Click the Saylient logo button on any page, sign in once, and get a live analysis of the text on your screen — intent, strategy, and a draft you can insert. Nothing is monitored or sent on its own.</p>
             <div className="extension-actions">
               <a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a>
               <Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button>
@@ -1175,7 +1181,7 @@ function ProfilePage({ user, go, onSignOut, onUserChanged }) {
 }
 
 function ExtensionPage({ go }) {
-  return <><PageHeader eyebrow="Workspace" title="Good communication, wherever work happens." text="A thoughtful layer for your browser."><Button onClick={() => go("demo-chat")} icon={Globe2}>Open local demo chat</Button></PageHeader><div className="placeholder-page panel"><div className="placeholder-icon"><Globe2 size={25} /></div><h2>Review suggestions without leaving your workflow.</h2><p>Download the extension below, unzip it, and load it in Chrome (chrome://extensions → Developer mode → Load unpacked). Clicking the extension icon opens this site; on any page, click the floating ✦ button to analyze the text on your screen — sign in once in the panel, then Analyze. The extension calls the real backend and shows the live intent, strategy and draft. It never monitors the page and never sends anything automatically.</p><div className="extension-actions"><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension (.zip)</span></a><Button variant="outline" onClick={() => go("demo-chat")}>Open local demo chat <ArrowRight size={15} /></Button></div></div></>;
+  return <><PageHeader eyebrow="Workspace" title="Good communication, wherever work happens." text="A thoughtful layer for your browser."><Button onClick={() => go("demo-chat")} icon={Globe2}>Open local demo chat</Button></PageHeader><div className="placeholder-page panel"><div className="placeholder-icon"><Globe2 size={25} /></div><h2>Review suggestions without leaving your workflow.</h2><p>Download the extension below, unzip it, and load it in Chrome (chrome://extensions → Developer mode → Load unpacked). Clicking the extension icon opens this site; on any page, click the floating Saylient logo button to analyze the text on your screen — sign in once in the panel, then Analyze. The extension calls the real backend and shows the live intent, strategy and draft. It never monitors the page and never sends anything automatically.</p><div className="extension-actions"><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension (.zip)</span></a><Button variant="outline" onClick={() => go("demo-chat")}>Open local demo chat <ArrowRight size={15} /></Button></div></div></>;
 }
 
 /* Contact — a public page (no sign-in needed), reached from the landing

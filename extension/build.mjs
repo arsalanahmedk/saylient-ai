@@ -24,7 +24,7 @@ const manifest = {
     "Click the icon to open Saylient AI, or analyze the text on any page with real backend analysis — only when you click Analyze. Nothing is monitored or sent automatically.",
   permissions: ["storage", "activeTab", "contextMenus", "scripting"],
   host_permissions: HOST_PERMISSIONS,
-  web_accessible_resources: [{ resources: ["content.css"], matches: PAGE_MATCHES }],
+  web_accessible_resources: [{ resources: ["content.css", "icon.svg"], matches: PAGE_MATCHES }],
   // No default_popup: clicking the toolbar icon opens the hero page
   // (background.js, chrome.action.onClicked).
   action: { default_title: "Open Saylient AI" },

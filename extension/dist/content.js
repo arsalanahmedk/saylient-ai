@@ -1,7 +1,7 @@
 // Saylient AI content script — screen analysis, click-to-analyze only.
 //
 // Rules this script follows:
-//  - The floating ✦ button is always present on the page. Nothing is read
+//  - The floating logo button is always present on the page. Nothing is read
 //    from the page until the user opens the panel.
 //  - Text is collected only when the panel opens (or when the user picks
 //    "Analyze with Saylient AI" from the context menu): the current text
@@ -113,7 +113,12 @@
     const trigger = document.createElement("button");
     trigger.id = "saylient-ai-trigger";
     trigger.type = "button";
-    trigger.textContent = "✦";
+    // The Saylient logo (icon.svg ships in the extension package and is
+    // listed in web_accessible_resources, so the image loads on any page).
+    const triggerLogo = document.createElement("img");
+    triggerLogo.src = chrome.runtime.getURL("icon.svg");
+    triggerLogo.alt = "Saylient AI";
+    trigger.append(triggerLogo);
     trigger.title = "Open Saylient AI assistant";
     trigger.addEventListener("click", () => openPanel());
     document.body.append(trigger);
@@ -137,7 +142,7 @@
 
     const head = el("div", "sai-head");
     const title = el("b");
-    title.innerHTML = "✦ saylient<span>.ai</span>";
+    title.innerHTML = `<img class="sai-title-logo" src="${chrome.runtime.getURL("icon.svg")}" alt=""> saylient<span>.ai</span>`;
     const closeBtn = el("button", null, "×");
     closeBtn.type = "button";
     closeBtn.setAttribute("aria-label", "Close");
