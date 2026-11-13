@@ -35,23 +35,31 @@ signinForm.addEventListener("submit", async (event) => {
   signinSubmit.disabled = true;
   signinSubmit.textContent = "Signing in…";
   try {
-    const res = await fetch(`${SAYLIENT_API_BASE}/auth/login`, {
+    // Route through the background service worker: a popup/content fetch
+    // carries the page's Origin, which the backend's CORS allow-list
+    // rejects. (This popup is currently unused — no default_popup — but
+    // keep it working the same way as the panel.)
+    const result = await chrome.runtime.sendMessage({
+      type: "SAYLIENT_API",
+      path: "/auth/login",
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: { email, password },
     });
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      throw new Error(data.detail || data.message || `Sign-in failed (${res.status}).`);
+    if (!result || !result.ok) {
+      const message =
+        result?.status === 0
+          ? "Could not reach the Saylient AI backend. Check your connection and try again."
+          : result?.data?.error?.message ||
+            result?.data?.detail ||
+            result?.data?.message ||
+            `Sign-in failed (${result?.status ?? "?" }).`;
+      throw new Error(message);
     }
-    const data = await res.json();
+    const data = result.data;
     await chrome.storage.local.set({ "saylient-token": data.token, "saylient-email": email });
     showSignedIn(email);
   } catch (err) {
-    signinError.textContent =
-      err instanceof TypeError
-        ? "Could not reach the Saylient AI backend. Check your connection and try again."
-        : err?.message || "Sign-in failed.";
+    signinError.textContent = err?.message || "Sign-in failed.";
     signinError.hidden = false;
   } finally {
     signinSubmit.disabled = false;

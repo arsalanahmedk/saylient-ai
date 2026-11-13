@@ -11,6 +11,11 @@
 //  - No observer watching the DOM, no auto-scan, no auto-analyze. Analysis
 //    runs only when the user clicks "Analyze", and only against the real
 //    backend API with the stored Bearer token.
+//  - All backend calls go through the background service worker
+//    (chrome.runtime.sendMessage → apiCall): a content script's fetch()
+//    carries the PAGE's Origin, which the backend's CORS allow-list rejects
+//    on every site except the app itself, so direct calls fail with a
+//    TypeError. The worker fetches from the extension origin instead.
 //  - Insert into a field is click-only and never auto-sends.
 //  - Page text is user data: it is only ever inserted via textContent /
 //    escapeHtml, never as raw innerHTML.
@@ -173,7 +178,65 @@
     signinSubmit.setAttribute("data-signin-submit", "");
     signinForm.append(emailLabel, passwordLabel, signinError, signinSubmit);
     signinForm.addEventListener("submit", signIn);
-    auth.append(signinForm);
+
+    // Create-account view (hidden until the user asks for it). Many users
+    // have no account on the live backend yet, so sign-in alone is a dead
+    // end for them.
+    const registerToggle = el("button", "sai-toggle", "No account yet? Create one");
+    registerToggle.type = "button";
+    registerToggle.setAttribute("data-show-register", "");
+    const registerForm = el("form", "sai-signin-form");
+    registerForm.setAttribute("data-register-form", "");
+    registerForm.hidden = true;
+    const nameLabel = el("label", "sai-field-label", "Display name");
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.autocomplete = "name";
+    nameInput.placeholder = "Your name";
+    nameInput.setAttribute("data-display-name", "");
+    nameLabel.append(nameInput);
+    const regEmailLabel = el("label", "sai-field-label", "Email");
+    const regEmailInput = document.createElement("input");
+    regEmailInput.type = "email";
+    regEmailInput.required = true;
+    regEmailInput.autocomplete = "email";
+    regEmailInput.placeholder = "you@example.com";
+    regEmailInput.setAttribute("data-register-email", "");
+    regEmailLabel.append(regEmailInput);
+    const regPasswordLabel = el("label", "sai-field-label", "Password");
+    const regPasswordInput = document.createElement("input");
+    regPasswordInput.type = "password";
+    regPasswordInput.required = true;
+    regPasswordInput.autocomplete = "new-password";
+    regPasswordInput.placeholder = "At least 8 characters";
+    regPasswordInput.minLength = 8;
+    regPasswordInput.setAttribute("data-register-password", "");
+    regPasswordLabel.append(regPasswordInput);
+    const registerError = el("p", "sai-error");
+    registerError.setAttribute("data-register-error", "");
+    registerError.hidden = true;
+    const registerSubmit = el("button", "sai-primary", "Create account");
+    registerSubmit.type = "submit";
+    registerSubmit.setAttribute("data-register-submit", "");
+    registerForm.append(nameLabel, regEmailLabel, regPasswordLabel, registerError, registerSubmit);
+    registerForm.addEventListener("submit", registerAccount);
+    const backToggle = el("button", "sai-toggle", "Already have an account? Sign in");
+    backToggle.type = "button";
+    backToggle.setAttribute("data-show-signin", "");
+    backToggle.hidden = true;
+    registerToggle.addEventListener("click", () => {
+      signinForm.hidden = true;
+      registerToggle.hidden = true;
+      registerForm.hidden = false;
+      backToggle.hidden = false;
+    });
+    backToggle.addEventListener("click", () => {
+      registerForm.hidden = true;
+      backToggle.hidden = true;
+      signinForm.hidden = false;
+      registerToggle.hidden = false;
+    });
+    auth.append(signinForm, registerToggle, registerForm, backToggle);
     root.append(auth);
 
     // Signed-in account row.
@@ -325,6 +388,44 @@
     }
   }
 
+  // --- backend calls (via the background service worker) ---------------
+  function apiErrorFrom(result) {
+    if (!result || result.status === 0) {
+      return new Error(
+        result?.error || "Could not reach the Saylient AI backend. Check your connection and try again."
+      );
+    }
+    const message =
+      result.data?.error?.message || result.data?.detail || result.data?.message;
+    const err = new Error(message || `Request failed (HTTP ${result.status}).`);
+    err.status = result.status;
+    return err;
+  }
+
+  async function apiCall(path, method, body, token) {
+    const result = await chrome.runtime.sendMessage({
+      type: "SAYLIENT_API",
+      path,
+      method,
+      body,
+      token,
+    });
+    if (!result || !result.ok) throw apiErrorFrom(result);
+    return result.data;
+  }
+
+  // The worker tells the panel when it is warming the backend up (Render
+  // Free spins down when idle), so the active button says "Starting
+  // server…" instead of flashing an error while the user waits.
+  function showWarmingUp() {
+    if (!panel) return;
+    const button =
+      panel.querySelector("[data-signin-submit]:disabled") ||
+      panel.querySelector("[data-register-submit]:disabled") ||
+      panel.querySelector("[data-analyze]:disabled");
+    if (button) button.textContent = "Starting server…";
+  }
+
   async function signIn(event) {
     event.preventDefault();
     if (!panel) return;
@@ -336,29 +437,49 @@
     submit.disabled = true;
     submit.textContent = "Signing in…";
     try {
-      const res = await fetch(`${SAYLIENT_API_BASE}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(
-          errData?.error?.message || errData?.detail || errData?.message || `Sign-in failed (${res.status}).`
-        );
-      }
-      const data = await res.json();
+      const data = await apiCall("/auth/login", "POST", { email, password });
       await chrome.storage.local.set({ "saylient-token": data.token, "saylient-email": email });
       refreshAuthState();
     } catch (err) {
       errorEl.textContent =
-        err instanceof TypeError
-          ? "Could not reach the Saylient AI backend. Check your connection and try again."
-          : err?.message || "Sign-in failed.";
+        err.status === 401 || err.status === 400
+          ? "Wrong email or password — or create an account below."
+          : err.message || "Sign-in failed.";
       errorEl.hidden = false;
     } finally {
       submit.disabled = false;
       submit.textContent = "Sign in";
+    }
+  }
+
+  async function registerAccount(event) {
+    event.preventDefault();
+    if (!panel) return;
+    const email = panel.querySelector("[data-register-email]").value.trim();
+    const password = panel.querySelector("[data-register-password]").value;
+    const displayName = panel.querySelector("[data-display-name]").value.trim();
+    const errorEl = panel.querySelector("[data-register-error]");
+    const submit = panel.querySelector("[data-register-submit]");
+    errorEl.hidden = true;
+    submit.disabled = true;
+    submit.textContent = "Creating account…";
+    try {
+      const data = await apiCall("/auth/register", "POST", {
+        email,
+        password,
+        display_name: displayName,
+      });
+      await chrome.storage.local.set({ "saylient-token": data.token, "saylient-email": email });
+      refreshAuthState();
+    } catch (err) {
+      errorEl.textContent =
+        err.status === 409
+          ? "An account with this email already exists — try signing in instead."
+          : err.message || "Could not create the account.";
+      errorEl.hidden = false;
+    } finally {
+      submit.disabled = false;
+      submit.textContent = "Create account";
     }
   }
 
@@ -368,7 +489,6 @@
   }
 
   function apiErrorMessage(err) {
-    if (err instanceof TypeError) return "Could not reach the Saylient AI backend. Check your connection and try again.";
     return err?.message || "Could not reach the Saylient AI backend.";
   }
 
@@ -404,28 +524,19 @@
 
     let data;
     try {
-      const res = await fetch(`${SAYLIENT_API_BASE}/analyses`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
+      data = await apiCall(
+        "/analyses",
+        "POST",
+        {
           message,
           conversation_context: [],
           goal,
           context: { power: "unknown", social_distance: "unknown", imposition: "unknown" },
           tone,
           directness,
-        }),
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(
-          errData?.error?.message || errData?.detail || errData?.message || `Analysis failed (HTTP ${res.status}).`
-        );
-      }
-      data = await res.json();
+        },
+        token
+      );
     } catch (err) {
       errorEl.textContent = apiErrorMessage(err);
       errorEl.hidden = false;
@@ -458,21 +569,9 @@
     button.disabled = true;
     button.textContent = "Regenerating…";
     try {
-      const res = await fetch(`${SAYLIENT_API_BASE}/analyses/${currentAnalysisId}/regenerate`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ tone, directness }),
-      });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error(
-          errData?.error?.message || errData?.detail || errData?.message || `Regenerate failed (HTTP ${res.status}).`
-        );
-      }
-      renderResult(await res.json());
+      renderResult(
+        await apiCall(`/analyses/${currentAnalysisId}/regenerate`, "POST", { tone, directness }, token)
+      );
     } catch (err) {
       errorEl.textContent = apiErrorMessage(err);
       errorEl.hidden = false;
@@ -610,6 +709,7 @@
 
   chrome.runtime.onMessage.addListener((message) => {
     if (message?.type === "SAYLIENT_OPEN") openPanel(message.text);
+    if (message?.type === "SAYLIENT_WARMING_UP") showWarmingUp();
   });
 
   // The trigger is always present. Nothing is read from the page until the

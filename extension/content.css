@@ -105,6 +105,14 @@
 }
 #saylient-ai-panel .sai-signout:hover { background: var(--sai-card); }
 
+#saylient-ai-panel .sai-toggle {
+  display: block; width: 100%; margin-top: 12px; padding: 4px 0;
+  border: 0; background: none; color: var(--sai-accent);
+  font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer;
+  text-align: center;
+}
+#saylient-ai-panel .sai-toggle:hover { color: var(--sai-accent-light); text-decoration: underline; }
+
 #saylient-ai-panel .sai-error {
   color: var(--sai-error); font-size: 12px; line-height: 1.5;
   background: var(--sai-error-bg);
