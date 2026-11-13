@@ -122,7 +122,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
 .emoji { font-size: 15px; }
 .wave, .emoji { color: var(--accent); }
 
-.button {
+.button, .btn {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -141,7 +141,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   overflow: hidden;
   transition: filter 0.2s ease, transform 0.2s ease;
 }
-.button::after {
+.button::after, .btn::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -151,17 +151,17 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   pointer-events: none;
 }
 @keyframes shimmer { 0% { transform: translateX(-110%); } 55%, 100% { transform: translateX(110%); } }
-.button.outline {
+.button.outline, .btn-outline {
   background: transparent;
   color: var(--text);
   border: 1px solid var(--border-strong);
   box-shadow: none;
 }
-.button.outline::after { display: none; }
-.button:hover:not(:disabled) { filter: brightness(1.08); }
-.button:active:not(:disabled) { transform: scale(0.98); }
-.button:disabled { opacity: 0.55; cursor: not-allowed; }
-.button .icon { display: inline-flex; }
+.button.outline::after, .btn-outline::after { display: none; }
+.button:hover:not(:disabled), .btn:hover:not(:disabled) { filter: brightness(1.08); }
+.button:active:not(:disabled), .btn:active:not(:disabled) { transform: scale(0.98); }
+.button:disabled, .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.button .icon, .btn .icon { display: inline-flex; }
 
 .form-error {
   padding: 10px 12px;
@@ -293,10 +293,31 @@ select.select-field option { background: var(--input); }
   white-space: nowrap;
 }
 
-.hero { display: grid; grid-template-columns: 1fr 375px; gap: 64px; align-items: center; padding: 80px 24px 60px; }
-.hero-copy h1 { font-size: 64px; line-height: 1.04; font-weight: 700; letter-spacing: -0.04em; }
-.hero-copy h1 em { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; font-style: italic; }
-.hero-copy p { max-width: 470px; margin-top: 20px; color: var(--text-2); font-size: 18px; line-height: 1.5; }
+/* ---------- lamp hero (Aceternity Lamp, recoloured mint on deep teal) ----------
+   A bright glow cone shines down from the top centre, like a lamp over the
+   headline; the interactive analysis window sits below in a browser frame
+   (Qronos hero rhythm), with an integrations marquee underneath. */
+.hero-lamp { position: relative; padding: 112px 24px 8px; text-align: center; }
+.lamp-glow { position: absolute; top: -160px; left: 50%; width: 920px; max-width: 130vw; height: 440px; transform: translateX(-50%); background: radial-gradient(ellipse 50% 62% at 50% 0%, rgba(110, 231, 183, 0.22), rgba(110, 231, 183, 0.05) 55%, transparent 75%); pointer-events: none; }
+.lamp-beam { position: absolute; top: 0; left: 50%; width: 540px; max-width: 92vw; height: 350px; transform: translateX(-50%); clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); background: linear-gradient(to bottom, rgba(110, 231, 183, 0.32), rgba(110, 231, 183, 0.07) 55%, transparent); filter: blur(18px); pointer-events: none; }
+.hero-lamp .hero-badge { position: relative; }
+.hero-lamp h1 { position: relative; max-width: 840px; margin: 0 auto; font-size: 68px; line-height: 1.03; font-weight: 700; letter-spacing: -0.04em; }
+.hero-lamp h1 em { background: var(--brand-gradient); -webkit-background-clip: text; background-clip: text; color: transparent; font-style: italic; }
+.hero-lamp > p { position: relative; max-width: 580px; margin: 22px auto 0; color: var(--text-2); font-size: 18px; line-height: 1.55; }
+.hero-lamp .hero-actions { position: relative; justify-content: center; margin-top: 34px; }
+.hero-lamp .hero-note { position: relative; justify-content: center; }
+
+.hero-frame { position: relative; max-width: 880px; margin: 52px auto 0; padding: 0 24px; }
+.hero-frame-glow { position: absolute; inset: -48px -70px; background: radial-gradient(ellipse 60% 55% at 50% 40%, rgba(110, 231, 183, 0.14), transparent 70%); pointer-events: none; }
+.hero-frame .hero-window { position: relative; }
+
+/* Integrations marquee: the extension works on any HTTPS page. */
+.marquee { display: flex; align-items: center; gap: 28px; max-width: 1120px; margin: 60px auto 0; padding: 0 24px; overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent); }
+.marquee-label { flex: none; color: var(--text-3); font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.marquee-track { display: flex; animation: marquee 32s linear infinite; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+.marquee-item { flex: none; padding-right: 44px; color: var(--text-2); font-size: 15px; font-weight: 600; white-space: nowrap; }
+@keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 .hero-badge {
   display: inline-flex;
   align-items: center;
@@ -412,8 +433,13 @@ select.select-field option { background: var(--input); }
 .section-heading { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: end; margin-bottom: 48px; }
 .section-heading h2 { font-size: 40px; line-height: 1.08; font-weight: 700; letter-spacing: -0.04em; }
 .section-heading p { color: var(--text-2); font-size: 16px; line-height: 1.55; }
-.bento-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+/* ---------- bento grid (Aceternity Bento Grid, inverted to deep teal) ----------
+   Skewed / asymmetric: one large anchor cell (the live before/after rewrite
+   demo) spans 2 columns and 2 rows, surrounded by smaller uneven cells. */
+.bento-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(190px, auto); gap: 16px; }
 .bento-card {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   min-height: 200px;
   padding: 24px;
@@ -423,10 +449,32 @@ select.select-field option { background: var(--input); }
   transition: transform 0.2s ease, border-color 0.2s ease;
 }
 .bento-card:hover { transform: translateY(-2px); border-color: var(--border-strong); }
-.bento-card.wide { grid-column: span 2; }
+.bento-anchor { grid-column: span 2; grid-row: span 2; background: linear-gradient(160deg, var(--card), var(--panel)); }
 .bento-icon { display: inline-grid; place-items: center; width: 40px; height: 40px; margin-bottom: 14px; border-radius: var(--radius-inner); background: var(--accent-14); color: var(--accent-hover); }
 .bento-card h3 { margin-bottom: 8px; font-size: 19px; font-weight: 600; }
 .bento-card p { max-width: 420px; color: var(--text-2); font-size: 15px; line-height: 1.55; }
+
+/* Anchor cell: before/after rewrite demo. */
+.bento-anchor-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 18px; }
+.bento-anchor-label { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-hover); font-size: 13px; font-weight: 700; }
+.bento-anchor-note { color: var(--text-3); font-size: 11px; }
+.rewrite-before, .rewrite-after { padding: 14px 16px; border: 1px solid var(--border); border-radius: var(--radius-inner); }
+.rewrite-before { background: var(--input); }
+.rewrite-before small, .rewrite-after small { display: block; margin-bottom: 6px; color: var(--text-3); font-size: 10px; font-weight: 700; letter-spacing: 0.08em; }
+.rewrite-before p { color: var(--text); font-size: 14px; line-height: 1.55; font-style: italic; }
+.rewrite-arrow { display: flex; align-items: center; gap: 6px; margin: 12px 0; color: var(--accent-hover); font-size: 12px; font-weight: 700; }
+.rewrite-after { background: var(--accent-08); border-color: var(--accent-35); }
+.rewrite-after p { color: var(--text); font-size: 14px; line-height: 1.6; white-space: pre-line; }
+.rewrite-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.rewrite-tags span { padding: 5px 10px; border: 1px solid var(--border); border-radius: 100px; background: var(--input); font-size: 12px; color: var(--text-2); }
+.rewrite-tags span b { color: var(--text); }
+
+/* Small-cell visuals, pinned to the bottom of each card. */
+.bento-visual { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 18px; }
+.bento-visual span { padding: 5px 10px; border: 1px solid var(--border); border-radius: 100px; background: var(--input); font-size: 12px; font-weight: 600; color: var(--text-2); }
+.bento-visual span:first-child { color: var(--accent-hover); border-color: var(--accent-35); }
+.bento-visual.bento-quote { display: block; padding: 12px 14px; border-left: 2px solid var(--accent); border-radius: 0 var(--radius-inner) var(--radius-inner) 0; background: var(--input); color: var(--text-2); font-size: 13px; font-style: italic; line-height: 1.55; }
+.bento-visual .bento-star { padding: 0; border: 0; background: none; color: var(--accent-hover); font-size: 16px; }
 
 .theory-strip { padding: 100px 24px; }
 .strategy-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
@@ -436,31 +484,32 @@ select.select-field option { background: var(--input); }
 .strategy-chip strong { display: block; margin-bottom: 6px; font-size: 16px; }
 .strategy-chip p { color: var(--text-2); font-size: 13px; line-height: 1.5; }
 
-/* ---------- perspective tunnel (scroll section) ---------- */
-.tunnel-section { position: relative; height: 300vh; margin: 60px 0; overflow: clip; }
-.tunnel-sticky { position: sticky; top: 0; height: 100vh; overflow: hidden; display: grid; place-items: center; }
-.tunnel-scene { position: relative; width: 100vw; height: 100vh; overflow: hidden; background: var(--tunnel-bg); }
-.tunnel-scene::before {
-  content: "";
-  position: absolute;
-  inset: -40%;
-  background: radial-gradient(ellipse 40% 46% at 50% 50%, var(--accent-24), transparent 68%);
-}
-.tunnel-core { position: relative; z-index: 3; text-align: center; }
-.tunnel-core h2 { font-size: 64px; line-height: 1.1; font-weight: 700; letter-spacing: -0.035em; }
-.tunnel-core h2 em { color: var(--accent-hover); font-style: italic; }
-.tunnel-core p { margin: 16px auto 0; max-width: 460px; color: var(--text-2); font-size: 16px; line-height: 1.6; }
-.tunnel-label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--white-32); }
-.tunnel-instructions { position: relative; z-index: 4; margin-top: 28px; text-align: center; color: var(--text-2); font-size: 14px; }
-.tunnel-instructions button { display: inline-flex; align-items: center; gap: 6px; margin: 0 6px; padding: 7px 14px; border: 1px solid var(--border-strong); border-radius: 100px; background: var(--white-07); color: var(--text); font-weight: 600; cursor: pointer; }
-.tunnel-image { position: absolute; width: 320px; border-radius: 14px; border: 1px solid var(--border-strong); object-fit: cover; box-shadow: 0 20px 40px var(--black-50); }
-
-.tunnel-card-row { display: flex; justify-content: center; gap: 16px; margin: 40px auto 0; padding: 0 24px; flex-wrap: wrap; }
-.tunnel-card { display: flex; gap: 14px; width: min(100%, 320px); padding: 18px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); text-align: left; }
-.tunnel-card img { width: 56px; height: 56px; flex: none; border-radius: var(--radius-inner); object-fit: cover; }
-.tunnel-card strong { display: block; font-size: 15px; }
-.tunnel-card p { margin-top: 4px; color: var(--text-2); font-size: 13px; line-height: 1.5; }
-.tunnel-card em { display: block; margin-top: 10px; color: var(--accent-hover); font-size: 12px; font-weight: 600; font-style: normal; }
+/* ---------- perspective tunnel (scroll section) ----------
+   Scroll-driven 3D tunnel (see PerspectiveTunnelHero in main.jsx): the
+   section is 320vh tall, the hero sticks to the viewport while the page
+   scrolls, and the image cards fly toward the viewer. Mint glow and rings
+   on the deep teal background. */
+.tunnel-scroll { position: relative; height: 320vh; margin: 40px 0 0; }
+.tunnel-hero { position: sticky; top: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; background: var(--tunnel-bg); }
+.tunnel-grid { position: absolute; inset: 0; background-image: linear-gradient(rgba(110, 231, 183, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(110, 231, 183, 0.05) 1px, transparent 1px); background-size: 72px 72px; -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000, transparent 75%); mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000, transparent 75%); }
+.tunnel-glow { position: absolute; left: 50%; top: 50%; width: 720px; height: 720px; transform: translate(-50%, -50%); background: radial-gradient(circle, rgba(110, 231, 183, 0.16), transparent 65%); pointer-events: none; }
+.tunnel-ring { position: absolute; left: 50%; top: 50%; border: 1px solid rgba(110, 231, 183, 0.18); border-radius: 50%; transform: translate(-50%, -50%); }
+.tunnel-ring-small { width: 420px; height: 420px; }
+.tunnel-ring-large { width: 760px; height: 760px; border-color: rgba(110, 231, 183, 0.09); }
+.tunnel-title { position: relative; z-index: 5; max-width: 840px; padding: 0 24px; text-align: center; }
+.tunnel-title p { color: var(--accent-hover); font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.tunnel-title h1 { margin-top: 14px; font-size: 64px; line-height: 1.04; font-weight: 700; letter-spacing: -0.04em; }
+.tunnel-title h1 em { color: var(--accent-hover); font-style: italic; }
+.tunnel-title > span { display: block; margin-top: 18px; color: var(--text-2); font-size: 16px; line-height: 1.55; }
+.tunnel-title .btn { margin-top: 26px; }
+.tunnel-prompt { position: absolute; left: 50%; bottom: 32px; z-index: 5; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text-3); font-size: 12px; }
+.tunnel-prompt i { display: block; width: 1px; height: 36px; background: linear-gradient(var(--accent), transparent); animation: promptDrop 1.6s ease infinite; }
+@keyframes promptDrop { 0% { transform: scaleY(0); transform-origin: top; } 55% { transform: scaleY(1); transform-origin: top; } 56% { transform-origin: bottom; } 100% { transform: scaleY(0); transform-origin: bottom; } }
+.tunnel-cards { position: absolute; inset: 0; z-index: 2; }
+.tunnel-card { position: absolute; left: 50%; top: 50%; }
+.tunnel-card > div { overflow: hidden; border: 1px solid var(--border-strong); border-radius: var(--radius-card); background: var(--panel); box-shadow: 0 24px 48px var(--black-50); }
+.tunnel-card img { display: block; width: 100%; height: 150px; object-fit: cover; }
+.tunnel-card span { display: block; padding: 10px 14px; font-size: 13px; font-weight: 600; }
 
 /* ---------- extension cta / final cta / footer ---------- */
 .extension-cta {
@@ -479,13 +528,13 @@ select.select-field option { background: var(--input); }
 .extension-copy { padding-left: 28px; border-left: 1px solid var(--border); }
 .extension-copy p { color: var(--text-2); font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
 .extension-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-.extension-actions .button { text-decoration: none; }
+.extension-actions .button, .extension-actions .btn { text-decoration: none; }
 .download-steps { margin: 0; padding-left: 18px; color: var(--text-2); font-size: 13px; line-height: 1.7; }
 .download-steps code { font-family: var(--font-mono); font-size: 12px; color: var(--text); background: var(--card); border: 1px solid var(--border); border-radius: 6px; padding: 1px 6px; }
 .download-steps strong { color: var(--text); }
 .final-cta { padding: 100px 0 120px; background: radial-gradient(ellipse at 50% 100%, var(--accent-deep-28), transparent 62%); text-align: center; }
 .final-cta h2 { font-size: 48px; line-height: 1.05; letter-spacing: -0.04em; font-weight: 700; }
-.final-cta .button { margin-top: 28px; }
+.final-cta .button, .final-cta .btn { margin-top: 28px; }
 .halftone-footer { position: relative; overflow: hidden; color: var(--text); }
 .halftone-footer canvas { display: block; width: 100%; height: 300px; }
 .halftone-footer-inner {
@@ -605,10 +654,14 @@ select.select-field option { background: var(--input); }
   white-space: nowrap;
 }
 .demo-badge span { width: 5px; height: 5px; border-radius: 50%; background: var(--pending); }
+.live-pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 11px; border: 1px solid var(--border); border-radius: var(--radius-input); background: var(--panel); color: var(--text-2); font-size: 11px; font-weight: 600; white-space: nowrap; }
 
 /* ---------- dashboard ---------- */
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; }
-.stat-card { position: relative; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); animation: riseIn 0.6s ease both; }
+.stat-card { position: relative; padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--panel); animation: riseIn 0.6s ease both; overflow: hidden; }
+/* Qronos "Agent Insights" KPI rhythm: a thin mint rule across the top of
+   each card, so the four stats read as one dashboard row. */
+.stat-card::before { content: ""; position: absolute; top: 0; left: 20px; right: 20px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--accent), transparent 75%); opacity: 0.7; }
 .stat-card:nth-child(2) { animation-delay: 0.08s; }
 .stat-card:nth-child(3) { animation-delay: 0.16s; }
 .stat-card:nth-child(4) { animation-delay: 0.24s; }
@@ -809,7 +862,7 @@ select.select-field option { background: var(--input); }
 .auth-card form label { font-size: 13px; }
 .auth-card form label input { width: 100%; min-height: 42px; margin-top: 8px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-input); background: var(--input); color: var(--text); font-size: 14px; outline: none; }
 .auth-card form label input:focus { border-color: var(--accent); }
-.auth-card form .button { width: 100%; margin-top: 6px; }
+.auth-card form .button, .auth-card form .btn { width: 100%; margin-top: 6px; }
 .auth-links { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 20px; }
 .auth-card .model-note { display: block; margin-top: 20px; }
 
@@ -837,17 +890,18 @@ select.select-field option { background: var(--input); }
 /* ---------- responsive ---------- */
 @media (max-width: 1100px) {
   .strategy-strip { grid-template-columns: repeat(3, 1fr); }
-  .tunnel-core h2 { font-size: 52px; }
+  .tunnel-title h1 { font-size: 52px; }
 }
 @media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; gap: 40px; padding-top: 60px; }
+  .hero-lamp { padding-top: 84px; }
+  .hero-lamp h1 { font-size: 52px; }
   .landing-nav-links { display: none; }
   .section-heading { grid-template-columns: 1fr; gap: 16px; }
   .pipeline-steps { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
   .pipeline-step:not(:last-child) { padding-right: 20px; }
   .pipeline-step:not(:last-child) .pipeline-node::after { display: none; }
   .bento-grid { grid-template-columns: 1fr 1fr; }
-  .bento-card.wide { grid-column: span 2; }
+  .bento-anchor { grid-column: span 2; grid-row: auto; }
   .template-grid { grid-template-columns: 1fr 1fr; }
   .extension-cta { grid-template-columns: auto 1fr; padding: 32px; }
   .extension-copy { grid-column: 2; padding-left: 0; border-left: 0; }
@@ -860,31 +914,32 @@ select.select-field option { background: var(--input); }
   .menu-button { display: block; }
   .dashboard-content { padding: 35px 25px; }
   .app-header { padding: 0 25px; }
-  .tunnel-image { width: 240px; }
+  .tunnel-title h1 { font-size: 44px; }
 }
 @media (max-width: 600px) {
   .shell { padding: 0 18px; }
-  .hero { padding: 50px 18px; }
-  .hero-copy h1 { font-size: 44px; letter-spacing: -0.03em; }
-  .hero-copy p { font-size: 16px; }
-  .hero-actions { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .hero-lamp { padding: 64px 18px 4px; }
+  .hero-lamp h1 { font-size: 44px; letter-spacing: -0.03em; }
+  .hero-lamp > p { font-size: 16px; }
+  .hero-lamp .hero-actions { flex-direction: column; align-items: center; gap: 16px; }
+  .hero-frame { margin-top: 36px; }
+  .marquee { margin-top: 40px; }
   .center-heading h2, .section-heading h2 { font-size: 32px; }
   .section { padding: 70px 18px; }
   .pipeline-section, .theory-strip { padding: 70px 18px; }
   .pipeline-steps { grid-template-columns: 1fr; }
   .bento-grid, .strategy-strip, .template-grid { grid-template-columns: 1fr; }
-  .bento-card.wide { grid-column: auto; }
+  .bento-anchor { grid-column: auto; grid-row: auto; }
   .extension-cta { display: block; margin-bottom: 70px; padding: 25px; }
   .extension-cta h2 { margin: 17px 0; }
   .extension-copy { margin-top: 20px; }
-  .tunnel-core h2 { font-size: 38px; }
-  .tunnel-image { width: 180px; }
+  .tunnel-title h1 { font-size: 38px; }
   .final-cta { padding: 70px 0 90px; }
   .final-cta h2 { font-size: 34px; }
   .dashboard-content { padding: 28px 16px; }
   .app-header { padding: 0 16px; }
   .page-header { display: block; }
-  .page-header > .button, .page-header > .demo-badge { margin-top: 18px; }
+  .page-header > .button, .page-header > .btn, .page-header > .demo-badge { margin-top: 18px; }
   .page-header h1 { font-size: 26px; }
   .stats-grid { gap: 9px; }
   .stat-card { padding: 14px; }
@@ -895,7 +950,7 @@ select.select-field option { background: var(--input); }
   .field-row, .field-row.three { grid-template-columns: 1fr; }
   .result-cards, .analysis-breakdown { grid-template-columns: 1fr; }
   .result-actions { justify-content: stretch; }
-  .result-actions .button { flex: 1; }
+  .result-actions .button, .result-actions .btn { flex: 1; }
   .secondary-action { flex: 1; justify-content: center; }
   .history-item { flex-direction: column; }
   .pipeline-card { grid-template-columns: 1fr; }

@@ -365,6 +365,38 @@ function HeroAnalysisWindow({ go, user }) {
   </div>;
 }
 
+/* Qronos-style integrations marquee, adapted: the extension works on
+   any HTTPS page, so the strip names the places people actually write. */
+const MARQUEE_ITEMS = ["Gmail", "Slack", "WhatsApp Web", "LinkedIn", "Upwork", "Fiverr", "Google Docs", "Notion", "Microsoft Teams", "Chrome"];
+
+function Marquee() {
+  const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
+  return <div className="marquee" aria-label="Works wherever you write">
+    <span className="marquee-label">Works wherever you write</span>
+    <div className="marquee-track">
+      {items.map((item, i) => <span className="marquee-item" key={`${item}-${i}`} aria-hidden={i >= MARQUEE_ITEMS.length}>{item}</span>)}
+    </div>
+  </div>;
+}
+
+/* Bento anchor cell: a live before/after rewrite demo. The output is the
+   REAL output of the rule-based engine (prototype-0.1) for the boundary
+   preset, precomputed and labelled as a demo — same honesty rule as the
+   hero window. */
+function RewriteDemoCell() {
+  const demo = DEMO_PRESETS[0];
+  return <article className="bento-card bento-anchor">
+    <div className="bento-anchor-head">
+      <span className="bento-anchor-label"><WandSparkles size={14} /> See it rewrite</span>
+      <span className="bento-anchor-note">Precomputed demo · prototype-0.1</span>
+    </div>
+    <div className="rewrite-before"><small>BEFORE</small><p>“{demo.message}”</p></div>
+    <div className="rewrite-arrow"><span>Rewrite</span><ArrowRight size={14} /></div>
+    <div className="rewrite-after"><small>AFTER · POLITE REWRITE</small><p>{demo.result.draft}</p></div>
+    <div className="rewrite-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div>
+  </article>;
+}
+
 function Landing({ go, user }) {
   const steps = [
     ["01", "Paste the message", "Share the message and a little context — who it's for and what you want."],
@@ -374,12 +406,11 @@ function Landing({ go, user }) {
     ["05", "Send the draft", "An editable draft in your words — review it, then send it yourself."],
   ];
   const features = [
-    { icon: Target, title: "Understand the subtext", text: "See intent, tone, and social dynamics behind any message — before you reply.", wide: true },
-    { icon: WandSparkles, title: "Find the right words", text: "Shape thoughtful responses that still sound like you." },
-    { icon: Gauge, title: "Build confidence", text: "Learn the patterns that make communication clear, one message at a time." },
-    { icon: History, title: "A private archive", text: "Every analysis is saved to your account — search it, reopen it, delete it." },
-    { icon: Clipboard, title: "Saved templates", text: "Keep thoughtful starting points for the moments that come up again and again." },
-    { icon: Globe2, title: "In your browser", text: "The extension brings the same live analysis into the conversations you already have." },
+    { icon: Target, title: "Understand the subtext", text: "See intent, tone, and social dynamics behind any message — before you reply.", visual: "chips-intent" },
+    { icon: Gauge, title: "Build confidence", text: "Learn the patterns that make communication clear, one message at a time.", visual: "chips-tone" },
+    { icon: History, title: "A private archive", text: "Every analysis is saved to your account — search it, reopen it, delete it.", visual: null },
+    { icon: Clipboard, title: "Saved templates", text: "Keep thoughtful starting points for the moments that come up again and again.", visual: "quote" },
+    { icon: Globe2, title: "In your browser", text: "The extension brings the same live analysis into the conversations you already have.", visual: "browser" },
   ];
   const strategies = [
     ["Bald on Record", "Direct and clear. Best when the message is urgent, the relationship is close, or the imposition is low."],
@@ -395,19 +426,25 @@ function Landing({ go, user }) {
       {user ? <button className="nav-user" onClick={() => go("overview")}>{user.display_name || user.email} · Workspace</button> : <Button onClick={() => go("login")}>Sign in</Button>}
     </nav>
     <main>
-      <section className="hero shell">
-        <div className="hero-copy">
-          <div className="hero-badge"><span className="pulse-dot" /> AI-based freelancer communication assistant</div>
-          <h1>Say what you mean, <em>better.</em></h1>
-          <p>Saylient AI gives every important message a second set of eyes — intent, tone, face concerns, and a draft that still sounds like you.</p>
-          <div className="hero-actions">
-            <Button onClick={() => go("assistant")} icon={WandSparkles}>Start writing clearly</Button>
-            <button className="text-link" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>Explore the studio <ArrowRight size={14} /></button>
-          </div>
-          <div className="hero-note"><ShieldCheck size={14} /> Nothing is ever sent automatically. You always review before you send.</div>
+      <section className="hero-lamp shell">
+        <div className="lamp-glow" aria-hidden="true" />
+        <div className="lamp-beam" aria-hidden="true" />
+        <div className="hero-badge"><span className="pulse-dot" /> AI-based freelancer communication assistant</div>
+        <h1>Say what you mean, <em>better.</em></h1>
+        <p>Saylient AI gives every important message a second set of eyes — intent, tone, face concerns, and a draft that still sounds like you.</p>
+        <div className="hero-actions">
+          <Button onClick={() => go("assistant")} icon={WandSparkles}>Start writing clearly</Button>
+          <button className="text-link" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>Explore the studio <ArrowRight size={14} /></button>
         </div>
-        <HeroAnalysisWindow go={go} user={user} />
+        <div className="hero-note"><ShieldCheck size={14} /> Nothing is ever sent automatically. You always review before you send.</div>
       </section>
+
+      <div className="hero-frame shell">
+        <div className="hero-frame-glow" aria-hidden="true" />
+        <HeroAnalysisWindow go={go} user={user} />
+      </div>
+
+      <Marquee />
 
       <section id="how" className="pipeline-section shell">
         <div className="center-heading"><div className="eyebrow">From thought to send</div><h2>Clarity at every <em>step.</em></h2><p>Communication theory, turned into practical help you can use in seconds.</p></div>
@@ -423,8 +460,13 @@ function Landing({ go, user }) {
       <section id="features" className="section shell">
         <div className="section-heading"><div><div className="eyebrow">The communication studio</div><h2>One calm layer between<br /><em>thinking and sending.</em></h2></div><p>From a quick follow-up to a difficult boundary, get context-aware guidance before you hit send.</p></div>
         <div className="bento-grid">
-          {features.map(({ icon: Icon, title, text, wide }) => <article className={`bento-card${wide ? " wide" : ""}`} key={title}>
+          <RewriteDemoCell />
+          {features.map(({ icon: Icon, title, text, visual }) => <article className="bento-card" key={title}>
             <div className="bento-icon"><Icon size={20} /></div><h3>{title}</h3><p>{text}</p>
+            {visual === "chips-intent" && <div className="bento-visual"><span>Intent</span><span>Tone</span><span>Face</span></div>}
+            {visual === "chips-tone" && <div className="bento-visual"><span>Diplomatic</span><span>Firm</span><span>Friendly</span><span>Formal</span></div>}
+            {visual === "quote" && <div className="bento-visual bento-quote">“Would moving the delivery to Thursday work for you?”</div>}
+            {visual === "browser" && <div className="bento-visual"><span className="bento-star">✦</span><span>Click on any page</span></div>}
           </article>)}
         </div>
       </section>
@@ -502,7 +544,7 @@ function Dashboard({ go, user, onOpen }) {
         <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="cyan" />
       </div>
       <div className="dashboard-grid">
-        <section className="panel activity-panel"><div className="panel-heading"><div><h3>Communication activity</h3><p>Your analyses over the last 30 days</p></div></div>
+        <section className="panel activity-panel"><div className="panel-heading"><div><h3>Communication activity</h3><p>Your analyses over the last 30 days</p></div><span className="live-pill"><span className="pulse-dot" /> Live · your data</span></div>
           <div className="fake-chart"><div className="chart-y">{yTicks.map(t => <span key={t}>{t}</span>)}</div><div className="chart-area"><div className="grid-lines"><i /><i /><i /><i /><i /></div>
             <svg viewBox="0 0 600 170" preserveAspectRatio="none"><defs><linearGradient id="chartFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" style={{ stopColor: "var(--accent)" }} stopOpacity=".3" /><stop offset="1" style={{ stopColor: "var(--accent)" }} stopOpacity="0" /></linearGradient></defs>
               {(stats?.total || 0) > 0 ? <><path d={area} fill="url(#chartFill)" /><path d={line} fill="none" style={{ stroke: "var(--accent)" }} strokeWidth="3" /></> : <text x="300" y="85" textAnchor="middle" style={{ fill: "var(--text-2)" }} fontSize="13">No analyses yet — try the assistant.</text>}
