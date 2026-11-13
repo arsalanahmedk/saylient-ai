@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
   <!-- Saylient AI mark, tile version (favicon + extension toolbar icon).
        Same construction as public/logo.svg: geometric S + fading wave bars.
-       Tile #1B1917 mirrors the panel token; mark #FF6B4A mirrors the accent token. -->
-  <rect width="128" height="128" rx="26" fill="#1B1917"/>
-  <g transform="translate(14,24) scale(3.3333)" fill="none" stroke="#FF6B4A" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+       Tile #FFFFFF mirrors the panel token; mark #9B2C2C mirrors the oxblood accent token. -->
+  <rect width="128" height="128" rx="26" fill="#FFFFFF"/>
+  <g transform="translate(14,24) scale(3.3333)" fill="none" stroke="#9B2C2C" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M17.5 7C17.5 4.2 15 2.5 12 2.5C9 2.5 6.5 4.2 6.5 7C6.5 9.8 9 11.5 12 11.5C15 11.5 17.5 13.2 17.5 16C17.5 18.8 15 20.5 12 20.5C9 20.5 6.5 18.8 6.5 16"/>
     <path d="M20.5 8.5V15.5M23 10V14M25.5 11V13"/>
   </g>

@@ -111,8 +111,8 @@ function findButton(doc, text) {
   } catch { check("landing renders (hero headline)", false); }
   const landingDoc = dom.window.document;
   check("landing has Sign in button", !!findButton(landingDoc, "Sign in"));
-  check("landing has interactive analysis window", !!landingDoc.querySelector(".hero-window"));
-  check("landing shows preset message pills", landingDoc.querySelectorAll(".preset-pills button").length >= 3);
+  check("landing has interactive analysis window", !!landingDoc.querySelector(".analyzer-console"));
+  check("landing shows sample message chips", landingDoc.querySelectorAll(".sample-chips button").length >= 3);
   check("invented clarity-score mock is gone", !rootText(landingDoc).toLowerCase().includes("clarity score"));
   try {
     const demoBtn = findButton(landingDoc, "Run demo analysis");
@@ -132,7 +132,7 @@ function findButton(doc, text) {
       // Switching the scenario pill and running again must show THAT
       // scenario's output (payment chase: invoice #1048, and the fixed
       // draft — no invented "overdue", payment close).
-      const payPill = [...landingDoc.querySelectorAll(".preset-pills button")].find((b) => (b.textContent || "").includes("Chase a payment"));
+      const payPill = [...landingDoc.querySelectorAll(".sample-chips button")].find((b) => (b.textContent || "").includes("Chase a payment"));
       if (payPill) {
         payPill.click();
         // Wait until the pill's state has flushed into the displayed

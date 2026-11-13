@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { motion, useReducedMotion } from "framer-motion";
 import {
-  ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleHelp,
+  ArrowRight, BarChart3, BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp,
   Clipboard, Clock3, Copy, Download, Gauge, Github, Globe2, History, LayoutDashboard,
   Lightbulb, Linkedin, LoaderCircle, LogOut, Mail, Menu, MessageSquare, MoreHorizontal, PenLine,
   Plus, RotateCw, Search, Send, Settings, ShieldCheck, Sparkles, Target, Trash2,
@@ -86,7 +86,7 @@ const PIPELINE_STAGES = [
 /* The Saylient mark: a geometric "S" (two cubic bowls on a 24-unit grid)
    followed by three vertical bars of decreasing height (7, 4, 2) — the
    voice fading into silence. One flat colour (currentColor, so it follows
-   the palette: dark charcoal in the coral tile, coral on dark everywhere else).
+   the palette: oxblood on a white tile, oxblood everywhere else).
    The S is deliberately unclosed: the message pauses before it is sent. */
 const LOGO_S_PATH = "M17.5 7C17.5 4.2 15 2.5 12 2.5C9 2.5 6.5 4.2 6.5 7C6.5 9.8 9 11.5 12 11.5C15 11.5 17.5 13.2 17.5 16C17.5 18.8 15 20.5 12 20.5C9 20.5 6.5 18.8 6.5 16";
 const LOGO_WAVE_PATH = "M20.5 8.5V15.5M23 10V14M25.5 11V13";
@@ -245,7 +245,7 @@ function PhraseRewriteDemo({ go, user }) {
 }
 
 /* Magic UI-style animated beam: the places people write feed into Saylient.
-   CSS-only — a coral dot travels along each connector. */
+   CSS-only — an oxblood dot travels along each connector. */
 const BEAM_APPS = ["Gmail", "Slack", "WhatsApp", "Upwork"];
 
 function BeamDiagram() {
@@ -260,21 +260,91 @@ function BeamDiagram() {
   </div>;
 }
 
-/* Linear-style numbered chapters: two-tone headlines, huge whitespace, and
-   the actual product UI in thin bordered frames — no stock photos, no fake
-   images. Every frame shows real engine output (precomputed demo data). */
-function FeatureChapters({ go }) {
-  const demo = DEMO_PRESETS[0];
-  const chapters = [
-    { n: "01", lead: "Understand", rest: " the subtext.", text: "See intent, tone, and social dynamics behind any message — before you reply.", frame: <><div className="chapter-frame-head"><span className="ai-icon"><Sparkles size={14} /></span><strong>Live analysis · prototype-0.1</strong></div><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><p className="hero-draft">{demo.result.draft}</p><span className="chapter-frame-note">Precomputed demo · prototype-0.1</span></> },
-    { n: "02", lead: "Build", rest: " confidence.", text: "Learn the patterns that make communication clear, one message at a time — and watch the numbers move.", frame: <><ScoreRing value={0.87} /><span className="chapter-frame-note">Intent confidence · boundary preset · precomputed demo</span></> },
-    { n: "03", lead: "Keep a", rest: " private archive.", text: "Every analysis is saved to your account — search it, reopen it, delete it.", frame: <>{DEMO_PRESETS.map(p => <div className="chapter-row" key={p.label}><div className="conversation-icon"><MessageSquare size={16} /></div><div className="conversation-name"><strong>{prettyLabel(p.result.intent.label)}</strong><span>{p.message}</span></div><span className="score-pill"><span /> {Math.round(p.result.intent.confidence * 100)}%</span></div>)}<span className="chapter-frame-note">Your recent analyses, as they appear in the workspace.</span></> },
-    { n: "04", lead: "Work", rest: " in your browser.", text: "The extension brings the same live analysis into the conversations you already have.", frame: <div className="chapter-mini-panel"><div className="sai-mini-head">✦ Saylient AI</div><p>“{demo.message}”</p><Button onClick={() => go("extension")}>Analyze conversation</Button><span className="chapter-frame-note">What the panel looks like on any page — sign in once, then Analyze.</span></div> },
-  ];
-  return <>{chapters.map((c, i) => <article className="chapter" key={c.n}>
-    <div className="chapter-text"><span className="chapter-num">{c.n}</span><h3>{c.lead}<span className="chapter-rest">{c.rest}</span></h3><p>{c.text}</p></div>
-    <div className={`chapter-frame${i === 1 ? " chapter-frame-center" : ""}`}>{c.frame}</div>
-  </article>)}</>;
+/* How it works — a 3-card bento. Every visual is real product UI:
+   analysis chips and a draft from the rule-based engine (precomputed
+   demo, labelled), and recent-analysis rows from the same demo presets. */
+function HowItWorks({ go }) {
+  const demo = DEMO_PRESETS[2];
+  return <section id="how" className="how-section shell">
+    <div className="center-heading"><div className="eyebrow">How it works</div><h2>From thought <em>to send.</em></h2><p>Communication theory, turned into practical help you can use in seconds.</p></div>
+    <div className="how-bento">
+      <article className="how-card"><span className="how-num">01</span><h3>Analyze the message</h3><p>Paste a message and see intent, tone and face concerns — before you reply.</p><div className="how-visual"><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><span className="how-note">Precomputed demo · prototype-0.1</span></div></article>
+      <article className="how-card"><span className="how-num">02</span><h3>Get a draft reply</h3><p>An editable draft in your words, with tone options — formal, casual or short.</p><div className="how-visual"><p className="hero-draft">{demo.result.draft}</p><span className="how-note">Precomputed demo · prototype-0.1</span></div></article>
+      <article className="how-card"><span className="how-num">03</span><h3>Use it anywhere</h3><p>The extension brings the same analysis into the places you already write — and every analysis is saved to your history.</p><div className="how-visual">{DEMO_PRESETS.map(p => <div className="how-row" key={p.label}><div className="conversation-icon"><MessageSquare size={16} /></div><div className="conversation-name"><strong>{prettyLabel(p.result.intent.label)}</strong><span>{p.message}</span></div><span className="score-pill"><span /> {Math.round(p.result.intent.confidence * 100)}%</span></div>)}<span className="how-note">Your recent analyses, as they appear in the workspace.</span></div></article>
+    </div>
+    <div className="center-heading" style={{ marginTop: 32 }}><Button onClick={() => go("assistant")} icon={WandSparkles}>Try the assistant</Button></div>
+  </section>;
+}
+
+/* Feature tabs — one product area at a time. Analyse shows the real
+   breakdown for a demo preset; Suggested messages is the Wordtune-style
+   tone demo; Connect anywhere is the extension beam; Assistant chat is a
+   look at the demo conversation; Activity timeline is real history when
+   signed in, labelled samples when not. */
+const FEATURE_TABS = ["Analyse", "Suggested messages", "Connect anywhere", "Assistant chat", "Activity timeline"];
+
+function ActivityTab({ go, user }) {
+  const [items, setItems] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    if (!user) return undefined;
+    api.listAnalyses(5, 0)
+      .then(d => setItems(d.items || []))
+      .catch(e => setError(friendlyError(e)));
+    return undefined;
+  }, [user]);
+  if (!user) {
+    return <div className="tab-note"><p>Sign in and your real activity timeline appears here — every analysis you run, newest first.</p>
+      <ol className="activity-timeline">{DEMO_PRESETS.map(p => <li key={p.label}><span className="timeline-dot" /><div><strong>{prettyLabel(p.result.intent.label)}</strong><span>{p.message}</span><small>Sample · precomputed demo · prototype-0.1</small></div></li>)}</ol></div>;
+  }
+  if (error) return <div className="form-error">{error}</div>;
+  if (items === null) return <div className="tab-note"><p>Loading your activity…</p></div>;
+  if (!items.length) return <div className="tab-note"><p>Nothing analyzed yet — your timeline will fill in as you use the assistant.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>;
+  return <ol className="activity-timeline">{items.map(item => <li key={item.id}><span className="timeline-dot" /><div><strong>{prettyLabel(item.intent?.label)} · {Math.round((item.intent?.confidence || 0) * 100)}%</strong><span>{item.message}</span><small>{new Date(item.created_at).toLocaleDateString()} · {prettyLabel(item.strategy?.label)}</small></div><button className="secondary-action" onClick={() => go("assistant")}>Open</button></li>)}</ol>;
+}
+
+function FeatureTabs({ go, user }) {
+  const [tab, setTab] = useState(0);
+  const demo = DEMO_PRESETS[2];
+  return <section id="features" className="tabs-section shell">
+    <div className="center-heading"><div className="eyebrow">The communication studio</div><h2>One calm layer between<br /><em>thinking and sending.</em></h2><p>From a quick follow-up to a difficult boundary, get context-aware guidance before you hit send.</p></div>
+    <div className="tabs-nav" role="tablist">{FEATURE_TABS.map((label, i) => <button key={label} role="tab" aria-selected={tab === i} className={tab === i ? "active" : ""} onClick={() => setTab(i)}>{label}</button>)}</div>
+    <div className="tab-panel">
+      {tab === 0 && <div className="tab-grid"><div><h3>See what a message really asks for.</h3><p>The engine reads intent, tone and social dynamics without guessing what anyone feels — and tells you how sure it is.</p><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><span className="how-note">Precomputed demo · prototype-0.1</span><div style={{ marginTop: 18 }}><Button onClick={() => go("assistant")} icon={WandSparkles}>Open the analyzer</Button></div></div><div className="tab-frame"><ScoreRing value={0.87} /><span className="how-note">Intent confidence · boundary preset · precomputed demo</span></div></div>}
+      {tab === 1 && <div><h3>Three ways to say the same thing.</h3><p>Tap an underlined phrase, pick a tone — the drafts are real engine output.</p><div style={{ marginTop: 18 }}><PhraseRewriteDemo go={go} user={user} /></div></div>}
+      {tab === 2 && <div className="tab-grid"><div><h3>Wherever you write.</h3><p>The extension brings live analysis into the conversations you already have — Gmail, Slack, WhatsApp, Upwork. Nothing is monitored or sent on its own.</p><div className="extension-actions" style={{ marginTop: 18 }}><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a><Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button></div></div><BeamDiagram /></div>}
+      {tab === 3 && <div className="tab-grid"><div><h3>Practice in a safe conversation.</h3><p>A local demo chat where you can try a draft before it matters — nothing leaves the page.</p><div style={{ marginTop: 18 }}><Button onClick={() => go("demo-chat")} icon={Globe2}>Open the demo chat</Button></div></div><div className="tab-frame tab-chat"><div className="demo-message"><span className="demo-author">Alex</span><p>Hi! I wanted to check whether the homepage concepts will be ready today.</p></div><div className="demo-message freelancer"><span className="demo-author">You</span><p>Hi Alex, I am putting the final details together now.</p></div><span className="how-note">From the local demo chat — no account needed.</span></div></div>}
+      {tab === 4 && <div><h3>Your work, in order.</h3><p>Every analysis is saved to your account — search it, reopen it, delete it.</p><div style={{ marginTop: 18 }}><ActivityTab go={go} user={user} /></div></div>}
+    </div>
+  </section>;
+}
+
+/* Dashboard preview — signed-in visitors only, and only REAL data:
+   stats from GET /analyses/stats and the latest analyses. Nothing here
+   is a mockup. */
+function DashboardPreview({ go }) {
+  const [stats, setStats] = useState(null);
+  const [recent, setRecent] = useState([]);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    Promise.all([api.getStats(), api.listAnalyses(3, 0)])
+      .then(([s, a]) => { setStats(s); setRecent(a.items || []); })
+      .catch(e => setError(friendlyError(e)));
+  }, []);
+  const avgConf = stats?.avg_intent_confidence == null ? null : Math.round(stats.avg_intent_confidence * 100);
+  return <section className="preview-section shell">
+    <div className="section-heading"><div><div className="eyebrow">Your workspace at a glance</div><h2>Real numbers, <em>your account.</em></h2></div><p>Nothing here is a mockup — these are your actual analyses, live from your account.</p></div>
+    {error && <div className="form-error">{error}</div>}
+    <div className="stats-grid">
+      <Stat title="Messages analyzed" value={stats?.total ?? 0} change={`${stats?.this_week ?? 0} this week`} icon={MessageSquare} color="accent" />
+      <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="oxblood" />
+      <Stat title="Flagged face concerns" value={stats?.fta_count ?? 0} change={stats?.total ? `${Math.round((stats.fta_count / stats.total) * 100)}% of messages` : "No analyses yet"} icon={Clock3} color="orange" />
+      <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="sand" />
+    </div>
+    <div className="panel recent-panel"><div className="panel-heading"><div><h3>Recent conversations</h3><p>Your latest analyses</p></div><button className="link-button" onClick={() => go("history")}>View all <ArrowRight size={14} /></button></div>
+      {recent.length ? <div className="conversation-table">{recent.map(c => <div className="conversation-row" key={c.id}><div className="conversation-icon"><MessageSquare size={16} /></div><div className="conversation-name"><strong>{prettyLabel(c.intent?.label)}</strong><span>{c.message}</span></div><span className="conversation-date">{new Date(c.created_at).toLocaleDateString()}</span><div className="score-pill"><span /> {Math.round((c.intent?.confidence || 0) * 100)}%</div></div>)}</div> : <div className="placeholder-page" style={{ minHeight: 160 }}><div className="placeholder-icon"><History size={25} /></div><h2>No analyses yet.</h2><p>Your first analysis will appear here.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>}
+    </div>
+  </section>;
 }
 
 /* Lex-style pricing, pattern only: two cards, Free vs Pro, benefits-led.
@@ -314,7 +384,7 @@ function HalftoneFooter({ go }) {
       mask.width = rect.width;
       mask.height = rect.height;
       const maskContext = mask.getContext("2d");
-      maskContext.font = `600 ${fontSize}px "Clash Display", "Satoshi", sans-serif`;
+      maskContext.font = `600 ${fontSize}px "Fraunces", Georgia, serif`;
       maskContext.textAlign = "center";
       maskContext.textBaseline = "alphabetic";
       maskContext.fillStyle = "#fff";
@@ -326,7 +396,7 @@ function HalftoneFooter({ go }) {
           if (alpha < 0.08) continue;
           const distance = Math.hypot(x - pointer.x, y - pointer.y);
           const warmth = Math.max(0, 1 - distance / 95) * alpha;
-          context.fillStyle = `rgb(${Math.round(255 + warmth * 0)},${Math.round(107 + warmth * 31)},${Math.round(74 + warmth * 33)})`;
+          context.fillStyle = `rgb(${Math.round(155 + warmth * 0)},${Math.round(44 + warmth * -15)},${Math.round(44 + warmth * -15)})`;
           context.beginPath();
           context.arc(x, y, Math.sqrt(alpha) * gap * 0.58, 0, Math.PI * 2);
           context.fill();
@@ -363,80 +433,104 @@ function HalftoneFooter({ go }) {
 
 /* ------------------------------------------------------------------ landing */
 
+/* The Analyzer console — the hero of the landing and the shape of the
+   Assistant page. Left: a textarea for the visitor's own message, sample
+   chips, and a large Analyze button. Right: the results — intent, tone and
+   strategy chips with scores, plus the draft reply panel with Copy /
+   Regenerate / Use in extension. Signed-in visitors get a LIVE analysis
+   of the text they typed; visitors see the clearly-labelled precomputed
+   demo for the selected sample. */
 function HeroAnalysisWindow({ go, user }) {
   const [preset, setPreset] = useState(0);
+  const [typed, setTyped] = useState(DEMO_PRESETS[0].message);
   const [running, setRunning] = useState(false);
   const [live, setLive] = useState(null);
   const [error, setError] = useState("");
-  // Bumps every time a demo run finishes, so the output block remounts
+  const [copied, setCopied] = useState(false);
+  // Bumps every time a run finishes, so the output block remounts
   // and visibly re-renders for the currently selected scenario.
   const [demoTick, setDemoTick] = useState(0);
   const demoTimerRef = useRef(null);
   const chosen = DEMO_PRESETS[preset];
+  const isCustom = typed.trim() !== chosen.message;
 
   useEffect(() => () => { if (demoTimerRef.current) clearTimeout(demoTimerRef.current); }, []);
 
+  const pickPreset = (i) => { setPreset(i); setTyped(DEMO_PRESETS[i].message); setLive(null); setError(""); };
+
   const run = async () => {
-    if (!user) {
-      // Demo run: show a brief loading state, then re-render the output
-      // for the SELECTED scenario pill (previously the output was already
-      // on screen, so the click did nothing visible).
-      setRunning(true); setError("");
-      demoTimerRef.current = setTimeout(() => {
-        setRunning(false);
+    if (user) {
+      if (!typed.trim() || typed.length > 2000 || running) return;
+      setRunning(true); setError(""); setLive(null);
+      try {
+        const result = await api.createAnalysis({
+          message: typed.trim(),
+          conversation_context: [],
+          goal: GOAL_VALUES[chosen.goal],
+          context: { power: "unknown", social_distance: "unknown", imposition: "unknown" },
+        });
+        setLive(result);
         setDemoTick(t => t + 1);
-      }, 700);
+      } catch (err) { setError(friendlyError(err)); }
+      setRunning(false);
       return;
     }
-    setRunning(true); setError(""); setLive(null);
-    try {
-      const result = await api.createAnalysis({
-        message: chosen.message,
-        conversation_context: [],
-        goal: GOAL_VALUES[chosen.goal],
-        context: { power: "unknown", social_distance: "unknown", imposition: "unknown" },
-      });
-      setLive(result);
-    } catch (err) { setError(friendlyError(err)); }
-    setRunning(false);
+    setRunning(true); setError("");
+    demoTimerRef.current = setTimeout(() => {
+      setRunning(false);
+      setDemoTick(t => t + 1);
+    }, 700);
+  };
+
+  const copyDraft = async () => {
+    const draft = (live || chosen.result).draft;
+    await navigator.clipboard?.writeText(draft);
+    setCopied(true); setTimeout(() => setCopied(false), 1400);
   };
 
   const shown = live || (!user ? chosen.result : null);
   const isDemo = !live && !user;
-  return <div className="hero-window">
-    <div className="window-top"><span className="window-dots"><i /><i /><i /></span><span>saylient.ai — message assistant</span><Sparkles size={14} /></div>
-    <div className="window-body">
-      <div className="preset-pills">
-        {DEMO_PRESETS.map((p, i) => <button key={p.label} className={preset === i ? "active" : ""} onClick={() => { setPreset(i); setLive(null); setError(""); }}>{p.label}</button>)}
+  return <div className="analyzer-console">
+    <div className="console-toolbar"><span className="window-dots"><i /><i /><i /></span><strong>Saylient Analyzer</strong><span className="console-badge">{user ? "Live analysis" : "Precomputed demo · prototype-0.1"}</span></div>
+    <div className="analyzer-grid">
+      <div className="analyzer-form">
+        <label>Your client's message<textarea value={typed} onChange={e => setTyped(e.target.value)} placeholder="Paste your client's message…" maxLength={2000} rows={6} /></label>
+        <div className="sample-chips"><span>Try a sample:</span>{DEMO_PRESETS.map((p, i) => <button key={p.label} type="button" className={preset === i ? "active" : ""} onClick={() => pickPreset(i)}>{p.label}</button>)}</div>
+        <Button onClick={run} icon={running ? LoaderCircle : WandSparkles} disabled={running || (user && !typed.trim())}>{running ? "Analyzing…" : user ? "Analyze message" : "Run demo analysis"}</Button>
+        {!user && isCustom && <p className="console-hint">Sign in to analyze your own message — the demo below is for the selected sample.</p>}
+        {user && <p className="console-hint">Live analysis · your account</p>}
+        {error && <div className="form-error">{error}</div>}
       </div>
-      <p className="hero-message">“{chosen.message}”</p>
-      <div className="hero-run">
-        <Button onClick={run} icon={running ? LoaderCircle : WandSparkles} disabled={running}>{running ? "Analyzing…" : user ? "Run live analysis" : "Run demo analysis"}</Button>
-        <span className="hero-run-note">{user ? "Live analysis · your account" : "Demo output below is precomputed — sign in for a live one"}</span>
+      <div className="analyzer-results">
+        {running && <div className="hero-output hero-output-loading" aria-live="polite"><div className="hero-shimmer"><i /><i /><i /></div><span><LoaderCircle size={14} className="spin" /> {user ? "Analyzing…" : "Running demo analysis…"}</span></div>}
+        {!running && shown && <div className="hero-output" key={demoTick}>
+          <div className="hero-output-head">
+            <span className="ai-icon"><Sparkles size={14} /></span>
+            <strong>{isDemo ? "Demo output" : "Live analysis"} · {shown.model_version}</strong>
+            <span className="result-tag"><Check size={12} /> Review required</span>
+          </div>
+          <div className="hero-output-tags">
+            <span><b>Intent</b> {prettyLabel(shown.intent?.label)} · {Math.round((shown.intent?.confidence || 0) * 100)}% <small>({CONFIDENCE_NOTE})</small></span>
+            <span><b>Tone</b> {prettyLabel(shown.tone?.label)}</span>
+            <span><b>Strategy</b> {prettyLabel(shown.strategy?.label)}</span>
+          </div>
+          <p className="hero-draft">{shown.draft}</p>
+          <div className="analyzer-actions">
+            <button className="secondary-action" onClick={copyDraft}><Copy size={14} /> {copied ? "Copied" : "Copy draft"}</button>
+            <button className="secondary-action" onClick={run} disabled={running}><RotateCw size={14} /> Regenerate</button>
+            <button className="secondary-action" onClick={() => go("extension")}><Globe2 size={14} /> Use in extension</button>
+          </div>
+          {isDemo && <button className="link-button" onClick={() => go("login")}>Sign in to analyze your own messages <ArrowRight size={13} /></button>}
+        </div>}
+        {!shown && !running && <div className="analyzer-empty"><div className="empty-spark"><Sparkles size={25} /></div><h3>Your analysis appears here.</h3><p>Paste a message and run the analyzer — intent, tone, strategy and a draft you can edit.</p></div>}
       </div>
-      {error && <div className="form-error">{error}</div>}
-      {running && !user && <div className="hero-output hero-output-loading" aria-live="polite"><div className="hero-shimmer"><i /><i /><i /></div><span><LoaderCircle size={14} className="spin" /> Running demo analysis…</span></div>}
-      {!(running && !user) && shown && <div className="hero-output" key={demoTick}>
-        <div className="hero-output-head">
-          <span className="ai-icon"><Sparkles size={14} /></span>
-          <strong>{isDemo ? "Demo output" : "Live analysis"} · {shown.model_version}</strong>
-          <span className="result-tag"><Check size={12} /> Review required</span>
-        </div>
-        <div className="hero-output-tags">
-          <span><b>Intent</b> {prettyLabel(shown.intent?.label)} · {Math.round((shown.intent?.confidence || 0) * 100)}% <small>({CONFIDENCE_NOTE})</small></span>
-          <span><b>Tone</b> {prettyLabel(shown.tone?.label)}</span>
-          <span><b>Strategy</b> {prettyLabel(shown.strategy?.label)}</span>
-        </div>
-        <p className="hero-draft">{shown.draft}</p>
-        {isDemo && <button className="link-button" onClick={() => go("login")}>Sign in to analyze your own messages <ArrowRight size={13} /></button>}
-      </div>}
     </div>
   </div>;
 }
 
-/* Qronos-style integrations marquee, adapted: the extension works on
+/* Integrations marquee: the extension works on
    any HTTPS page, so the strip names the places people actually write. */
-const MARQUEE_ITEMS = ["Gmail", "Slack", "WhatsApp Web", "LinkedIn", "Upwork", "Fiverr", "Google Docs", "Notion", "Microsoft Teams", "Chrome"];
+const MARQUEE_ITEMS = ["Browser extension", "Gmail", "Upwork", "Fiverr", "LinkedIn", "Slack", "WhatsApp Web", "Google Docs"];
 
 function Marquee() {
   const items = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
@@ -462,13 +556,6 @@ function PublicNav({ go, user }) {
 }
 
 function Landing({ go, user }) {
-  const steps = [
-    ["01", "Paste the message", "Share the message and a little context — who it's for and what you want."],
-    ["02", "See the intent", "The engine reads intent and tone without guessing what anyone feels."],
-    ["03", "Mind the face", "Possible face-threatening acts are flagged, so you know what might land badly."],
-    ["04", "Pick a strategy", "One of five politeness strategies, with the reason it fits."],
-    ["05", "Send the draft", "An editable draft in your words — review it, then send it yourself."],
-  ];
   const strategies = [
     ["Bald on Record", "Direct and clear. Best when the message is urgent, the relationship is close, or the imposition is low."],
     ["Positive Politeness", "Shows appreciation and shared ground. Best when you want the other person to feel valued and included."],
@@ -481,47 +568,26 @@ function Landing({ go, user }) {
     <main>
       <section className="hero shell">
         <div className="hero-dots" aria-hidden="true" />
-        <svg className="hero-field" viewBox="0 0 1200 600" preserveAspectRatio="none" aria-hidden="true">
-          <g fill="none" stroke="var(--accent)" strokeWidth="1">
-            <path d="M-40 520 C 300 420, 500 560, 760 430 S 1100 380, 1260 460" opacity="0.32" />
-            <path d="M-40 560 C 320 470, 560 600, 820 470 S 1120 430, 1260 500" opacity="0.2" />
-            <path d="M-40 80 C 300 160, 520 40, 780 140 S 1100 200, 1260 120" opacity="0.2" />
-          </g>
-        </svg>
         <div className="hero-badge"><span className="pulse-dot" /> AI-based freelancer communication assistant</div>
-        <h1>Say what you mean, <em>better.</em></h1>
-        <p>Saylient AI gives every important message a second set of eyes — intent, tone, face concerns, and a draft that still sounds like you.</p>
-        <div className="hero-actions">
-          <Button onClick={() => go("assistant")} icon={WandSparkles}>Start writing clearly</Button>
-          <button className="text-link" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>Explore the studio <ArrowRight size={14} /></button>
+        <h1>Say it so <em>they say yes.</em></h1>
+        <p>Saylient AI reads the intent, tone and face concerns behind a message — and drafts a reply that still sounds like you.</p>
+        <div className="hero-console">
+          <HeroAnalysisWindow go={go} user={user} />
+          <div className="hero-tone">
+            <div className="hero-tone-head"><span>Refine the tone</span><p>Tap an underlined phrase, then pick a tone — the drafts are real engine output.</p></div>
+            <PhraseRewriteDemo go={go} user={user} />
+          </div>
         </div>
         <div className="hero-note"><ShieldCheck size={14} /> Nothing is ever sent automatically. You always review before you send.</div>
-        <div className="hero-demo">
-          <PhraseRewriteDemo go={go} user={user} />
-        </div>
       </section>
-
-      <div className="hero-frame shell">
-        <HeroAnalysisWindow go={go} user={user} />
-      </div>
 
       <Marquee />
 
-      <section id="how" className="pipeline-section shell">
-        <div className="center-heading"><div className="eyebrow">From thought to send</div><h2>Clarity at every <em>step.</em></h2><p>Communication theory, turned into practical help you can use in seconds.</p></div>
-        <div className="pipeline-steps">
-          {steps.map(([n, title, text], i) => <div className="pipeline-step" key={n}>
-            <div className="pipeline-node"><span>{n}</span></div>
-            {i < steps.length - 1 && <div className="pipeline-connector" aria-hidden="true" />}
-            <h3>{title}</h3><p>{text}</p>
-          </div>)}
-        </div>
-      </section>
+      <HowItWorks go={go} />
 
-      <section id="features" className="chapters-section shell">
-        <div className="section-heading"><div><div className="eyebrow">The communication studio</div><h2>One calm layer between<br /><em>thinking and sending.</em></h2></div><p>From a quick follow-up to a difficult boundary, get context-aware guidance before you hit send.</p></div>
-        <FeatureChapters go={go} />
-      </section>
+      <FeatureTabs go={go} user={user} />
+
+      {user && <DashboardPreview go={go} />}
 
       <section id="theory" className="theory-strip shell">
         <div className="center-heading"><div className="eyebrow">Grounded in research</div><h2>The science of <em>being understood.</em></h2><p>Built on Brown and Levinson's Politeness Theory (1987) — five strategies, one reason each.</p></div>
@@ -549,6 +615,15 @@ function Landing({ go, user }) {
       </section>
 
       <PricingSection go={go} />
+
+      <section className="closing-cta shell">
+        <div className="closing-card">
+          <div className="eyebrow">Ready when you are</div>
+          <h2>Your next message <em>starts here.</em></h2>
+          <p>One analysis is all it takes to stop second-guessing the send button.</p>
+          <Button onClick={() => go("assistant")} icon={WandSparkles}>Open the assistant</Button>
+        </div>
+      </section>
     </main>
     <HalftoneFooter go={go} />
   </div>;
@@ -558,7 +633,8 @@ function Landing({ go, user }) {
 
 function Layout({ page, go, user, onSignOut, children }) {
   const [mobile, setMobile] = useState(false);
-  return <div className="app-shell"><aside className={mobile ? "sidebar open" : "sidebar"}><div className="side-logo"><Logo /><button className="mobile-close" onClick={() => setMobile(false)}><X size={18} /></button></div><div className="side-label">Workspace</div><nav>{navItems.map(([id, label, Icon]) => <button key={id} className={page === id ? "side-link active" : "side-link"} onClick={() => { go(id); setMobile(false); }}><Icon size={17} />{label}{id === "assistant" && <span className="new-dot" />}</button>)}</nav><div className="side-label lower">Account</div><button className={`side-link ${page === "settings" ? "active" : ""}`} onClick={() => go("settings")}><Settings size={17} />Settings</button><button className="side-link" onClick={onSignOut}><LogOut size={17} />Sign out</button><div className="upgrade-card"><Sparkles size={17} /><strong>Prototype build</strong><p>Analyses run on the rule-based engine (prototype-0.1). Your data lives in your account.</p><button onClick={() => go("assistant")}>Analyze a message <ArrowRight size={13} /></button></div><button className="profile profile-button" onClick={() => go("profile")}><div className="profile-avatar">{initials(user.display_name || user.email)}</div><div><strong>{user.display_name || user.email}</strong><small>{user.email}</small></div><MoreHorizontal size={16} /></button></aside><div className="main-area"><header className="app-header"><button className="menu-button" onClick={() => setMobile(true)}><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><ChevronDown size={14} /><strong>{navItems.find(x => x[0] === page)?.[1] || "Overview"}</strong></div><div className="header-actions"><button aria-label="Help" onClick={() => go("theory")}><CircleHelp size={18} /></button><button className="header-avatar" onClick={() => go("profile")}>{initials(user.display_name || user.email)}</button></div></header><main className="dashboard-content">{children}</main></div></div>;
+  const [collapsed, setCollapsed] = useState(false);
+  return <div className="app-shell"><aside className={`sidebar${mobile ? " open" : ""}${collapsed ? " collapsed" : ""}`}><div className="side-logo"><Logo /><button className="collapse-toggle" onClick={() => setCollapsed(c => !c)} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button><button className="mobile-close" onClick={() => setMobile(false)}><X size={18} /></button></div><div className="side-label">Workspace</div><nav>{navItems.map(([id, label, Icon]) => <button key={id} className={page === id ? "side-link active" : "side-link"} onClick={() => { go(id); setMobile(false); }} title={label}><Icon size={17} /><span className="side-link-label">{label}</span>{id === "assistant" && <span className="new-dot" />}</button>)}</nav><div className="side-label lower">Account</div><button className={`side-link ${page === "settings" ? "active" : ""}`} onClick={() => go("settings")} title="Settings"><Settings size={17} /><span className="side-link-label">Settings</span></button><button className="side-link" onClick={onSignOut} title="Sign out"><LogOut size={17} /><span className="side-link-label">Sign out</span></button><div className="upgrade-card"><Sparkles size={17} /><strong>Prototype build</strong><p>Analyses run on the rule-based engine (prototype-0.1). Your data lives in your account.</p><button onClick={() => go("assistant")}>Analyze a message <ArrowRight size={13} /></button></div><button className="profile profile-button" onClick={() => go("profile")}><div className="profile-avatar">{initials(user.display_name || user.email)}</div><div className="profile-text"><strong>{user.display_name || user.email}</strong><small>{user.email}</small></div><MoreHorizontal size={16} /></button></aside><div className="main-area"><header className="app-header"><button className="menu-button" onClick={() => setMobile(true)}><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><ChevronDown size={14} /><strong>{navItems.find(x => x[0] === page)?.[1] || "Overview"}</strong></div><div className="header-actions"><button aria-label="Help" onClick={() => go("theory")}><CircleHelp size={18} /></button><button className="header-avatar" onClick={() => go("profile")}>{initials(user.display_name || user.email)}</button></div></header><main className="dashboard-content">{children}</main></div></div>;
 }
 
 function PageHeader({ eyebrow, title, text, children }) { return <div className="page-header"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1>{text && <p>{text}</p>}</div>{children}</div>; }
@@ -594,7 +670,7 @@ function Dashboard({ go, user, onOpen }) {
     {loading ? <div className="panel placeholder-page"><div className="placeholder-icon"><Sparkles size={25} /></div><h2>Loading your overview…</h2></div> : <>
       <div className="stats-grid">
         <Stat title="Messages analyzed" value={stats?.total ?? 0} change={`${stats?.this_week ?? 0} this week`} icon={MessageSquare} color="accent" />
-        <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="coral" />
+        <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="oxblood" />
         <Stat title="Flagged face concerns" value={stats?.fta_count ?? 0} change={stats?.total ? `${Math.round((stats.fta_count / stats.total) * 100)}% of messages` : "No analyses yet"} icon={Clock3} color="orange" />
         <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="sand" />
       </div>
@@ -747,8 +823,10 @@ function Assistant({ go, openAnalysis, clearOpen }) {
     } catch (err) { setError(friendlyError(err)); }
   };
 
-  return <><PageHeader eyebrow="Message assistant" title="Find the right words." text="Add a little context, and we'll help you say what you mean."><span className="demo-badge"><span /> Live analysis · real backend</span></PageHeader>
-    <div className="assistant-layout">
+  return <><PageHeader eyebrow="Message assistant" title="Find the right words." text="Add a little context, and we'll help you say what you mean." />
+    <div className="assistant-console">
+      <div className="console-toolbar"><span className="window-dots"><i /><i /><i /></span><strong>Message assistant</strong><span className="console-badge">Live analysis · real backend</span></div>
+      <div className="assistant-layout">
       <section className="panel assistant-form"><div className="assistant-title"><div className="panel-icon accent"><MessageSquare size={17} /></div><div><h3>Your message</h3><p>Context is user supplied; predictions are labelled.</p></div></div>
         {error && <div className="form-error">{error}</div>}
         <div className="context-editor">
@@ -791,6 +869,7 @@ function Assistant({ go, openAnalysis, clearOpen }) {
           <Result analysis={analysis} tone={tone} directness={directness} onTone={changeTone} onDirectness={changeDirectness} onSave={saveDraft} onDeleteDraft={deleteDraft} hasDraft={!!draftId} onRegenerate={() => regenerate()} savedNote={savedNote} updating={updating} />
         </>}
       </section>
+      </div>
     </div></>;
 }
 
@@ -892,7 +971,24 @@ function HistoryPage({ go, onOpen }) {
   return <><PageHeader eyebrow="Your private archive" title="Conversation history" text="Analyses are stored in your account. Deleting one removes it for good."><Button onClick={() => go("assistant")} icon={Plus}>New analysis</Button></PageHeader>
     {error && <div className="form-error panel">{error}</div>}
     <div className="history-toolbar panel"><Search size={16} /><input placeholder="Search saved conversations..." value={query} onChange={event => setQuery(event.target.value)} /><span>{total} saved</span></div>
-    <div className="history-list">{loading ? <div className="placeholder-page panel"><div className="placeholder-icon"><History size={25} /></div><h2>Loading your history…</h2></div> : filtered.length ? filtered.map(item => <article className="panel history-item" key={item.id}><div><small>{prettyLabel(item.intent?.label)} · {new Date(item.created_at).toLocaleDateString()}</small><h3>{item.message}</h3><p>{item.draft}</p><div className="analysis-tags"><span>{prettyLabel(item.strategy?.label)}</span><span>{item.fta?.detected ? "Face concern flagged" : "No face concern"}</span></div></div><div style={{ display: "flex", gap: 8 }}><button className="secondary-action" onClick={() => onOpen(item)}><ArrowRight size={15} /> Open</button><button className="secondary-action" onClick={() => remove(item.id)}><Trash2 size={15} /> Delete</button></div></article>) : <div className="placeholder-page panel"><div className="placeholder-icon"><History size={25} /></div><h2>Your saved conversations will appear here.</h2><p>Analyze a message and it is saved to your account automatically.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>}</div>
+    {loading ? <div className="placeholder-page panel"><div className="placeholder-icon"><History size={25} /></div><h2>Loading your history…</h2></div> : filtered.length ? <>
+      <div className="panel history-table-wrap">
+        <table className="history-table">
+          <thead><tr><th>Client message</th><th>Intent</th><th>Tone</th><th>Politeness</th><th>Draft</th><th><span className="sr-only">Actions</span></th></tr></thead>
+          <tbody>{filtered.map(item => <tr key={item.id}>
+            <td className="history-message"><strong>{item.message}</strong><small>{new Date(item.created_at).toLocaleDateString()}</small></td>
+            <td>{prettyLabel(item.intent?.label)} · {Math.round((item.intent?.confidence || 0) * 100)}%</td>
+            <td>{prettyLabel(item.tone?.label)}</td>
+            <td>{prettyLabel(item.strategy?.label)}</td>
+            <td>{item.draft ? <span className="draft-chip">Draft ready</span> : <span className="muted">No draft</span>}</td>
+            <td><div className="row-actions"><button className="secondary-action" onClick={() => onOpen(item)}><ArrowRight size={15} /> Open</button><button className="secondary-action" onClick={() => remove(item.id)}><Trash2 size={15} /> Delete</button></div></td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+      <section className="panel timeline-panel"><div className="panel-heading"><div><h3>Activity timeline</h3><p>Newest first</p></div></div>
+        <ol className="activity-timeline">{filtered.slice(0, 10).map(item => <li key={item.id}><span className="timeline-dot" /><div><strong>{prettyLabel(item.intent?.label)} · {Math.round((item.intent?.confidence || 0) * 100)}%</strong><span>{item.message}</span><small>{new Date(item.created_at).toLocaleDateString()} · {prettyLabel(item.strategy?.label)}{item.fta?.detected ? " · Face concern flagged" : ""}</small></div></li>)}</ol>
+      </section>
+    </> : <div className="placeholder-page panel"><div className="placeholder-icon"><History size={25} /></div><h2>Your saved conversations will appear here.</h2><p>Analyze a message and it is saved to your account automatically.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>}
     {hasMore && <div className="load-more"><Button variant="outline" onClick={() => load(offset + PAGE)} disabled={loadingMore}>{loadingMore ? "Loading…" : `Load more (${total - items.length} left)`}</Button></div>}
   </>;
 }

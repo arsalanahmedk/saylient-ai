@@ -1,21 +1,21 @@
-/* Saylient AI popup — dark premium. System font stack only; nothing remote.
+/* Saylient AI popup — light ivory. System font stack only; nothing remote.
    All colours live in :root, so a palette swap is a single edit.
    Note: the toolbar icon no longer opens this popup — it opens the Saylient
    AI hero page, and sign-in lives in the in-page panel (content.js). This
    file is kept for reference and for the sign-in flow it documents. */
 :root {
-  /* Charcoal + Coral palette (chosen 2026-11-13). */
-  --bg: #121110;
-  --panel: #1b1917;
-  --card: #26211e;
-  --text: #f5f1ea;
-  --text-2: #a39e93;
-  --text-3: #7a7468;
-  --accent: #ff6b4a;
-  --accent-hover: #ff8a6b;
-  --accent-deep: #e14e2e;
+  /* Elegant Luxury palette (ivory + oxblood). */
+  --bg: #faf7f5;
+  --panel: #ffffff;
+  --card: #f0ebe8;
+  --text: #1a1a1a;
+  --text-2: #57534e;
+  --text-3: #8a837c;
+  --accent: #9b2c2c;
+  --accent-hover: #991b1b;
+  --accent-deep: #991b1b;
   --white: #ffffff;
-  --border: rgba(255, 255, 255, 0.08);
+  --border: rgba(26, 26, 26, 0.12);
   --error: #f43f5e;
   --error-bg: rgba(244, 63, 94, 0.08);
   --error-border: rgba(244, 63, 94, 0.25);
@@ -36,7 +36,7 @@ header small { display: block; color: var(--text-2); font-size: 11px; margin-top
 .brand-mark {
   width: 38px; height: 38px; border-radius: 10px;
   display: grid; place-items: center;
-  background: var(--accent); color: #121110; font-size: 20px;
+  background: var(--accent); color: #ffffff; font-size: 20px;
 }
 .rule { height: 1px; background: var(--border); margin: 18px 0; }
 .eyebrow {
@@ -72,7 +72,7 @@ input::placeholder { color: var(--text-3); }
 .account-avatar {
   width: 36px; height: 36px; border-radius: 10px;
   display: grid; place-items: center; flex-shrink: 0;
-  background: var(--accent); color: #121110; font-size: 18px;
+  background: var(--accent); color: #ffffff; font-size: 18px;
 }
 .account-card b { display: block; font-size: 13px; word-break: break-all; }
 .account-card small { display: block; color: var(--text-2); font-size: 11px; margin-top: 3px; }
@@ -87,7 +87,7 @@ input::placeholder { color: var(--text-3); }
   cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
 .primary {
-  border: 1px solid var(--accent); background: var(--accent); color: #121110;
+  border: 1px solid var(--accent); background: var(--accent); color: #ffffff;
   margin-bottom: 10px;
 }
 .primary:hover:not(:disabled) { background: var(--accent-deep); }
