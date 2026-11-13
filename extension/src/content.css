@@ -3,26 +3,26 @@
    single edit. (Names are --sai-* prefixed: this stylesheet is injected
    into host pages, so its variables must not collide with theirs.) */
 :root {
-  --sai-bg: #0c1a2e;
-  --sai-card: #10233c;
-  --sai-elevated: #16304f;
-  --sai-track: #16304f;
-  --sai-text: #f2f7f5;
-  --sai-text-2: #9db0c6;
-  --sai-text-3: #c9d6e4;
-  --sai-text-4: #6b7e96;
-  --sai-accent: #d4a853;
-  --sai-accent-deep: #b8912f;
-  --sai-accent-light: #e8c468;
-  --sai-accent-pale: #e8c468;
+  --sai-bg: #1b1917;
+  --sai-card: #26211e;
+  --sai-elevated: #2e2823;
+  --sai-track: #2e2823;
+  --sai-text: #f5f1ea;
+  --sai-text-2: #a39e93;
+  --sai-text-3: #d8d2c6;
+  --sai-text-4: #7a7468;
+  --sai-accent: #ff6b4a;
+  --sai-accent-deep: #e14e2e;
+  --sai-accent-light: #ff8a6b;
+  --sai-accent-pale: #ff8a6b;
   --sai-white: #ffffff;
   --sai-border: rgba(255, 255, 255, 0.08);
   --sai-border-strong: rgba(255, 255, 255, 0.12);
-  --sai-accent-soft: rgba(212, 168, 83, 0.12);
-  --sai-accent-softer: rgba(212, 168, 83, 0.15);
-  --sai-accent-glow: rgba(212, 168, 83, 0.45);
-  --sai-accent-glow-soft: rgba(212, 168, 83, 0.4);
-  --sai-accent-glow-clear: rgba(212, 168, 83, 0);
+  --sai-accent-soft: rgba(255, 107, 74, 0.12);
+  --sai-accent-softer: rgba(255, 107, 74, 0.15);
+  --sai-accent-glow: rgba(255, 107, 74, 0.45);
+  --sai-accent-glow-soft: rgba(255, 107, 74, 0.4);
+  --sai-accent-glow-clear: rgba(255, 107, 74, 0);
   --sai-error: #f43f5e;
   --sai-error-bg: rgba(244, 63, 94, 0.08);
   --sai-error-border: rgba(244, 63, 94, 0.25);
@@ -34,7 +34,7 @@
 #saylient-ai-trigger {
   position: fixed; right: 22px; bottom: 22px; z-index: 2147483646;
   width: 52px; height: 52px; border: 1px solid var(--sai-border-strong);
-  border-radius: 50%; background: var(--sai-accent); color: #081120;
+  border-radius: 50%; background: var(--sai-accent); color: #121110;
   font-size: 22px; font-weight: 700; cursor: pointer;
   box-shadow: 0 8px 24px var(--sai-accent-glow);
   animation: saiPulse 2.4s infinite;
@@ -132,7 +132,7 @@
 }
 #saylient-ai-panel .sai-analyze,
 #saylient-ai-panel .sai-primary {
-  border: 1px solid var(--sai-accent); background: var(--sai-accent); color: #081120;
+  border: 1px solid var(--sai-accent); background: var(--sai-accent); color: #121110;
 }
 #saylient-ai-panel .sai-analyze:hover:not(:disabled),
 #saylient-ai-panel .sai-primary:hover:not(:disabled) { background: var(--sai-accent-deep); }

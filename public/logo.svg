@@ -2,12 +2,12 @@
   <!-- Saylient AI lockup — dark-background version.
        Mark: a geometric "S" (two cubic bowls on a 24-unit grid) followed by
        three vertical bars of decreasing height (7, 4, 2) — the voice fading
-       into silence. One flat colour (#D4A853, mirrors the accent token).
-       Wordmark: "Saylient" in Inter 700, tight tracking (-0.8); "AI" in the
-       accent colour. Text #F2F7F5 mirrors the text token: use on dark navy. -->
-  <g transform="translate(0,10.2) scale(1.2)" fill="none" stroke="#D4A853" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+       into silence. One flat colour (#FF6B4A, mirrors the accent token).
+       Wordmark: "Saylient" in Clash Display 700, tight tracking (-0.8); "AI" in the
+       accent colour. Text #F5F1EA mirrors the text token: use on dark charcoal. -->
+  <g transform="translate(0,10.2) scale(1.2)" fill="none" stroke="#FF6B4A" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
     <path d="M17.5 7C17.5 4.2 15 2.5 12 2.5C9 2.5 6.5 4.2 6.5 7C6.5 9.8 9 11.5 12 11.5C15 11.5 17.5 13.2 17.5 16C17.5 18.8 15 20.5 12 20.5C9 20.5 6.5 18.8 6.5 16"/>
     <path d="M20.5 8.5V15.5M23 10V14M25.5 11V13"/>
   </g>
-  <text x="42" y="31" font-family="Inter, sans-serif" font-size="27" font-weight="700" letter-spacing="-0.8" fill="#F2F7F5">Saylient<tspan fill="#D4A853">AI</tspan></text>
+  <text x="42" y="31" font-family="Clash Display, sans-serif" font-size="27" font-weight="700" letter-spacing="-0.8" fill="#F5F1EA">Saylient<tspan fill="#FF6B4A">AI</tspan></text>
 </svg>

@@ -1,10 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { motion, useMotionValue, useReducedMotion, useSpring, useTransform } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleHelp,
   Clipboard, Clock3, Copy, Download, Gauge, Github, Globe2, History, LayoutDashboard,
-  Lightbulb, Linkedin, LoaderCircle, LogOut, Mail, Menu, MessageSquare, Moon, MoreHorizontal, PenLine,
+  Lightbulb, Linkedin, LoaderCircle, LogOut, Mail, Menu, MessageSquare, MoreHorizontal, PenLine,
   Plus, RotateCw, Search, Send, Settings, ShieldCheck, Sparkles, Target, Trash2,
   UserRound, WandSparkles, X, Zap
 } from "lucide-react";
@@ -30,15 +30,6 @@ const navItems = [
   ["contact", "Contact", Mail],
   ["settings", "Settings", Settings],
   ["profile", "Profile", UserRound],
-];
-
-const tunnelImages = [
-  ["https://cdn.21st.dev/assets/mirror/c3/c3fbd2afa140223999a441b32ed986f61d473930002708df805a81532a326aac.jpg", "Context"],
-  ["https://cdn.21st.dev/assets/mirror/9d/9d8b2f675a5814476ada3736ce439bcda23c5c389e0ebf9b25d8a0c09f3bbcfe.jpg", "Tone"],
-  ["https://cdn.21st.dev/assets/mirror/8b/8bb738bf2f00d7f7ed3c3ec034adb9938ad38f4be4ac191d632a6a11ad525574.jpg", "Clarity"],
-  ["https://cdn.21st.dev/assets/mirror/ac/ac5ac700b188d7ef16ee9dab868098b59f15c440db3f71d4e8c03262a3287577.jpg", "Intent"],
-  ["https://cdn.21st.dev/assets/mirror/ef/ef25eff6ce655fba459b3b7e7711524dc92499aa18f6c7dbea9a0fcc56a8f908.jpg", "Politeness"],
-  ["https://cdn.21st.dev/assets/mirror/f2/f28b370a5dcbf76240f1504579c4b05fc0ff0bb990a42aff8dc2f73a5dc46072.jpg", "Better work"],
 ];
 
 /* Landing hero presets. The "demo output" for each preset is the REAL
@@ -95,7 +86,7 @@ const PIPELINE_STAGES = [
 /* The Saylient mark: a geometric "S" (two cubic bowls on a 24-unit grid)
    followed by three vertical bars of decreasing height (7, 4, 2) — the
    voice fading into silence. One flat colour (currentColor, so it follows
-   the palette: dark navy in the gold tile, gold on dark everywhere else).
+   the palette: dark charcoal in the coral tile, coral on dark everywhere else).
    The S is deliberately unclosed: the message pauses before it is sent. */
 const LOGO_S_PATH = "M17.5 7C17.5 4.2 15 2.5 12 2.5C9 2.5 6.5 4.2 6.5 7C6.5 9.8 9 11.5 12 11.5C15 11.5 17.5 13.2 17.5 16C17.5 18.8 15 20.5 12 20.5C9 20.5 6.5 18.8 6.5 16";
 const LOGO_WAVE_PATH = "M20.5 8.5V15.5M23 10V14M25.5 11V13";
@@ -163,84 +154,141 @@ function ScoreRing({ value, size = 132 }) {
   </div>;
 }
 
-/* Perspective Tunnel hero — now a scroll section lower on the landing,
-   driven by the page scroll (sticky) instead of hijacking the wheel. */
-function PerspectiveTunnelHero({ go }) {
-  const wrapRef = useRef(null);
-  const reduce = useReducedMotion();
-  const [stage, setStage] = useState({ width: 1440, height: 900, isMobile: false });
-  const rawProgress = useMotionValue(0);
-  const progress = useSpring(rawProgress, { stiffness: 80, damping: 30, restDelta: 0.0001 });
-  const pointerX = useMotionValue(0);
-  const pointerY = useMotionValue(0);
+/* Wordtune-style rewrite demo: a blunt freelancer message, with REAL
+   rule-based engine output (model prototype-0.1) for three tones.
+   Generated locally from backend/app/services/analysis_engine.py:
+   Formal = tone Professional / directness balanced,
+   Casual = tone Friendly / balanced,
+   Shorten = tone Assertive / direct.
+   Visitors see these precomputed drafts (labelled as a demo); a signed-in
+   visitor who picks a tone gets a LIVE analysis instead. */
+const REWRITE_DEMO = {
+  message: "You still haven't paid invoice #1048. It has been two weeks. Send the payment now.",
+  goal: "Request payment",
+  phrases: [
+    { text: "still haven't paid", note: "An accusation. The rewrite turns it into a check-in." },
+    { text: "Send the payment now.", note: "A demand. The rewrite turns it into a question." },
+  ],
+  intent: { label: "request_payment", confidence: 0.85 },
+  tone: { label: "direct", confidence: 0.47 },
+  strategy: { label: "negative_politeness" },
+  variants: [
+    { label: "Formal", tone: "Professional", directness: "balanced", note: "Polite, business-like", draft: "Hello,\n\nI wanted to check in on invoice #1048. Could you let me know when the payment will be sent?\n\nThank you — please let me know once the payment is on its way." },
+    { label: "Casual", tone: "Friendly", directness: "balanced", note: "Warm, easy-going", draft: "Hi there,\n\nI wanted to check in on invoice #1048. Could you let me know when the payment will be sent?\n\nThank you — please let me know once the payment is on its way." },
+    { label: "Shorten", tone: "Assertive", directness: "direct", note: "Short and to the point", draft: "Hi,\n\nI'm following up on invoice #1048. Please let me know when the payment will be sent?\n\nPlease let me know." },
+  ],
+};
 
-  useEffect(() => {
-    const update = () => setStage({ width: window.innerWidth, height: window.innerHeight, isMobile: window.innerWidth < 768 });
-    const onPointerMove = event => {
-      if (!reduce) {
-        pointerX.set((event.clientX / window.innerWidth - 0.5) * 2);
-        pointerY.set((event.clientY / window.innerHeight - 0.5) * 2);
-      }
-    };
-    const onScroll = () => {
-      const el = wrapRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const total = Math.max(1, rect.height - window.innerHeight);
-      rawProgress.set(Math.min(1, Math.max(0, -rect.top / total)));
-    };
-    update();
-    onScroll();
-    window.addEventListener("resize", update);
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("pointermove", onPointerMove);
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, [pointerX, pointerY, reduce, rawProgress]);
+function PhraseRewriteDemo({ go, user }) {
+  const [activePhrase, setActivePhrase] = useState(0);
+  const [liveDrafts, setLiveDrafts] = useState({});
+  const [liveBusy, setLiveBusy] = useState(null);
+  const [liveError, setLiveError] = useState("");
+  const demo = REWRITE_DEMO;
 
-  const titleScale = useTransform(progress, [0, 0.5, 1], [0.7, 1, 1.35]);
-  const titleOpacity = useTransform(progress, [0, 0.12, 0.85, 1], [0.25, 1, 1, 0]);
-  const promptOpacity = useTransform(progress, [0, 0.12], [1, 0]);
-  const panStrength = stage.isMobile ? 20 : 45;
+  const runLive = async (variant) => {
+    if (!user || liveBusy) return;
+    setLiveBusy(variant.label); setLiveError("");
+    try {
+      const result = await api.createAnalysis({
+        message: demo.message,
+        conversation_context: [],
+        goal: GOAL_VALUES[demo.goal],
+        context: { power: "unknown", social_distance: "unknown", imposition: "unknown" },
+        tone: variant.tone,
+        directness: variant.directness,
+      });
+      setLiveDrafts(prev => ({ ...prev, [variant.label]: result.draft }));
+    } catch (err) { setLiveError(friendlyError(err)); }
+    setLiveBusy(null);
+  };
 
-  return <div ref={wrapRef} className="tunnel-scroll">
-    <section className="tunnel-hero" style={{ perspective: stage.isMobile ? "900px" : "1200px" }}>
-      <div className="tunnel-grid" />
-      <div className="tunnel-glow" />
-      <div className="tunnel-ring tunnel-ring-small" />
-      <div className="tunnel-ring tunnel-ring-large" />
-      <motion.div className="tunnel-title" style={{ scale: titleScale, opacity: titleOpacity }}>
-        <p>Context-aware communication intelligence</p>
-        <h1>MAKE ROOM<br /><em>FOR BETTER</em><br />CONVERSATIONS.</h1>
-        <span>Scroll to move through the studio. Keep your intent. Change the impact.</span>
-        <button className="btn btn-primary" onClick={() => go("assistant")}>Open the assistant <ArrowRight size={14} /></button>
-      </motion.div>
-      <motion.div className="tunnel-prompt" style={{ opacity: promptOpacity }}><span>Scroll to explore</span><i /></motion.div>
-      <div className="tunnel-cards">
-        {tunnelImages.map(([src, title], index) => <TunnelCard key={title} src={src} title={title} index={index} total={tunnelImages.length} progress={progress} pointerX={pointerX} pointerY={pointerY} stage={stage} panStrength={panStrength} />)}
-      </div>
-    </section>
+  // Render the blunt message with its two sharp phrases underlined and
+  // clickable — tapping one selects it and explains what the rewrite does.
+  const parts = [];
+  let rest = demo.message;
+  demo.phrases.forEach((phrase, i) => {
+    const idx = rest.indexOf(phrase.text);
+    if (idx === -1) return;
+    if (idx > 0) parts.push(<span key={`t${i}`}>{rest.slice(0, idx)}</span>);
+    parts.push(<button key={`p${i}`} type="button" className={`rewrite-phrase${activePhrase === i ? " active" : ""}`} onClick={() => setActivePhrase(i)}>{phrase.text}</button>);
+    rest = rest.slice(idx + phrase.text.length);
+  });
+  if (rest) parts.push(<span key="tail">{rest}</span>);
+
+  return <div className="rewrite-demo">
+    <div className="rewrite-demo-head">
+      <span className="rewrite-demo-label"><WandSparkles size={14} /> Try it — tap an underlined phrase</span>
+      <span className="rewrite-demo-note">{user ? "Pick a tone for a live rewrite" : "Precomputed demo · prototype-0.1"}</span>
+    </div>
+    <p className="rewrite-demo-message">“{parts}”</p>
+    <p className="rewrite-phrase-note"><b>“{demo.phrases[activePhrase].text}”</b> — {demo.phrases[activePhrase].note}</p>
+    <div className="rewrite-demo-meta">
+      <span><b>Intent</b> {prettyLabel(demo.intent.label)} · {Math.round(demo.intent.confidence * 100)}%</span>
+      <span><b>Tone</b> {prettyLabel(demo.tone.label)} · blunt</span>
+      <span><b>Strategy</b> {prettyLabel(demo.strategy.label)}</span>
+    </div>
+    <div className="rewrite-cards">
+      {demo.variants.map(v => {
+        const live = liveDrafts[v.label];
+        const busy = liveBusy === v.label;
+        return <button key={v.label} type="button" className="rewrite-card" onClick={() => runLive(v)}>
+          <span className="rewrite-card-tone">{v.label}<small>{v.note}</small></span>
+          <span className="rewrite-card-draft">{busy ? "Running live analysis…" : live || v.draft}</span>
+          <span className="rewrite-card-foot">{live ? "Live analysis · prototype-0.1" : user ? "Tap for a live rewrite" : "Precomputed demo · prototype-0.1"}</span>
+        </button>;
+      })}
+    </div>
+    {liveError && <div className="form-error">{liveError}</div>}
+    <p className="rewrite-demo-cta">Want the full breakdown — intent, face concerns, strategy? <button className="link-button" onClick={() => go("assistant")}>Open the assistant <ArrowRight size={13} /></button></p>
   </div>;
 }
 
-function TunnelCard({ src, title, index, total, progress, pointerX, pointerY, stage, panStrength }) {
-  const angle = index * 137.5 * (Math.PI / 180);
-  const start = (index / total) * 0.45;
-  const local = useTransform(progress, [start, start + 0.55], [0, 1]);
-  const z = useTransform(local, [0, 1], [stage.isMobile ? -1200 : -1700, stage.isMobile ? 350 : 500]);
-  const opacity = useTransform(local, [0, 0.18, 0.82, 0.98], [0, 1, 1, 0]);
-  const transform = useTransform([z, pointerX, pointerY], ([currentZ, px, py]) => {
-    const x = Math.cos(angle) * stage.width * (0.28 + (index % 3) * 0.08) - px * panStrength;
-    const y = Math.sin(angle) * stage.height * (0.26 + (index % 2) * 0.09) - py * panStrength;
-    const rotation = (index % 2 ? -1 : 1) * (3 + (index % 5) * 2);
-    return `translate3d(calc(-50% + ${x}px), calc(-50% + ${y}px), ${currentZ}px) rotateZ(${rotation}deg)`;
-  });
-  return <motion.div className="tunnel-card" style={{ opacity, transform, zIndex: index + 1, width: stage.isMobile ? "38vw" : "18vw" }}>
-    <div><img src={src} alt={title} draggable="false" /><span>{title}</span></div>
-  </motion.div>;
+/* Magic UI-style animated beam: the places people write feed into Saylient.
+   CSS-only — a coral dot travels along each connector. */
+const BEAM_APPS = ["Gmail", "Slack", "WhatsApp", "Upwork"];
+
+function BeamDiagram() {
+  return <div className="beam-diagram">
+    <div className="beam-apps">
+      {BEAM_APPS.map((app, i) => <div className="beam-row" key={app}>
+        <span className="beam-app">{app}</span>
+        <span className="beam-track"><i style={{ animationDelay: `${i * 0.55}s` }} /></span>
+      </div>)}
+    </div>
+    <div className="beam-center"><span className="beam-center-mark">✦</span><strong>Saylient</strong><small>Live analysis</small></div>
+  </div>;
+}
+
+/* Linear-style numbered chapters: two-tone headlines, huge whitespace, and
+   the actual product UI in thin bordered frames — no stock photos, no fake
+   images. Every frame shows real engine output (precomputed demo data). */
+function FeatureChapters({ go }) {
+  const demo = DEMO_PRESETS[0];
+  const chapters = [
+    { n: "01", lead: "Understand", rest: " the subtext.", text: "See intent, tone, and social dynamics behind any message — before you reply.", frame: <><div className="chapter-frame-head"><span className="ai-icon"><Sparkles size={14} /></span><strong>Live analysis · prototype-0.1</strong></div><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><p className="hero-draft">{demo.result.draft}</p><span className="chapter-frame-note">Precomputed demo · prototype-0.1</span></> },
+    { n: "02", lead: "Build", rest: " confidence.", text: "Learn the patterns that make communication clear, one message at a time — and watch the numbers move.", frame: <><ScoreRing value={0.87} /><span className="chapter-frame-note">Intent confidence · boundary preset · precomputed demo</span></> },
+    { n: "03", lead: "Keep a", rest: " private archive.", text: "Every analysis is saved to your account — search it, reopen it, delete it.", frame: <>{DEMO_PRESETS.map(p => <div className="chapter-row" key={p.label}><div className="conversation-icon"><MessageSquare size={16} /></div><div className="conversation-name"><strong>{prettyLabel(p.result.intent.label)}</strong><span>{p.message}</span></div><span className="score-pill"><span /> {Math.round(p.result.intent.confidence * 100)}%</span></div>)}<span className="chapter-frame-note">Your recent analyses, as they appear in the workspace.</span></> },
+    { n: "04", lead: "Work", rest: " in your browser.", text: "The extension brings the same live analysis into the conversations you already have.", frame: <div className="chapter-mini-panel"><div className="sai-mini-head">✦ Saylient AI</div><p>“{demo.message}”</p><Button onClick={() => go("extension")}>Analyze conversation</Button><span className="chapter-frame-note">What the panel looks like on any page — sign in once, then Analyze.</span></div> },
+  ];
+  return <>{chapters.map((c, i) => <article className="chapter" key={c.n}>
+    <div className="chapter-text"><span className="chapter-num">{c.n}</span><h3>{c.lead}<span className="chapter-rest">{c.rest}</span></h3><p>{c.text}</p></div>
+    <div className={`chapter-frame${i === 1 ? " chapter-frame-center" : ""}`}>{c.frame}</div>
+  </article>)}</>;
+}
+
+/* Lex-style pricing, pattern only: two cards, Free vs Pro, benefits-led.
+   No prices are invented — Pro is coming soon, so its card says so and
+   points at Contact instead of a checkout. */
+function PricingSection({ go }) {
+  return <section id="pricing" className="pricing-section shell">
+    <div className="center-heading"><div className="eyebrow">Simple, honest pricing</div><h2>Start free.<br /><em>Grow when you're ready.</em></h2><p>No card, no surprise charges. The extension is free — Pro unlocks more when you need it.</p></div>
+    <div className="pricing-grid">
+      <article className="pricing-card"><h3>Free</h3><p className="pricing-tag">For trying it out</p><ul><li><Check size={14} /> Browser extension</li><li><Check size={14} /> Real backend analyses</li><li><Check size={14} /> All five politeness strategies</li><li><Check size={14} /> Saved drafts and history</li></ul><Button onClick={() => go("register")}>Create a free account</Button></article>
+      <article className="pricing-card pro"><span className="pricing-soon">Coming soon</span><h3>Pro</h3><p className="pricing-tag">For freelancers who write all day</p><ul><li><Check size={14} /> Unlimited analyses</li><li><Check size={14} /> Priority analysis</li><li><Check size={14} /> Everything in Free</li></ul><Button variant="outline" onClick={() => go("contact")}>Talk to us about Pro</Button></article>
+    </div>
+    <div className="teams-strip"><span>Teams</span><p>Shared templates and a team workspace — coming later.</p><button className="link-button" onClick={() => go("contact")}>Tell me when it's ready <ArrowRight size={13} /></button></div>
+  </section>;
 }
 
 function HalftoneFooter({ go }) {
@@ -266,7 +314,7 @@ function HalftoneFooter({ go }) {
       mask.width = rect.width;
       mask.height = rect.height;
       const maskContext = mask.getContext("2d");
-      maskContext.font = `600 ${fontSize}px Inter, sans-serif`;
+      maskContext.font = `600 ${fontSize}px "Clash Display", "Satoshi", sans-serif`;
       maskContext.textAlign = "center";
       maskContext.textBaseline = "alphabetic";
       maskContext.fillStyle = "#fff";
@@ -278,7 +326,7 @@ function HalftoneFooter({ go }) {
           if (alpha < 0.08) continue;
           const distance = Math.hypot(x - pointer.x, y - pointer.y);
           const warmth = Math.max(0, 1 - distance / 95) * alpha;
-          context.fillStyle = `rgb(${Math.round(212 + warmth * 20)},${Math.round(168 + warmth * 28)},${Math.round(83 + warmth * 21)})`;
+          context.fillStyle = `rgb(${Math.round(255 + warmth * 0)},${Math.round(107 + warmth * 31)},${Math.round(74 + warmth * 33)})`;
           context.beginPath();
           context.arc(x, y, Math.sqrt(alpha) * gap * 0.58, 0, Math.PI * 2);
           context.fill();
@@ -305,7 +353,7 @@ function HalftoneFooter({ go }) {
     <canvas ref={canvasRef} aria-hidden="true" />
     <div className="halftone-top">
       <div><Logo /><span>© 2026 · Context / Tone / Clarity</span></div>
-      <div><small>Explore</small><button type="button" onClick={() => goSection(go, "features")}>Product</button><button type="button" onClick={() => goSection(go, "how")}>How it works</button><button type="button" onClick={() => goSection(go, "theory")}>The framework</button><button type="button" onClick={() => goSection(go, "extension")}>Browser extension</button></div>
+      <div><small>Explore</small><button type="button" onClick={() => goSection(go, "features")}>Product</button><button type="button" onClick={() => goSection(go, "how")}>How it works</button><button type="button" onClick={() => goSection(go, "theory")}>The framework</button><button type="button" onClick={() => goSection(go, "extension")}>Browser extension</button><button type="button" onClick={() => goSection(go, "pricing")}>Pricing</button></div>
       <div><small>Connect</small><a href="mailto:arsalanahmeda813@gmail.com">arsalanahmeda813@gmail.com</a><button type="button" onClick={() => go("contact")}>Contact</button><a href="https://www.linkedin.com/in/arsalan-ahmed-khan-b4a9a2310" target="_blank" rel="noreferrer">LinkedIn</a><a href="https://github.com/arsalanahmedk" target="_blank" rel="noreferrer">GitHub</a></div>
       <div><small>Studio</small><span>Made for messages that matter.</span><button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Back to top ↑</button></div>
     </div>
@@ -402,24 +450,6 @@ function Marquee() {
   </div>;
 }
 
-/* Bento anchor cell: a live before/after rewrite demo. The output is the
-   REAL output of the rule-based engine (prototype-0.1) for the boundary
-   preset, precomputed and labelled as a demo — same honesty rule as the
-   hero window. */
-function RewriteDemoCell() {
-  const demo = DEMO_PRESETS[0];
-  return <article className="bento-card bento-anchor">
-    <div className="bento-anchor-head">
-      <span className="bento-anchor-label"><WandSparkles size={14} /> See it rewrite</span>
-      <span className="bento-anchor-note">Precomputed demo · prototype-0.1</span>
-    </div>
-    <div className="rewrite-before"><small>BEFORE</small><p>“{demo.message}”</p></div>
-    <div className="rewrite-arrow"><span>Rewrite</span><ArrowRight size={14} /></div>
-    <div className="rewrite-after"><small>AFTER · POLITE REWRITE</small><p>{demo.result.draft}</p></div>
-    <div className="rewrite-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div>
-  </article>;
-}
-
 /* Shared public navigation (landing + contact page). Section links route
    through goSection, not #hash anchors, so the hash router cannot mistake
    them for page names. */
@@ -439,13 +469,6 @@ function Landing({ go, user }) {
     ["04", "Pick a strategy", "One of five politeness strategies, with the reason it fits."],
     ["05", "Send the draft", "An editable draft in your words — review it, then send it yourself."],
   ];
-  const features = [
-    { icon: Target, title: "Understand the subtext", text: "See intent, tone, and social dynamics behind any message — before you reply.", visual: "chips-intent" },
-    { icon: Gauge, title: "Build confidence", text: "Learn the patterns that make communication clear, one message at a time.", visual: "chips-tone" },
-    { icon: History, title: "A private archive", text: "Every analysis is saved to your account — search it, reopen it, delete it.", visual: null },
-    { icon: Clipboard, title: "Saved templates", text: "Keep thoughtful starting points for the moments that come up again and again.", visual: "quote" },
-    { icon: Globe2, title: "In your browser", text: "The extension brings the same live analysis into the conversations you already have.", visual: "browser" },
-  ];
   const strategies = [
     ["Bald on Record", "Direct and clear. Best when the message is urgent, the relationship is close, or the imposition is low."],
     ["Positive Politeness", "Shows appreciation and shared ground. Best when you want the other person to feel valued and included."],
@@ -456,9 +479,15 @@ function Landing({ go, user }) {
   return <div className="landing">
     <PublicNav go={go} user={user} />
     <main>
-      <section className="hero-lamp shell">
-        <div className="lamp-glow" aria-hidden="true" />
-        <div className="lamp-beam" aria-hidden="true" />
+      <section className="hero shell">
+        <div className="hero-dots" aria-hidden="true" />
+        <svg className="hero-field" viewBox="0 0 1200 600" preserveAspectRatio="none" aria-hidden="true">
+          <g fill="none" stroke="var(--accent)" strokeWidth="1">
+            <path d="M-40 520 C 300 420, 500 560, 760 430 S 1100 380, 1260 460" opacity="0.32" />
+            <path d="M-40 560 C 320 470, 560 600, 820 470 S 1120 430, 1260 500" opacity="0.2" />
+            <path d="M-40 80 C 300 160, 520 40, 780 140 S 1100 200, 1260 120" opacity="0.2" />
+          </g>
+        </svg>
         <div className="hero-badge"><span className="pulse-dot" /> AI-based freelancer communication assistant</div>
         <h1>Say what you mean, <em>better.</em></h1>
         <p>Saylient AI gives every important message a second set of eyes — intent, tone, face concerns, and a draft that still sounds like you.</p>
@@ -467,10 +496,12 @@ function Landing({ go, user }) {
           <button className="text-link" onClick={() => document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })}>Explore the studio <ArrowRight size={14} /></button>
         </div>
         <div className="hero-note"><ShieldCheck size={14} /> Nothing is ever sent automatically. You always review before you send.</div>
+        <div className="hero-demo">
+          <PhraseRewriteDemo go={go} user={user} />
+        </div>
       </section>
 
       <div className="hero-frame shell">
-        <div className="hero-frame-glow" aria-hidden="true" />
         <HeroAnalysisWindow go={go} user={user} />
       </div>
 
@@ -487,18 +518,9 @@ function Landing({ go, user }) {
         </div>
       </section>
 
-      <section id="features" className="section shell">
+      <section id="features" className="chapters-section shell">
         <div className="section-heading"><div><div className="eyebrow">The communication studio</div><h2>One calm layer between<br /><em>thinking and sending.</em></h2></div><p>From a quick follow-up to a difficult boundary, get context-aware guidance before you hit send.</p></div>
-        <div className="bento-grid">
-          <RewriteDemoCell />
-          {features.map(({ icon: Icon, title, text, visual }) => <article className="bento-card" key={title}>
-            <div className="bento-icon"><Icon size={20} /></div><h3>{title}</h3><p>{text}</p>
-            {visual === "chips-intent" && <div className="bento-visual"><span>Intent</span><span>Tone</span><span>Face</span></div>}
-            {visual === "chips-tone" && <div className="bento-visual"><span>Diplomatic</span><span>Firm</span><span>Friendly</span><span>Formal</span></div>}
-            {visual === "quote" && <div className="bento-visual bento-quote">“Would moving the delivery to Thursday work for you?”</div>}
-            {visual === "browser" && <div className="bento-visual"><span className="bento-star">✦</span><span>Click on any page</span></div>}
-          </article>)}
-        </div>
+        <FeatureChapters go={go} />
       </section>
 
       <section id="theory" className="theory-strip shell">
@@ -509,21 +531,24 @@ function Landing({ go, user }) {
         <div className="center-heading" style={{ marginTop: 28 }}><Button variant="outline" onClick={() => go("theory")}>Explore politeness theory <ArrowRight size={15} /></Button></div>
       </section>
 
-      <PerspectiveTunnelHero go={go} />
-
       <section id="extension" className="extension-cta shell">
-        <div className="browser-icon"><Globe2 size={26} /></div>
-        <div><div className="eyebrow">In your browser</div><h2>Good communication,<br /><em>wherever work happens.</em></h2></div>
-        <div className="extension-copy"><p>Click the ✦ button on any page, sign in once, and get a live analysis of the text on your screen — intent, strategy, and a draft you can insert. Nothing is monitored or sent on its own.</p>
-          <div className="extension-actions">
-            <a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a>
-            <Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button>
+        <div className="extension-head">
+          <div className="browser-icon"><Globe2 size={26} /></div>
+          <div><div className="eyebrow">In your browser</div><h2>Good communication,<br /><em>wherever work happens.</em></h2></div>
+        </div>
+        <div className="extension-grid">
+          <BeamDiagram />
+          <div className="extension-copy"><p>Click the ✦ button on any page, sign in once, and get a live analysis of the text on your screen — intent, strategy, and a draft you can insert. Nothing is monitored or sent on its own.</p>
+            <div className="extension-actions">
+              <a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a>
+              <Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button>
+            </div>
+            <ol className="download-steps"><li>Download and unzip the file.</li><li>Open <code>chrome://extensions</code> and turn on Developer mode.</li><li>Choose <strong>Load unpacked</strong> and select the unzipped folder.</li></ol>
           </div>
-          <ol className="download-steps"><li>Download and unzip the file.</li><li>Open <code>chrome://extensions</code> and turn on Developer mode.</li><li>Choose <strong>Load unpacked</strong> and select the unzipped folder.</li></ol>
         </div>
       </section>
 
-      <section className="final-cta"><div className="shell center-heading"><div className="eyebrow">Your next message starts here</div><h2>Say it better.<br /><em>Feel the difference.</em></h2><Button onClick={() => go("assistant")} icon={Sparkles}>Try Saylient AI free <ArrowRight size={15} /></Button></div></section>
+      <PricingSection go={go} />
     </main>
     <HalftoneFooter go={go} />
   </div>;
@@ -569,9 +594,9 @@ function Dashboard({ go, user, onOpen }) {
     {loading ? <div className="panel placeholder-page"><div className="placeholder-icon"><Sparkles size={25} /></div><h2>Loading your overview…</h2></div> : <>
       <div className="stats-grid">
         <Stat title="Messages analyzed" value={stats?.total ?? 0} change={`${stats?.this_week ?? 0} this week`} icon={MessageSquare} color="accent" />
-        <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="green" />
+        <Stat title="Avg. intent confidence" value={avgConf === null ? "—" : `${avgConf}%`} change={CONFIDENCE_NOTE} icon={Gauge} color="coral" />
         <Stat title="Flagged face concerns" value={stats?.fta_count ?? 0} change={stats?.total ? `${Math.round((stats.fta_count / stats.total) * 100)}% of messages` : "No analyses yet"} icon={Clock3} color="orange" />
-        <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="cyan" />
+        <Stat title="Most common intent" value={stats?.top_intent ? prettyLabel(stats.top_intent) : "—"} change={stats?.top_strategy ? `Usual strategy: ${prettyLabel(stats.top_strategy)}` : "No analyses yet"} icon={Target} color="sand" />
       </div>
       <div className="dashboard-grid">
         <section className="panel activity-panel"><div className="panel-heading"><div><h3>Communication activity</h3><p>Your analyses over the last 30 days</p></div><span className="live-pill"><span className="pulse-dot" /> Live · your data</span></div>
