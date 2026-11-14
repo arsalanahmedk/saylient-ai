@@ -172,7 +172,7 @@ html[data-theme="light"] .beam-diagram { background: linear-gradient(180deg, #FF
 html[data-theme="light"] .beam-center { background: linear-gradient(160deg, #EDE9FE, #DBEAFE); }
 html[data-theme="light"] .closing-card { background: linear-gradient(180deg, #FFFFFF, #F1F5F9); }
 html[data-theme="light"] .analyzer-console { background: rgba(255, 255, 255, 0.94); }
-html[data-theme="light"] .footer-wordmark { background: linear-gradient(90deg, #7C3AED, #2563EB); opacity: 0.9; }
+html[data-theme="light"] .footer-wordmark { background-image: linear-gradient(90deg, #7C3AED, #2563EB); -webkit-background-clip: text; background-clip: text; opacity: 0.9; }
 
 /* ---------- theme toggle (sun / moon) ---------- */
 .landing-nav-actions { display: flex; align-items: center; gap: 10px; }
