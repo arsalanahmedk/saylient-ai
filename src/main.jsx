@@ -390,14 +390,17 @@ function HalftoneFooter({ go }) {
     if (!context) return undefined; // canvas unavailable (e.g. disabled): the footer simply stays blank.
     let pointer = { x: -1000, y: -1000 };
     const draw = () => {
-      const rect = root.getBoundingClientRect();
+      // The wordmark lives in the canvas's own box (180px tall), not the
+      // whole footer — tying it to footer height made its position depend
+      // on how tall the footer is, so it clipped on mobile (tall footer).
+      const rect = canvas.getBoundingClientRect();
       const ratio = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = rect.width * ratio;
       canvas.height = rect.height * ratio;
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
       context.clearRect(0, 0, rect.width, rect.height);
       const gap = Math.max(5, Math.min(8, rect.width / 180));
-      const fontSize = Math.min(rect.width * 0.34, 430);
+      const fontSize = Math.min(rect.width * 0.34, rect.height * 1.05);
       const mask = document.createElement("canvas");
       mask.width = rect.width;
       mask.height = rect.height;
@@ -406,7 +409,7 @@ function HalftoneFooter({ go }) {
       maskContext.textAlign = "center";
       maskContext.textBaseline = "alphabetic";
       maskContext.fillStyle = "#fff";
-      maskContext.fillText("saylient", rect.width / 2, rect.height + fontSize * 0.12);
+      maskContext.fillText("saylient", rect.width / 2, rect.height - fontSize * 0.21 - 2);
       const pixels = maskContext.getImageData(0, 0, rect.width, rect.height).data;
       for (let y = gap / 2; y < rect.height; y += gap) {
         for (let x = gap / 2; x < rect.width; x += gap) {
