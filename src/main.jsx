@@ -381,16 +381,24 @@ function PricingSection({ go }) {
 
 function HalftoneFooter({ go }) {
   /* Footer wordmark is plain HTML text, not a canvas: the canvas halftone
-     never rendered on the live site, so this always shows. */
+     never rendered on the live site, so this always shows. Redesigned
+     2026-11-14: gradient hairline, panel surface, brand tagline, a soft
+     glow behind the wordmark, motto + bottom bar — all token-driven so
+     the whole footer flips with the dark/light toggle. */
   return <footer className="halftone-footer">
-    <div className="footer-wordmark" aria-hidden="true">saylient</div>
-    <div className="halftone-top">
-      <div><Logo /><span>© 2026 · Context / Tone / Clarity</span></div>
-      <div><small>Explore</small><button type="button" onClick={() => goSection(go, "features")}>Product</button><button type="button" onClick={() => goSection(go, "how")}>How it works</button><button type="button" onClick={() => goSection(go, "theory")}>The framework</button><button type="button" onClick={() => goSection(go, "extension")}>Browser extension</button><button type="button" onClick={() => goSection(go, "pricing")}>Pricing</button></div>
-      <div><small>Connect</small><a href="mailto:arsalanahmeda813@gmail.com">arsalanahmeda813@gmail.com</a><button type="button" onClick={() => go("contact")}>Contact</button><a href="https://www.linkedin.com/in/arsalan-ahmed-khan-b4a9a2310" target="_blank" rel="noreferrer">LinkedIn</a><a href="https://github.com/arsalanahmedk" target="_blank" rel="noreferrer">GitHub</a></div>
-      <div><small>Studio</small><span>Made for messages that matter.</span><button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Back to top ↑</button></div>
+    <div className="footer-inner">
+      <div className="halftone-top">
+        <div className="footer-brand"><Logo /><p className="footer-tagline">Say it so <em>they say yes.</em></p><span>AI-based freelancer communication assistant.</span></div>
+        <div><small>Explore</small><button type="button" onClick={() => goSection(go, "features")}>Product</button><button type="button" onClick={() => goSection(go, "how")}>How it works</button><button type="button" onClick={() => goSection(go, "theory")}>The framework</button><button type="button" onClick={() => goSection(go, "extension")}>Browser extension</button><button type="button" onClick={() => goSection(go, "pricing")}>Pricing</button></div>
+        <div><small>Connect</small><a href="mailto:arsalanahmeda813@gmail.com">arsalanahmeda813@gmail.com</a><button type="button" onClick={() => go("contact")}>Contact</button><a href="https://www.linkedin.com/in/arsalan-ahmed-khan-b4a9a2310" target="_blank" rel="noreferrer">LinkedIn</a><a href="https://github.com/arsalanahmedk" target="_blank" rel="noreferrer">GitHub</a></div>
+        <div><small>Studio</small><span>Made for messages that matter.</span><span className="footer-status">Demo build · prototype-0.1</span><button type="button" className="footer-top-btn" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Back to top ↑</button></div>
+      </div>
+      <div className="footer-wordmark-wrap">
+        <div className="footer-wordmark" aria-hidden="true">saylient</div>
+        <p className="footer-motto">Keep the intent. Change the impact.</p>
+      </div>
+      <div className="halftone-rule"><span>© 2026 · Context / Tone / Clarity</span><span>saylient.ai / communication studio</span></div>
     </div>
-    <div className="halftone-rule"><span>saylient.ai / communication studio</span><span>Keep the intent. Change the impact.</span></div>
   </footer>;
 }
 

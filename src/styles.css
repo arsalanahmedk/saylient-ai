@@ -173,6 +173,11 @@ html[data-theme="light"] .beam-center { background: linear-gradient(160deg, #EDE
 html[data-theme="light"] .closing-card { background: linear-gradient(180deg, #FFFFFF, #F1F5F9); }
 html[data-theme="light"] .analyzer-console { background: rgba(255, 255, 255, 0.94); }
 html[data-theme="light"] .footer-wordmark { background-image: linear-gradient(90deg, #7C3AED, #2563EB); -webkit-background-clip: text; background-clip: text; opacity: 0.9; }
+/* Footer muted text is darker than the global light muted (#64748B was
+   only 4.55:1 — just passing). #475569 is ~7.0:1 on the white footer
+   surface, so the labels, status line and bottom bar stay clearly
+   readable in light mode. */
+html[data-theme="light"] .halftone-footer small, html[data-theme="light"] .halftone-rule, html[data-theme="light"] .footer-status { color: #475569; }
 
 /* ---------- theme toggle (sun / moon) ---------- */
 .landing-nav-actions { display: flex; align-items: center; gap: 10px; }
@@ -570,18 +575,46 @@ select.select-field option { background: var(--input); }
 .teams-strip > span { flex: none; padding: 6px 10px; border-radius: 100px; background: var(--accent-14); color: var(--accent-text); font-size: 12px; font-weight: 700; }
 .teams-strip p { flex: 1; color: var(--text-2); font-size: 14px; }
 
-/* ---------- footer ---------- */
-.halftone-footer { position: relative; overflow: hidden; color: var(--text); }
+/* ---------- footer ----------
+   Redesigned 2026-11-14: a distinct footer, not a plain link grid —
+   a violet→blue gradient hairline on top, a panel surface that fades
+   into the page background, a brand tagline, a soft glow behind the
+   giant gradient wordmark, a motto, and a bottom bar. Everything
+   reads the theme tokens, so the whole footer flips with the
+   dark/light toggle — the surface, the glow and the wordmark all
+   change visibly between modes. */
+.halftone-footer { position: relative; overflow: hidden; color: var(--text); background: linear-gradient(180deg, var(--panel) 0%, var(--bg) 60%); border-top: 1px solid var(--border); }
+.halftone-footer::before { content: ""; display: block; height: 2px; background: var(--aurora-btn); }
+.footer-inner { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+.halftone-footer small { color: var(--text-3); }
+.halftone-top { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1fr; gap: 32px; padding: 48px 0 8px; }
+.halftone-top > div { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
+.halftone-top small { display: flex; align-items: center; gap: 8px; color: var(--text-3); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.halftone-top small::before { content: ""; width: 14px; height: 2px; flex: none; border-radius: 2px; background: var(--aurora-btn); }
+.halftone-top a, .halftone-top button { background: none; border: 0; padding: 0; color: var(--text-2); font-size: 14px; font-family: inherit; text-align: left; cursor: pointer; transition: color 0.2s ease, transform 0.2s ease; }
+.halftone-top a:hover, .halftone-top button:hover { color: var(--accent-text); transform: translateX(2px); }
+.halftone-top span { color: var(--text-2); font-size: 14px; }
+.footer-brand .footer-tagline { margin: 14px 0 0; font-family: var(--font-display); font-size: 20px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.25; color: var(--text); }
+.footer-brand .footer-tagline em { font-style: normal; background: var(--aurora); background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.footer-status { color: var(--text-3); font-size: 12px; }
+.halftone-top .footer-top-btn { margin-top: 6px; padding: 8px 14px; border: 1px solid var(--border-strong); border-radius: 100px; color: var(--text-2); font-size: 13px; font-weight: 600; transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease; }
+.halftone-top .footer-top-btn:hover { color: var(--accent-text); border-color: var(--accent); background: var(--accent-tint); transform: translateY(-1px); }
 /* Footer wordmark: plain HTML text, NOT a canvas. The canvas halftone
    wordmark never rendered on the live site (twice), so this giant
    gradient wordmark is real DOM text and always shows. It lives in its
    own box, width-capped with nowrap + overflow hidden so it never
-   overflows on mobile. */
+   overflows on mobile; a soft radial glow sits behind it. NOTE: use
+   background-image here (and in the light override), never the
+   background shorthand — the shorthand resets background-clip and
+   turns the wordmark into a solid rectangle. */
+.footer-wordmark-wrap { position: relative; margin-top: 36px; padding: 12px 0 0; text-align: center; }
+.footer-wordmark-wrap::before { content: ""; position: absolute; inset: 0 0 -10px; background: radial-gradient(ellipse 55% 75% at 50% 55%, var(--glow) 0%, transparent 70%); pointer-events: none; }
 .footer-wordmark {
+  position: relative;
   display: block;
   max-width: 1120px;
   margin: 0 auto;
-  padding: 10px 24px 0;
+  padding: 0 24px;
   overflow: hidden;
   font-family: var(--font-display);
   font-size: clamp(64px, 17vw, 190px);
@@ -590,22 +623,16 @@ select.select-field option { background: var(--input); }
   letter-spacing: -0.03em;
   text-align: center;
   white-space: nowrap;
-  background: linear-gradient(90deg, #8B5CF6, #3B82F6);
+  background-image: linear-gradient(90deg, #8B5CF6, #3B82F6);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   color: transparent;
-  opacity: 0.6;
+  opacity: 0.75;
   user-select: none;
 }
-.halftone-footer small { color: var(--text-3); }
-.halftone-top { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px; max-width: 1120px; margin: 0 auto; padding: 24px 24px 32px; }
-.halftone-top > div { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; }
-.halftone-top small { color: var(--text-3); font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
-.halftone-top a, .halftone-top button { background: none; border: 0; padding: 0; color: var(--text-2); font-size: 14px; font-family: inherit; text-align: left; cursor: pointer; }
-.halftone-top a:hover, .halftone-top button:hover { color: var(--text); }
-.halftone-top span { color: var(--text-2); font-size: 14px; }
-.halftone-rule { display: flex; justify-content: space-between; gap: 16px; max-width: 1120px; margin: 0 auto; padding: 18px 24px 28px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 12px; }
+.footer-motto { position: relative; margin: 10px 0 0; font-family: var(--font-display); font-size: clamp(16px, 2.4vw, 21px); font-weight: 700; letter-spacing: -0.01em; color: var(--text-2); }
+.halftone-rule { display: flex; justify-content: space-between; gap: 16px; margin-top: 36px; padding: 18px 0 28px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 12px; }
 
 /* ---------- contact page ---------- */
 .contact-page { padding-top: 56px; padding-bottom: 80px; }
