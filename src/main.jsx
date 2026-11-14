@@ -4,8 +4,8 @@ import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight, BarChart3, BookOpen, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp,
   Clipboard, Clock3, Copy, Download, Eye, EyeOff, Gauge, Github, Globe2, History, LayoutDashboard,
-  Lightbulb, Linkedin, LoaderCircle, LogOut, Mail, Menu, MessageSquare, MoreHorizontal, PenLine,
-  Plus, RotateCw, Search, Send, Settings, ShieldCheck, Sparkles, Target, Trash2,
+  Lightbulb, Linkedin, LoaderCircle, LogOut, Mail, Menu, MessageSquare, Moon, MoreHorizontal, PenLine,
+  Plus, RotateCw, Search, Send, Settings, ShieldCheck, Sparkles, Sun, Target, Trash2,
   UserRound, WandSparkles, X, Zap
 } from "lucide-react";
 import "./styles.css";
@@ -507,18 +507,47 @@ function Marquee() {
   </div>;
 }
 
+/* ---------- colour theme (dark / light) ----------
+   Dark (Midnight Purple + Electric Blue) is the default. The choice is
+   saved in localStorage; with no saved choice the system preference
+   decides (light system -> light mode). The inline script in index.html
+   applies the same logic before React loads, so there is no flash.
+   Only an explicit toggle writes to localStorage — a first visit that
+   follows the system setting does not lock it in. */
+const THEME_KEY = "saylient-theme";
+function readTheme() {
+  try {
+    const saved = window.localStorage.getItem(THEME_KEY);
+    if (saved === "light" || saved === "dark") return saved;
+  } catch (_) { /* storage unavailable: fall through to system */ }
+  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+  return "dark";
+}
+function applyTheme(theme, save) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", theme === "light" ? "#F8FAFC" : "#0B0B14");
+  if (save) {
+    try { window.localStorage.setItem(THEME_KEY, theme); } catch (_) { /* ignore */ }
+  }
+}
+function ThemeToggle({ theme, onToggle }) {
+  const toLight = theme === "dark";
+  return <button className="theme-toggle" type="button" onClick={onToggle} aria-label={toLight ? "Switch to light mode" : "Switch to dark mode"} title={toLight ? "Light mode" : "Dark mode"}>{toLight ? <Sun size={17} /> : <Moon size={17} />}</button>;
+}
+
 /* Shared public navigation (landing + contact page). Section links route
    through goSection, not #hash anchors, so the hash router cannot mistake
    them for page names. */
-function PublicNav({ go, user }) {
+function PublicNav({ go, user, theme, onToggleTheme }) {
   return <nav className="landing-nav" aria-label="Primary navigation">
     <Logo />
     <div className="landing-nav-links"><button type="button" onClick={() => goSection(go, "features")}>Product</button><button type="button" onClick={() => goSection(go, "how")}>How it works</button><button type="button" onClick={() => goSection(go, "theory")}>Framework</button><button type="button" onClick={() => goSection(go, "extension")}>Extension</button><button type="button" onClick={() => go("contact")}>Contact</button></div>
-    {user ? <button className="nav-user" onClick={() => go("overview")}>{user.display_name || user.email} · Workspace</button> : <Button onClick={() => go("login")}>Sign in</Button>}
+    <div className="landing-nav-actions"><ThemeToggle theme={theme} onToggle={onToggleTheme} />{user ? <button className="nav-user" onClick={() => go("overview")}>{user.display_name || user.email} · Workspace</button> : <Button onClick={() => go("login")}>Sign in</Button>}</div>
   </nav>;
 }
 
-function Landing({ go, user }) {
+function Landing({ go, user, theme, onToggleTheme }) {
   const reduce = useReducedMotion();
   const fadeUp = (delay) => ({
     initial: reduce ? false : { opacity: 0, y: 26 },
@@ -533,7 +562,7 @@ function Landing({ go, user }) {
     ["Avoidance", "Says nothing, or delays. Sometimes the kindest and safest move."],
   ];
   return <div className="landing">
-    <PublicNav go={go} user={user} />
+    <PublicNav go={go} user={user} theme={theme} onToggleTheme={onToggleTheme} />
     <main>
       <section className="hero shell">
         <div className="hero-mesh" aria-hidden="true"><i /><i /><i /></div>
@@ -601,10 +630,10 @@ function Landing({ go, user }) {
 
 /* ------------------------------------------------------------------ workspace shell */
 
-function Layout({ page, go, user, onSignOut, children }) {
+function Layout({ page, go, user, onSignOut, theme, onToggleTheme, children }) {
   const [mobile, setMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  return <div className="app-shell"><aside className={`sidebar${mobile ? " open" : ""}${collapsed ? " collapsed" : ""}`}><div className="side-logo"><Logo /><button className="collapse-toggle" onClick={() => setCollapsed(c => !c)} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button><button className="mobile-close" onClick={() => setMobile(false)}><X size={18} /></button></div><div className="side-label">Workspace</div><nav>{navItems.map(([id, label, Icon]) => <button key={id} className={page === id ? "side-link active" : "side-link"} onClick={() => { go(id); setMobile(false); }} title={label}><Icon size={17} /><span className="side-link-label">{label}</span>{id === "assistant" && <span className="new-dot" />}</button>)}</nav><div className="side-label lower">Account</div><button className={`side-link ${page === "settings" ? "active" : ""}`} onClick={() => go("settings")} title="Settings"><Settings size={17} /><span className="side-link-label">Settings</span></button><button className="side-link" onClick={onSignOut} title="Sign out"><LogOut size={17} /><span className="side-link-label">Sign out</span></button><div className="upgrade-card"><Sparkles size={17} /><strong>Demo build</strong><p>Analyses run on the built-in engine while your own model trains. Your data lives in your account.</p><button onClick={() => go("assistant")}>Analyze a message <ArrowRight size={13} /></button></div><button className="profile profile-button" onClick={() => go("profile")}><div className="profile-avatar">{initials(user.display_name || user.email)}</div><div className="profile-text"><strong>{user.display_name || user.email}</strong><small>{user.email}</small></div><MoreHorizontal size={16} /></button></aside><div className="main-area"><header className="app-header"><button className="menu-button" onClick={() => setMobile(true)}><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><ChevronDown size={14} /><strong>{navItems.find(x => x[0] === page)?.[1] || "Overview"}</strong></div><div className="header-actions"><button aria-label="Help" onClick={() => go("theory")}><CircleHelp size={18} /></button><button className="header-avatar" onClick={() => go("profile")}>{initials(user.display_name || user.email)}</button></div></header><main className="dashboard-content">{children}</main></div></div>;
+  return <div className="app-shell"><aside className={`sidebar${mobile ? " open" : ""}${collapsed ? " collapsed" : ""}`}><div className="side-logo"><Logo /><button className="collapse-toggle" onClick={() => setCollapsed(c => !c)} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button><button className="mobile-close" onClick={() => setMobile(false)}><X size={18} /></button></div><div className="side-label">Workspace</div><nav>{navItems.map(([id, label, Icon]) => <button key={id} className={page === id ? "side-link active" : "side-link"} onClick={() => { go(id); setMobile(false); }} title={label}><Icon size={17} /><span className="side-link-label">{label}</span>{id === "assistant" && <span className="new-dot" />}</button>)}</nav><div className="side-label lower">Account</div><button className={`side-link ${page === "settings" ? "active" : ""}`} onClick={() => go("settings")} title="Settings"><Settings size={17} /><span className="side-link-label">Settings</span></button><button className="side-link" onClick={onSignOut} title="Sign out"><LogOut size={17} /><span className="side-link-label">Sign out</span></button><div className="upgrade-card"><Sparkles size={17} /><strong>Demo build</strong><p>Analyses run on the built-in engine while your own model trains. Your data lives in your account.</p><button onClick={() => go("assistant")}>Analyze a message <ArrowRight size={13} /></button></div><button className="profile profile-button" onClick={() => go("profile")}><div className="profile-avatar">{initials(user.display_name || user.email)}</div><div className="profile-text"><strong>{user.display_name || user.email}</strong><small>{user.email}</small></div><MoreHorizontal size={16} /></button></aside><div className="main-area"><header className="app-header"><button className="menu-button" onClick={() => setMobile(true)}><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><ChevronDown size={14} /><strong>{navItems.find(x => x[0] === page)?.[1] || "Overview"}</strong></div><div className="header-actions"><ThemeToggle theme={theme} onToggle={onToggleTheme} /><button aria-label="Help" onClick={() => go("theory")}><CircleHelp size={18} /></button><button className="header-avatar" onClick={() => go("profile")}>{initials(user.display_name || user.email)}</button></div></header><main className="dashboard-content">{children}</main></div></div>;
 }
 
 function PageHeader({ eyebrow, title, text, children }) { return <div className="page-header"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1>{text && <p>{text}</p>}</div>{children}</div>; }
@@ -1153,7 +1182,7 @@ const CONTACT_EMAIL = "arsalanahmeda813@gmail.com";
 const CONTACT_LINKEDIN = "https://www.linkedin.com/in/arsalan-ahmed-khan-b4a9a2310";
 const CONTACT_GITHUB = "https://github.com/arsalanahmedk";
 
-function ContactPage({ go, user }) {
+function ContactPage({ go, user, theme, onToggleTheme }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -1166,7 +1195,7 @@ function ContactPage({ go, user }) {
     setOpened(true);
   };
   return <div className="landing">
-    <PublicNav go={go} user={user} />
+    <PublicNav go={go} user={user} theme={theme} onToggleTheme={onToggleTheme} />
     <main className="shell contact-page">
       <PageHeader eyebrow="Contact" title="Talk to the person behind Saylient AI." text="Questions, feedback, or a collaboration idea — write to Arsalan directly."><Button variant="outline" onClick={() => go("landing")}>Back to the landing page</Button></PageHeader>
       <div className="contact-grid">
@@ -1245,7 +1274,7 @@ function GoogleMark() {
   return <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z" /><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24z" /><path fill="#FBBC05" d="M5.27 14.29A7.2 7.2 0 0 1 4.89 12c0-.8.14-1.57.38-2.29V6.62H1.29a12 12 0 0 0 0 10.76l3.98-3.09z" /><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42A11.98 11.98 0 0 0 12 0 11.99 11.99 0 0 0 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z" /></svg>;
 }
 
-function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken }) {
+function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken, theme, onToggleTheme }) {
   const [isLogin, setIsLogin] = useState(mode !== "register");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -1290,7 +1319,7 @@ function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken }) {
     } catch (err) { setError(friendlyError(err)); }
     setBusy(false);
   };
-  return <div className="auth-page"><div className="auth-card panel">
+  return <div className="auth-page"><div className="auth-theme"><ThemeToggle theme={theme} onToggle={onToggleTheme} /></div><div className="auth-card panel">
     <Logo />
     <h1>{forgot ? "Reset your password" : isLogin ? "Welcome back" : "Create your account"}</h1>
     <p>{notice || "Your analyses, drafts and templates live in your account — not just in this browser."}</p>
@@ -1327,6 +1356,13 @@ function App() {
   };
   const [route, setRoute] = useState(parseHash);
   const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState(() => readTheme());
+  useEffect(() => { applyTheme(theme, false); }, [theme]);
+  const toggleTheme = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    applyTheme(next, true);
+    setTheme(next);
+  };
   const [authChecked, setAuthChecked] = useState(false);
   const [openAnalysis, setOpenAnalysis] = useState(null);
   const page = route.page;
@@ -1353,14 +1389,14 @@ function App() {
   };
   const onAuthed = (auth) => { setUser(auth.user); go("overview"); };
   const openInAssistant = (analysis) => { setOpenAnalysis(analysis); go("assistant"); };
-  if (page === "landing") return <Landing go={go} user={user} />;
-  if (page === "contact") return <ContactPage go={go} user={user} />;
-  if (page === "login") return user ? <AuthPage mode="login" go={go} onAuthed={onAuthed} notice="You are already signed in — this will switch to another account." /> : <AuthPage mode="login" go={go} onAuthed={onAuthed} />;
-  if (page === "register") return user ? <AuthPage mode="register" go={go} onAuthed={onAuthed} notice="You are already signed in — this will switch to another account." /> : <AuthPage mode="register" go={go} onAuthed={onAuthed} />;
-  if (page === "reset-password") return <AuthPage mode="reset" go={go} onAuthed={onAuthed} resetToken={route.token} />;
+  if (page === "landing") return <Landing go={go} user={user} theme={theme} onToggleTheme={toggleTheme} />;
+  if (page === "contact") return <ContactPage go={go} user={user} theme={theme} onToggleTheme={toggleTheme} />;
+  if (page === "login") return user ? <AuthPage mode="login" go={go} onAuthed={onAuthed} theme={theme} onToggleTheme={toggleTheme} notice="You are already signed in — this will switch to another account." /> : <AuthPage mode="login" go={go} onAuthed={onAuthed} theme={theme} onToggleTheme={toggleTheme} />;
+  if (page === "register") return user ? <AuthPage mode="register" go={go} onAuthed={onAuthed} theme={theme} onToggleTheme={toggleTheme} notice="You are already signed in — this will switch to another account." /> : <AuthPage mode="register" go={go} onAuthed={onAuthed} theme={theme} onToggleTheme={toggleTheme} />;
+  if (page === "reset-password") return <AuthPage mode="reset" go={go} onAuthed={onAuthed} resetToken={route.token} theme={theme} onToggleTheme={toggleTheme} />;
   if (page === "demo-chat") return <DemoChat go={go} />;
   if (!authChecked) return <div className="auth-page"><div className="auth-card panel"><Logo /><h1>Loading…</h1><p>Checking your session.</p></div></div>;
   if (!user) return <AuthPage mode="login" go={go} onAuthed={onAuthed} notice="Sign in to open your workspace." />;
-  return <Layout page={page} go={go} user={user} onSignOut={signOut}>{page === "overview" ? <Dashboard go={go} user={user} onOpen={openInAssistant} /> : page === "assistant" ? <Assistant go={go} openAnalysis={openAnalysis} clearOpen={() => setOpenAnalysis(null)} /> : <SimplePage type={page} go={go} user={user} onSignOut={signOut} onOpen={openInAssistant} onUserChanged={setUser} />}</Layout>;
+  return <Layout page={page} go={go} user={user} onSignOut={signOut} theme={theme} onToggleTheme={toggleTheme}>{page === "overview" ? <Dashboard go={go} user={user} onOpen={openInAssistant} /> : page === "assistant" ? <Assistant go={go} openAnalysis={openAnalysis} clearOpen={() => setOpenAnalysis(null)} /> : <SimplePage type={page} go={go} user={user} onSignOut={signOut} onOpen={openInAssistant} onUserChanged={setUser} />}</Layout>;
 }
 createRoot(document.getElementById("root")).render(<App />);
