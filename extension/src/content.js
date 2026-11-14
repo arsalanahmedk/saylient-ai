@@ -413,7 +413,7 @@
       el(
         "p",
         "sai-note",
-        "Analysis runs only when you click Analyze. Nothing is monitored or sent automatically. Suggestions come from the Saylient AI backend analysis (rule-based prototype v0.1) — review before you send."
+        "Analysis runs only when you click Analyze. Nothing is monitored or sent automatically. Suggestions come from the Saylient AI backend analysis — review before you send."
       )
     );
 
@@ -715,7 +715,8 @@
     }
 
     if (data?.model_version) {
-      resultEl.append(el("small", "sai-model", `Model: ${data.model_version} (rule-based prototype)`));
+      const modelLabel = String(data.model_version).startsWith("prototype") ? "Built-in engine" : data.model_version;
+      resultEl.append(el("small", "sai-model", `Model: ${modelLabel}`));
     }
 
     const copyBtn = el("button", "sai-copy", "Copy response");

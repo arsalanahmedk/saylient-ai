@@ -54,6 +54,42 @@
     return node;
   };
 
+  /* Password strength, same 5 rules as the website: length + character
+     variety. A higher score means harder to guess — never unbreakable. */
+  const EYE_SVG = "<svg viewBox=\"0 0 24 24\" width=\"17\" height=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/></svg>";
+  const EYE_OFF_SVG = "<svg viewBox=\"0 0 24 24\" width=\"17\" height=\"17\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9.88 9.88a3 3 0 1 0 4.24 4.24\"/><path d=\"M10.73 5.08A10.43 10.43 0 0 1 12 5c6.5 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68\"/><path d=\"M6.61 6.61A13.526 13.526 0 0 0 2 12s3.5 7 10 7a9.74 9.74 0 0 0 5.39-1.61\"/><line x1=\"2\" y1=\"2\" x2=\"22\" y2=\"22\"/></svg>";
+  const PW_RULES = [
+    { label: "8+ characters", test: (pw) => pw.length >= 8 },
+    { label: "A capital letter", test: (pw) => /[A-Z]/.test(pw) },
+    { label: "A small letter", test: (pw) => /[a-z]/.test(pw) },
+    { label: "A number", test: (pw) => /[0-9]/.test(pw) },
+    { label: "A symbol", test: (pw) => /[^A-Za-z0-9]/.test(pw) },
+  ];
+  const passwordStrength = (pw) => {
+    if (!pw) return { passed: 0, level: 0, label: "" };
+    const passed = PW_RULES.filter((r) => r.test(pw)).length;
+    const level = passed <= 2 ? 1 : passed === 3 ? 2 : passed === 4 ? 3 : 4;
+    return { passed, level, label: ["", "Weak", "Fair", "Good", "Strong"][level] };
+  };
+  /* Eye button that shows/hides a password field. Returns a wrapper span
+     holding the input + button, so the input keeps its field styling. */
+  const wrapPasswordInput = (input) => {
+    const wrap = el("span", "sai-pw-wrap");
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "sai-pw-toggle";
+    btn.innerHTML = EYE_SVG;
+    btn.setAttribute("aria-label", "Show password");
+    btn.addEventListener("click", () => {
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.innerHTML = show ? EYE_OFF_SVG : EYE_SVG;
+      btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    });
+    wrap.append(input, btn);
+    return wrap;
+  };
+
   const prettyLabel = (value) =>
     value
       ? String(value).replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
@@ -174,7 +210,7 @@
     passwordInput.autocomplete = "current-password";
     passwordInput.placeholder = "Your password";
     passwordInput.setAttribute("data-password", "");
-    passwordLabel.append(passwordInput);
+    passwordLabel.append(wrapPasswordInput(passwordInput));
     const signinError = el("p", "sai-error");
     signinError.setAttribute("data-signin-error", "");
     signinError.hidden = true;
@@ -216,14 +252,35 @@
     regPasswordInput.placeholder = "At least 8 characters";
     regPasswordInput.minLength = 8;
     regPasswordInput.setAttribute("data-register-password", "");
-    regPasswordLabel.append(regPasswordInput);
+    regPasswordLabel.append(wrapPasswordInput(regPasswordInput));
+    /* Live strength meter for the new password: coloured bar + label +
+       the five rules, updated on every keystroke. Guidance only — the
+       backend still only requires 8+ characters. */
+    const meter = el("div", "sai-pw-meter");
+    meter.hidden = true;
+    const meterBar = el("div", "sai-pw-bar");
+    const meterFill = document.createElement("i");
+    meterBar.append(meterFill);
+    const meterLabel = el("p", "sai-pw-label", "");
+    const meterRules = el("ul", "sai-pw-rules");
+    PW_RULES.forEach((r) => meterRules.append(el("li", "", r.label)));
+    meter.append(meterBar, meterLabel, meterRules);
+    regPasswordInput.addEventListener("input", () => {
+      const pw = regPasswordInput.value;
+      const s = passwordStrength(pw);
+      meter.hidden = pw.length === 0;
+      meter.setAttribute("data-level", String(s.level));
+      meterFill.style.width = `${s.level * 25}%`;
+      meterLabel.textContent = `${s.label} password — ${s.passed} of ${PW_RULES.length} rules met`;
+      [...meterRules.children].forEach((li, i) => li.classList.toggle("ok", PW_RULES[i].test(pw)));
+    });
     const registerError = el("p", "sai-error");
     registerError.setAttribute("data-register-error", "");
     registerError.hidden = true;
     const registerSubmit = el("button", "sai-primary", "Create account");
     registerSubmit.type = "submit";
     registerSubmit.setAttribute("data-register-submit", "");
-    registerForm.append(nameLabel, regEmailLabel, regPasswordLabel, registerError, registerSubmit);
+    registerForm.append(nameLabel, regEmailLabel, regPasswordLabel, meter, registerError, registerSubmit);
     registerForm.addEventListener("submit", registerAccount);
     const backToggle = el("button", "sai-toggle", "Already have an account? Sign in");
     backToggle.type = "button";
@@ -241,7 +298,20 @@
       signinForm.hidden = false;
       registerToggle.hidden = false;
     });
-    auth.append(signinForm, registerToggle, registerForm, backToggle);
+    /* Google sign-in needs a full-page OAuth redirect, so it happens on
+       the website: this opens the site login in a new tab. A Google-only
+       account has no password, so the panel's email sign-in needs a
+       password set in Profile first — the note says so. */
+    const googleDivider = el("div", "sai-divider", "or");
+    const googleButton = document.createElement("button");
+    googleButton.type = "button";
+    googleButton.className = "sai-google-btn";
+    googleButton.innerHTML = "<svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" aria-hidden=\"true\"><path fill=\"#4285F4\" d=\"M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47a5.53 5.53 0 0 1-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z\"/><path fill=\"#34A853\" d=\"M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09A11.99 11.99 0 0 0 12 24z\"/><path fill=\"#FBBC05\" d=\"M5.27 14.29A7.2 7.2 0 0 1 4.89 12c0-.8.14-1.57.38-2.29V6.62H1.29a12 12 0 0 0 0 10.76l3.98-3.09z\"/><path fill=\"#EA4335\" d=\"M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42A11.98 11.98 0 0 0 12 0 11.99 11.99 0 0 0 1.29 6.62l3.98 3.09C6.22 6.86 8.87 4.75 12 4.75z\"/></svg> Continue with Google";
+    googleButton.addEventListener("click", () => {
+      window.open(`${SAYLIENT_APP_ORIGIN}/#login`, "_blank", "noopener");
+    });
+    const googleNote = el("p", "sai-note", "Google sign-in opens the website. If your account uses Google only, set a password in Profile first, then sign in here with email.");
+    auth.append(signinForm, registerToggle, registerForm, backToggle, googleDivider, googleButton, googleNote);
     root.append(auth);
 
     // Signed-in account row.
@@ -343,7 +413,7 @@
       el(
         "p",
         "sai-note",
-        "Analysis runs only when you click Analyze. Nothing is monitored or sent automatically. Suggestions come from the Saylient AI backend analysis (rule-based prototype v0.1) — review before you send."
+        "Analysis runs only when you click Analyze. Nothing is monitored or sent automatically. Suggestions come from the Saylient AI backend analysis — review before you send."
       )
     );
 
@@ -645,7 +715,8 @@
     }
 
     if (data?.model_version) {
-      resultEl.append(el("small", "sai-model", `Model: ${data.model_version} (rule-based prototype)`));
+      const modelLabel = String(data.model_version).startsWith("prototype") ? "Built-in engine" : data.model_version;
+      resultEl.append(el("small", "sai-model", `Model: ${modelLabel}`));
     }
 
     const copyBtn = el("button", "sai-copy", "Copy response");
