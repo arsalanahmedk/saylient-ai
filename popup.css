@@ -1,24 +1,24 @@
-/* Saylient AI popup — Playful Brutalist. System font stack only; nothing remote.
+/* Saylient AI popup — Midnight Purple + Electric Blue. System font stack only; nothing remote.
    All colours live in :root, so a palette swap is a single edit.
    Note: the toolbar icon no longer opens this popup — it opens the Saylient
    AI hero page, and sign-in lives in the in-page panel (content.js). This
    file is kept for reference and for the sign-in flow it documents. */
 :root {
-  /* Gradient Clean palette (white + deep ink + cyan/violet/pink). */
-  --bg: #FFFFFF;
-  --panel: #FFFFFF;
-  --card: #F7FAFF;
-  --text: #0B1220;
-  --text-2: #475569;
-  --text-3: #8A97AD;
-  --accent: #7C3AED;
-  --accent-hover: #6D28D9;
-  --accent-deep: #0B1220;
+  /* Midnight Purple + Electric Blue palette. */
+  --bg: #0B0B14;
+  --panel: #151526;
+  --card: #1C1C31;
+  --text: #F8FAFC;
+  --text-2: #C7CDDE;
+  --text-3: #94A3B8;
+  --accent: #8B5CF6;
+  --accent-hover: #A78BFA;
+  --accent-deep: #F8FAFC;
   --white: #ffffff;
-  --border: rgba(11, 18, 32, 0.10);
-  --error: #DC2626;
-  --error-bg: rgba(220, 38, 38, 0.10);
-  --error-border: rgba(220, 38, 38, 0.35);
+  --border: rgba(248, 250, 252, 0.12);
+  --error: #F87171;
+  --error-bg: rgba(248, 113, 113, 0.10);
+  --error-border: rgba(248, 113, 113, 0.35);
 }
 * { box-sizing: border-box; }
 body {
@@ -36,7 +36,7 @@ header small { display: block; color: var(--text-2); font-size: 11px; margin-top
 .brand-mark {
   width: 38px; height: 38px; border-radius: 10px;
   display: grid; place-items: center;
-  background: linear-gradient(135deg, #06B6D4, #7C3AED 55%, #EC4899); color: #ffffff; font-size: 20px;
+  background: linear-gradient(135deg, #8B5CF6, #3B82F6); color: #ffffff; font-size: 20px;
 }
 /* The Saylient logo fills the brand tile and the account avatar. */
 .brand-mark img, .account-avatar img { width: 100%; height: 100%; display: block; border-radius: 10px; }
@@ -74,7 +74,7 @@ input::placeholder { color: var(--text-3); }
 .account-avatar {
   width: 36px; height: 36px; border-radius: 10px;
   display: grid; place-items: center; flex-shrink: 0;
-  background: linear-gradient(135deg, #06B6D4, #7C3AED 55%, #EC4899); color: #ffffff; font-size: 18px;
+  background: linear-gradient(135deg, #8B5CF6, #3B82F6); color: #ffffff; font-size: 18px;
 }
 .account-card b { display: block; font-size: 13px; word-break: break-all; }
 .account-card small { display: block; color: var(--text-2); font-size: 11px; margin-top: 3px; }
@@ -89,11 +89,11 @@ input::placeholder { color: var(--text-3); }
   cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
 .primary {
-  border: 0; background: linear-gradient(135deg, #06B6D4, #7C3AED 55%, #EC4899); color: #ffffff;
-  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.35);
+  border: 0; background: linear-gradient(135deg, #8B5CF6, #3B82F6); color: #ffffff;
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.35);
   margin-bottom: 10px;
 }
-.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(124, 58, 237, 0.40); }
+.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(139, 92, 246, 0.40); }
 .primary:disabled { opacity: 0.6; cursor: wait; }
 .primary:active:not(:disabled) { transform: translateY(1px); }
 .secondary {

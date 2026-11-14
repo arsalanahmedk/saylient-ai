@@ -380,69 +380,10 @@ function PricingSection({ go }) {
 }
 
 function HalftoneFooter({ go }) {
-  const canvasRef = useRef(null);
-  const rootRef = useRef(null);
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const root = rootRef.current;
-    if (!canvas || !root) return undefined;
-    const context = canvas.getContext("2d");
-    if (!context) return undefined; // canvas unavailable (e.g. disabled): the footer simply stays blank.
-    let pointer = { x: -1000, y: -1000 };
-    const draw = () => {
-      // The wordmark lives in the canvas's own box (180px tall), not the
-      // whole footer — tying it to footer height made its position depend
-      // on how tall the footer is, so it clipped on mobile (tall footer).
-      const rect = canvas.getBoundingClientRect();
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = rect.width * ratio;
-      canvas.height = rect.height * ratio;
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      context.clearRect(0, 0, rect.width, rect.height);
-      const gap = Math.max(5, Math.min(8, rect.width / 180));
-      const fontSize = Math.min(rect.width * 0.34, rect.height * 1.05, rect.width / 4.9);
-      const mask = document.createElement("canvas");
-      mask.width = rect.width;
-      mask.height = rect.height;
-      const maskContext = mask.getContext("2d");
-      maskContext.font = `600 ${fontSize}px "Plus Jakarta Sans", "Manrope", sans-serif`;
-      maskContext.textAlign = "center";
-      maskContext.textBaseline = "alphabetic";
-      maskContext.fillStyle = "#fff";
-      maskContext.fillText("saylient", rect.width / 2, rect.height - fontSize * 0.21 - 2);
-      const pixels = maskContext.getImageData(0, 0, rect.width, rect.height).data;
-      for (let y = gap / 2; y < rect.height; y += gap) {
-        for (let x = gap / 2; x < rect.width; x += gap) {
-          const alpha = pixels[(Math.floor(y) * rect.width + Math.floor(x)) * 4 + 3] / 255;
-          if (alpha < 0.08) continue;
-          const distance = Math.hypot(x - pointer.x, y - pointer.y);
-          const lift = Math.max(0, 1 - distance / 95) * alpha;
-          /* Halftone wordmark: indigo dots on white, shifting to cyan near the pointer — clearly visible, not a blank gap. */
-      context.fillStyle = `rgb(${Math.round(129 - lift * 123)},${Math.round(140 + lift * 42)},${Math.round(248 - lift * 36)})`;
-          context.beginPath();
-          context.arc(x, y, Math.sqrt(alpha) * gap * 0.58, 0, Math.PI * 2);
-          context.fill();
-        }
-      }
-    };
-    const move = event => {
-      const rect = canvas.getBoundingClientRect();
-      pointer = { x: event.clientX - rect.left, y: event.clientY - rect.top };
-      draw();
-    };
-    const leave = () => { pointer = { x: -1000, y: -1000 }; draw(); };
-    draw();
-    root.addEventListener("pointermove", move);
-    root.addEventListener("pointerleave", leave);
-    window.addEventListener("resize", draw);
-    return () => {
-      root.removeEventListener("pointermove", move);
-      root.removeEventListener("pointerleave", leave);
-      window.removeEventListener("resize", draw);
-    };
-  }, []);
-  return <footer ref={rootRef} className="halftone-footer">
-    <canvas ref={canvasRef} aria-hidden="true" />
+  /* Footer wordmark is plain HTML text, not a canvas: the canvas halftone
+     never rendered on the live site, so this always shows. */
+  return <footer className="halftone-footer">
+    <div className="footer-wordmark" aria-hidden="true">saylient</div>
     <div className="halftone-top">
       <div><Logo /><span>© 2026 · Context / Tone / Clarity</span></div>
       <div><small>Explore</small><button type="button" onClick={() => goSection(go, "features")}>Product</button><button type="button" onClick={() => goSection(go, "how")}>How it works</button><button type="button" onClick={() => goSection(go, "theory")}>The framework</button><button type="button" onClick={() => goSection(go, "extension")}>Browser extension</button><button type="button" onClick={() => goSection(go, "pricing")}>Pricing</button></div>
