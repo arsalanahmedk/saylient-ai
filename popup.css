@@ -4,18 +4,18 @@
    AI hero page, and sign-in lives in the in-page panel (content.js). This
    file is kept for reference and for the sign-in flow it documents. */
 :root {
-  /* Playful Brutalist palette (warm off-white + yellow + hot pink). */
-  --bg: #FFF6E9;
+  /* Gradient Clean palette (white + deep ink + cyan/violet/pink). */
+  --bg: #FFFFFF;
   --panel: #FFFFFF;
-  --card: #FFF3D6;
-  --text: #171310;
-  --text-2: #5C5148;
-  --text-3: #9A8B7D;
-  --accent: #FFD02F;
-  --accent-hover: #F0BE00;
-  --accent-deep: #171310;
+  --card: #F7FAFF;
+  --text: #0B1220;
+  --text-2: #475569;
+  --text-3: #8A97AD;
+  --accent: #7C3AED;
+  --accent-hover: #6D28D9;
+  --accent-deep: #0B1220;
   --white: #ffffff;
-  --border: rgba(23, 19, 16, 0.14);
+  --border: rgba(11, 18, 32, 0.10);
   --error: #DC2626;
   --error-bg: rgba(220, 38, 38, 0.10);
   --error-border: rgba(220, 38, 38, 0.35);
@@ -36,7 +36,7 @@ header small { display: block; color: var(--text-2); font-size: 11px; margin-top
 .brand-mark {
   width: 38px; height: 38px; border-radius: 10px;
   display: grid; place-items: center;
-  background: linear-gradient(135deg, #FFD02F, #FFC53D 55%, #FF4D8D); color: #171310; font-size: 20px;
+  background: linear-gradient(135deg, #06B6D4, #7C3AED 55%, #EC4899); color: #ffffff; font-size: 20px;
 }
 /* The Saylient logo fills the brand tile and the account avatar. */
 .brand-mark img, .account-avatar img { width: 100%; height: 100%; display: block; border-radius: 10px; }
@@ -74,7 +74,7 @@ input::placeholder { color: var(--text-3); }
 .account-avatar {
   width: 36px; height: 36px; border-radius: 10px;
   display: grid; place-items: center; flex-shrink: 0;
-  background: linear-gradient(135deg, #FFD02F, #FFC53D 55%, #FF4D8D); color: #171310; font-size: 18px;
+  background: linear-gradient(135deg, #06B6D4, #7C3AED 55%, #EC4899); color: #ffffff; font-size: 18px;
 }
 .account-card b { display: block; font-size: 13px; word-break: break-all; }
 .account-card small { display: block; color: var(--text-2); font-size: 11px; margin-top: 3px; }
@@ -89,11 +89,11 @@ input::placeholder { color: var(--text-3); }
   cursor: pointer; transition: background 0.2s, border-color 0.2s, transform 0.15s;
 }
 .primary {
-  border: 2px solid #171310; background: #FFD02F; color: #171310;
-  box-shadow: 3px 3px 0 #171310;
+  border: 0; background: linear-gradient(135deg, #06B6D4, #7C3AED 55%, #EC4899); color: #ffffff;
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.35);
   margin-bottom: 10px;
 }
-.primary:hover:not(:disabled) { transform: translate(1px, 1px); box-shadow: 2px 2px 0 #171310; }
+.primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 26px rgba(124, 58, 237, 0.40); }
 .primary:disabled { opacity: 0.6; cursor: wait; }
 .primary:active:not(:disabled) { transform: translateY(1px); }
 .secondary {

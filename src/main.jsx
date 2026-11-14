@@ -254,16 +254,22 @@ const BEAM_GROUPS = [
   { label: "Work", apps: ["Gmail", "Slack", "LinkedIn", "Microsoft Teams", "Upwork", "Fiverr"] },
 ];
 
+/* Animated beam — the screenshot's horizontal beam: four featured apps
+   (Gmail, Slack, WhatsApp, Upwork) each send a travelling gradient dot
+   along a line into the Saylient card; the other ten platforms are listed
+   below so nothing is lost. */
+const BEAM_FEATURED = ["Gmail", "Slack", "WhatsApp", "Upwork"];
 function BeamDiagram() {
+  const rest = BEAM_GROUPS.flatMap(g => g.apps).filter(app => !BEAM_FEATURED.includes(app));
   return <div className="beam-diagram">
-    <div className="beam-center"><span className="beam-center-mark"><LogoMark /></span><strong>Saylient</strong><small>Live analysis</small></div>
-    <span className="beam-track beam-track-wide"><i /></span>
-    <div className="beam-groups">
-      {BEAM_GROUPS.map(g => <div className="beam-group" key={g.label}>
-        <span className="beam-group-label">{g.label}</span>
-        <div className="beam-chips">{g.apps.map(app => <span className="beam-app" key={app}>{app}</span>)}</div>
+    <div className="beam-rows">
+      {BEAM_FEATURED.map((app, i) => <div className="beam-row" key={app}>
+        <span className="beam-app"><i className="beam-node" aria-hidden="true" />{app}</span>
+        <span className="beam-track" aria-hidden="true"><i style={{ animationDelay: `${i * 0.6}s` }} /></span>
       </div>)}
     </div>
+    <div className="beam-center"><span className="beam-center-mark"><LogoMark /></span><strong>Saylient</strong><small>Live analysis</small></div>
+    <div className="beam-more"><span>Also works with</span><div className="beam-chips">{rest.map(app => <span className="beam-chip" key={app}>{app}</span>)}</div></div>
   </div>;
 }
 
@@ -408,7 +414,8 @@ function HalftoneFooter({ go }) {
           if (alpha < 0.08) continue;
           const distance = Math.hypot(x - pointer.x, y - pointer.y);
           const lift = Math.max(0, 1 - distance / 95) * alpha;
-          context.fillStyle = `rgb(${Math.round(203 - lift * 147)},${Math.round(213 - lift * 24)},${Math.round(225 + lift * 23)})`;
+          /* Halftone wordmark: indigo dots on white, shifting to cyan near the pointer — clearly visible, not a blank gap. */
+      context.fillStyle = `rgb(${Math.round(129 - lift * 123)},${Math.round(140 + lift * 42)},${Math.round(248 - lift * 36)})`;
           context.beginPath();
           context.arc(x, y, Math.sqrt(alpha) * gap * 0.58, 0, Math.PI * 2);
           context.fill();
