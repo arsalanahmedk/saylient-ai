@@ -1,11 +1,11 @@
 /* Saylient AI popup — Midnight Purple + Electric Blue. Simple fonts:
-   Calibri body, Barlow headings, Lilita One for the brand (loaded from
+   Calibri body, Barlow headings, Barlow ExtraBold (800) for the brand (loaded from
    Google Fonts with a Calibri fallback). All colours live in :root, so a
    palette swap is a single edit.
    Note: the toolbar icon no longer opens this popup — it opens the Saylient
    AI hero page, and sign-in lives in the in-page panel (content.js). This
    file is kept for reference and for the sign-in flow it documents. */
-@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Lilita+One&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&display=swap");
 :root {
   /* Midnight Purple + Electric Blue palette. */
   --bg: #0B0B14;
@@ -33,7 +33,7 @@ body {
 }
 main { padding: 20px; }
 header { display: flex; align-items: center; gap: 12px; }
-header strong { display: block; font-family: "Lilita One", Calibri, "Segoe UI", sans-serif; font-size: 21px; font-weight: 400; letter-spacing: 0.5px; }
+header strong { display: block; font-family: "Barlow", Calibri, "Segoe UI", sans-serif; font-size: 21px; font-weight: 800; letter-spacing: 0.5px; }
 header strong span { color: var(--accent); }
 header small { display: block; color: var(--text-2); font-size: 11px; margin-top: 3px; }
 .brand-mark {

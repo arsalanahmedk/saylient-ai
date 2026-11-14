@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Lilita+One&family=Courier+Prime:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap");
 
 :root {
   /* Midnight Purple + Electric Blue (2026-11-14 — the user's own pick:
@@ -97,12 +97,12 @@
   --radius-inner: 14px;
   --radius-input: 12px;
   /* Simple fonts only (2026-11-14 redesign): Calibri body, Barlow
-     headings, Lilita One for the brand name / wordmark only, Courier
+     headings, Barlow ExtraBold (800) for the brand name / wordmark only, Courier
      Prime (typewriter) for data, labels and code-like bits, Times New
      Roman for the Theory page long-form text. No decorative faces. */
   --font-sans: Calibri, "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-display: "Barlow", Calibri, "Segoe UI", sans-serif;
-  --font-brand: "Lilita One", "Barlow", Calibri, sans-serif;
+  --font-brand: "Barlow", Calibri, "Segoe UI", sans-serif;
   --font-mono: "Courier Prime", "Courier New", ui-monospace, SFMono-Regular, Menlo, monospace;
   --font-serif: "Times New Roman", Times, serif;
   --ink: #F8FAFC;
@@ -353,7 +353,7 @@ select.select-field option { background: var(--input); }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* ---------- logo ---------- */
-.logo { display: inline-flex; align-items: center; gap: 9px; color: var(--text); font-family: var(--font-brand); font-size: 20px; font-weight: 400; letter-spacing: 0.01em; background: none; border: 0; padding: 0; text-align: left; }
+.logo { display: inline-flex; align-items: center; gap: 9px; color: var(--text); font-family: var(--font-brand); font-size: 20px; font-weight: 800; letter-spacing: 0.01em; background: none; border: 0; padding: 0; text-align: left; }
 .logo-ai { color: var(--pink); }
 .logo-icon {
   display: inline-grid;
@@ -429,7 +429,7 @@ select.select-field option { background: var(--input); }
 @keyframes meshDrift2 { from { transform: translate3d(0, 0, 0) scale(1.1); } to { transform: translate3d(-110px, 70px, 0) scale(0.95); } }
 @keyframes meshDrift3 { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(-60px, -50px, 0) scale(1.2); } }
 .hero-dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(248, 250, 252, 0.10) 1px, transparent 1px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); pointer-events: none; }
-.hero h1 { position: relative; max-width: 960px; margin: 0 auto; font-family: var(--font-brand); font-size: clamp(4rem, 11vw, 7.5rem); line-height: 1; font-weight: 400; letter-spacing: 0.01em; background: var(--aurora); background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.hero h1 { position: relative; max-width: 960px; margin: 0 auto; font-family: var(--font-brand); font-size: clamp(4rem, 11vw, 7.5rem); line-height: 1; font-weight: 800; letter-spacing: 0.01em; background: var(--aurora); background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
 .hero h1 em { font-style: normal; }
 .hero > p { position: relative; max-width: 620px; margin: 24px auto 0; color: var(--text-2); font-size: 20px; line-height: 1.6; }
 .hero-actions { position: relative; display: flex; justify-content: center; margin-top: 36px; }
@@ -617,7 +617,7 @@ select.select-field option { background: var(--input); }
   overflow: hidden;
   font-family: var(--font-brand);
   font-size: clamp(64px, 17vw, 190px);
-  font-weight: 400;
+  font-weight: 800;
   line-height: 0.92;
   letter-spacing: -0.03em;
   text-align: center;
