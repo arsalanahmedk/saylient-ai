@@ -1,8 +1,11 @@
-/* Saylient AI popup — Midnight Purple + Electric Blue. System font stack only; nothing remote.
-   All colours live in :root, so a palette swap is a single edit.
+/* Saylient AI popup — Midnight Purple + Electric Blue. Simple fonts:
+   Calibri body, Barlow headings, Lilita One for the brand (loaded from
+   Google Fonts with a Calibri fallback). All colours live in :root, so a
+   palette swap is a single edit.
    Note: the toolbar icon no longer opens this popup — it opens the Saylient
    AI hero page, and sign-in lives in the in-page panel (content.js). This
    file is kept for reference and for the sign-in flow it documents. */
+@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Lilita+One&display=swap");
 :root {
   /* Midnight Purple + Electric Blue palette. */
   --bg: #0B0B14;
@@ -26,11 +29,11 @@ body {
   width: 360px;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: Calibri, "Segoe UI", -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 main { padding: 20px; }
 header { display: flex; align-items: center; gap: 12px; }
-header strong { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.5px; }
+header strong { display: block; font-family: "Lilita One", Calibri, "Segoe UI", sans-serif; font-size: 21px; font-weight: 400; letter-spacing: 0.5px; }
 header strong span { color: var(--accent); }
 header small { display: block; color: var(--text-2); font-size: 11px; margin-top: 3px; }
 .brand-mark {
@@ -45,7 +48,7 @@ header small { display: block; color: var(--text-2); font-size: 11px; margin-top
   color: var(--accent); font-size: 10px; font-weight: 700;
   letter-spacing: 0.12em; margin: 0 0 8px;
 }
-h1 { font-size: 17px; margin: 0 0 6px; letter-spacing: -0.3px; }
+h1 { font-family: "Barlow", Calibri, "Segoe UI", sans-serif; font-size: 17px; margin: 0 0 6px; letter-spacing: -0.3px; }
 .lede { color: var(--text-2); font-size: 12px; line-height: 1.6; margin: 0 0 16px; }
 form label {
   display: block; color: var(--text-2); font-size: 11px; font-weight: 600;

@@ -1,7 +1,10 @@
-/* Saylient AI panel — Midnight Purple + Electric Blue. System font stack only.
-   All colours live in :root as --sai-* variables, so a palette swap is a
-   single edit. (Names are --sai-* prefixed: this stylesheet is injected
-   into host pages, so its variables must not collide with theirs.) */
+/* Saylient AI panel — Midnight Purple + Electric Blue. Simple fonts:
+   Calibri body (system stack — no remote fetch, so it works inside any
+   host page), Lilita One for the panel brand name with a Calibri
+   fallback. All colours live in :root as --sai-* variables, so a palette
+   swap is a single edit. (Names are --sai-* prefixed: this stylesheet
+   is injected into host pages, so its variables must not collide with
+   theirs.) */
 :root {
   --sai-bg: #151526;
   --sai-card: #1C1C31;
@@ -50,12 +53,13 @@
   background: var(--sai-bg); color: var(--sai-text);
   border: 1px solid var(--sai-border); border-radius: 16px;
   padding: 20px; box-shadow: 0 16px 48px var(--sai-shadow);
-  font: 13px -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font: 13px Calibri, "Segoe UI", -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 #saylient-ai-panel * { box-sizing: border-box; }
 #saylient-ai-panel .sai-head {
   display: flex; justify-content: space-between; align-items: center;
-  font-size: 17px; font-weight: 700;
+  font-family: "Lilita One", Calibri, "Segoe UI", sans-serif;
+  font-size: 19px; font-weight: 400;
 }
 /* Small logo mark inline with the "saylient.ai" panel title. */
 #saylient-ai-panel .sai-head img.sai-title-logo { width: 20px; height: 20px; border-radius: 6px; vertical-align: -4px; margin-right: 2px; }

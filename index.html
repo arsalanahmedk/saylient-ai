@@ -3,18 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#0B0B14" />
+    <meta name="theme-color" content="#F8FAFC" />
     <script>
       /* Set the colour theme before React loads, so there is no flash of
-         the wrong theme. Dark is the default; a saved choice wins;
-         otherwise the system preference decides (light system -> light). */
+         the wrong theme. Light is the default; a saved choice in
+         localStorage wins. The system preference is deliberately NOT
+         consulted — a first visit always opens light. */
       try {
         var t = localStorage.getItem("saylient-theme");
-        if (t !== "light" && t !== "dark") t = (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "light" : "dark";
+        if (t !== "light" && t !== "dark") t = "light";
         document.documentElement.setAttribute("data-theme", t);
         var m = document.querySelector('meta[name="theme-color"]');
         if (m) m.setAttribute("content", t === "light" ? "#F8FAFC" : "#0B0B14");
-      } catch (e) { document.documentElement.setAttribute("data-theme", "dark"); }
+      } catch (e) { document.documentElement.setAttribute("data-theme", "light"); }
     </script>
     <title>Saylient AI — Communicate smarter</title>
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Lilita+One&family=Courier+Prime:wght@400;700&display=swap");
 
 :root {
   /* Midnight Purple + Electric Blue (2026-11-14 — the user's own pick:
@@ -96,17 +96,24 @@
   --radius-card: 20px;
   --radius-inner: 14px;
   --radius-input: 12px;
-  --font-sans: "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: "Bricolage Grotesque", "DM Sans", sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Simple fonts only (2026-11-14 redesign): Calibri body, Barlow
+     headings, Lilita One for the brand name / wordmark only, Courier
+     Prime (typewriter) for data, labels and code-like bits, Times New
+     Roman for the Theory page long-form text. No decorative faces. */
+  --font-sans: Calibri, "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Barlow", Calibri, "Segoe UI", sans-serif;
+  --font-brand: "Lilita One", "Barlow", Calibri, sans-serif;
+  --font-mono: "Courier Prime", "Courier New", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-serif: "Times New Roman", Times, serif;
   --ink: #F8FAFC;
   --shadow-hard: 0 1px 2px rgba(0, 0, 0, 0.40), 0 12px 32px rgba(0, 0, 0, 0.35);
   --shadow-hard-sm: 0 1px 2px rgba(0, 0, 0, 0.40), 0 8px 20px rgba(0, 0, 0, 0.30);
 }
 
 /* ---------- light mode ----------
-   Same violet -> electric blue palette, light variant. Dark is the
-   default (plain :root above); light tokens apply when the theme
+   Same violet -> electric blue palette, light variant. Light is the
+   default (plain :root above is the dark palette, applied only when
+   the theme attribute says dark); light tokens apply when the theme
    attribute is set on <html>. Accent hues stay the same so the brand
    reads identically — only surfaces and text flip. Text colours are
    the darker variants (violet-700 / blue-700 / slate-600) so links,
@@ -190,10 +197,11 @@ html[data-theme="light"] .halftone-footer small, html[data-theme="light"] .halft
 html {
   width: 100%;
   min-height: 100%;
-  color-scheme: dark;
+  color-scheme: light;
   background: var(--bg);
   overflow-x: clip;
 }
+html[data-theme="dark"] { color-scheme: dark; }
 
 body {
   max-width: 100%;
@@ -345,7 +353,7 @@ select.select-field option { background: var(--input); }
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
 /* ---------- logo ---------- */
-.logo { display: inline-flex; align-items: center; gap: 9px; color: var(--text); font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: -0.01em; background: none; border: 0; padding: 0; text-align: left; }
+.logo { display: inline-flex; align-items: center; gap: 9px; color: var(--text); font-family: var(--font-brand); font-size: 20px; font-weight: 400; letter-spacing: 0.01em; background: none; border: 0; padding: 0; text-align: left; }
 .logo-ai { color: var(--pink); }
 .logo-icon {
   display: inline-grid;
@@ -404,7 +412,10 @@ select.select-field option { background: var(--input); }
    violet, pink) drift behind the hero, a soft top wash ties them together,
    and a soft dot grid fades out toward the bottom (all CSS-only, all
    disabled under prefers-reduced-motion). */
-.hero { position: relative; padding: 120px 24px 40px; text-align: center; overflow: hidden; }
+/* Minimal first viewport (2026-11-14): just the name, one tagline line
+   and one primary CTA, vertically centred. The analyzer console moved
+   to its own section below the hero. */
+.hero { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: calc(100vh - 160px); padding: 80px 24px; text-align: center; overflow: hidden; }
 .hero::before { content: ""; position: absolute; inset: -10% -20% auto; height: 640px; background: radial-gradient(ellipse 62% 55% at 50% 0%, rgba(59, 130, 246, 0.14), rgba(139, 92, 246, 0.09) 42%, rgba(139, 92, 246, 0.08) 62%, transparent 72%); animation: auroraGlow 16s ease-in-out infinite alternate; pointer-events: none; }
 @keyframes auroraGlow { from { opacity: 0.75; transform: translateY(-14px) scale(1); } to { opacity: 1; transform: translateY(10px) scale(1.06); } }
 .hero::after { content: ""; position: absolute; top: -140px; right: -90px; width: 460px; height: 460px; border-radius: 50%; background: radial-gradient(circle, rgba(59, 130, 246, 0.22), rgba(139, 92, 246, 0.12) 55%, transparent 70%); filter: blur(44px); animation: orbFloat 20s ease-in-out infinite alternate; pointer-events: none; }
@@ -418,10 +429,11 @@ select.select-field option { background: var(--input); }
 @keyframes meshDrift2 { from { transform: translate3d(0, 0, 0) scale(1.1); } to { transform: translate3d(-110px, 70px, 0) scale(0.95); } }
 @keyframes meshDrift3 { from { transform: translate3d(0, 0, 0) scale(1); } to { transform: translate3d(-60px, -50px, 0) scale(1.2); } }
 .hero-dots { position: absolute; inset: 0; background-image: radial-gradient(rgba(248, 250, 252, 0.10) 1px, transparent 1px); background-size: 26px 26px; -webkit-mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); mask-image: radial-gradient(ellipse 75% 60% at 50% 0%, #000, transparent 78%); pointer-events: none; }
-.hero-badge { position: relative; }
-.hero h1 { position: relative; max-width: 960px; margin: 0 auto; font-family: var(--font-display); font-size: clamp(3.5rem, 7vw, 5.5rem); line-height: 1.02; font-weight: 700; letter-spacing: -0.02em; }
-.hero h1 em { font-family: "Bricolage Grotesque", "DM Sans", sans-serif; font-style: normal; font-weight: 700; background: var(--aurora); background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
-.hero > p { position: relative; max-width: 620px; margin: 24px auto 0; color: var(--text-2); font-size: 19px; line-height: 1.6; }
+.hero h1 { position: relative; max-width: 960px; margin: 0 auto; font-family: var(--font-brand); font-size: clamp(4rem, 11vw, 7.5rem); line-height: 1; font-weight: 400; letter-spacing: 0.01em; background: var(--aurora); background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.hero h1 em { font-style: normal; }
+.hero > p { position: relative; max-width: 620px; margin: 24px auto 0; color: var(--text-2); font-size: 20px; line-height: 1.6; }
+.hero-actions { position: relative; display: flex; justify-content: center; margin-top: 36px; }
+.hero-actions .button, .hero-actions .btn { min-height: 50px; padding: 0 28px; font-size: 15px; }
 .hero-note { position: relative; justify-content: center; }
 
 /* Wordtune-style rewrite demo: blunt message, tap a phrase, pick a tone. */
@@ -456,19 +468,6 @@ select.select-field option { background: var(--input); }
 .marquee-item { flex: none; padding-right: 44px; color: var(--text-2); font-size: 15px; font-weight: 600; white-space: nowrap; }
 @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 @keyframes gradientShift { from { background-position: 0% center; } to { background-position: 100% center; } }
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 20px;
-  padding: 6px 12px 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  background: var(--panel);
-  color: var(--text-2);
-  font-size: 13px;
-  font-weight: 600;
-}
 .pulse-dot { width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--success); box-shadow: 0 0 0 0 var(--success-50); animation: pulse 2s ease-out infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 var(--success-50); } 75% { box-shadow: 0 0 0 6px var(--success-00); } 100% { box-shadow: 0 0 0 0 var(--success-00); } }
 .text-link { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--text); font-weight: 600; cursor: pointer; }
@@ -502,7 +501,7 @@ select.select-field option { background: var(--input); }
 
 .center-heading { max-width: 580px; margin: 0 auto 48px; text-align: center; }
 .center-heading h2 { font-size: clamp(2rem, 4vw, 3rem); line-height: 1.06; font-weight: 700; letter-spacing: -0.02em; }
-.center-heading h2 em, .section-heading h2 em, .theory-strip h2 em, .extension-cta h2 em, .pricing-section h2 em { font-family: "Bricolage Grotesque", "DM Sans", sans-serif; font-style: normal; font-weight: 700; background: var(--aurora); background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.center-heading h2 em, .section-heading h2 em, .theory-strip h2 em, .extension-cta h2 em, .pricing-section h2 em { font-family: var(--font-display); font-style: normal; font-weight: 700; background: var(--aurora); background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
 .center-heading p, .section-heading p { margin-top: 16px; color: var(--text-2); font-size: 17px; line-height: 1.55; }
 
 
@@ -616,9 +615,9 @@ select.select-field option { background: var(--input); }
   margin: 0 auto;
   padding: 0 24px;
   overflow: hidden;
-  font-family: var(--font-display);
+  font-family: var(--font-brand);
   font-size: clamp(64px, 17vw, 190px);
-  font-weight: 800;
+  font-weight: 400;
   line-height: 0.92;
   letter-spacing: -0.03em;
   text-align: center;
@@ -1038,8 +1037,8 @@ section[id] { scroll-margin-top: 120px; }
 }
 @media (max-width: 600px) {
   .shell { padding: 0 18px; }
-  .hero { padding: 64px 18px 4px; }
-  .hero h1 { font-size: clamp(2.5rem, 11vw, 3.25rem); letter-spacing: -0.02em; }
+  .hero { padding: 64px 18px; min-height: calc(100vh - 140px); }
+  .hero h1 { font-size: clamp(3rem, 13vw, 4rem); letter-spacing: 0.01em; }
   .hero > p { font-size: 16px; }
   .hero-actions { flex-direction: column; align-items: center; gap: 16px; }
   .marquee { margin-top: 40px; }
@@ -1119,6 +1118,15 @@ section[id] { scroll-margin-top: 120px; }
 
 /* hero console: analyzer + tone refinement in one panel */
 .hero-console { position: relative; max-width: 960px; margin: 48px auto 0; animation: popIn 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+/* Analyzer section (moved out of the hero 2026-11-14): the same console,
+   now its own section directly under the minimal hero. */
+.analyzer-section { padding: 20px 24px 40px; }
+.analyzer-section .hero-console { margin-top: 0; }
+
+/* Theory page: long-form body text in Times New Roman — the one serif
+   spot on the site, for comfortable long-form reading. */
+.theory-page p { font-family: var(--font-serif); font-size: 16px; line-height: 1.7; }
 @keyframes popIn { from { opacity: 0; transform: translateY(14px) scale(0.985); } to { opacity: 1; transform: none; } }
 .hero-tone { border-top: 1px solid var(--border); padding: 22px; }
 .hero-tone-head { margin-bottom: 16px; }
@@ -1175,7 +1183,7 @@ section[id] { scroll-margin-top: 120px; }
 .closing-cta { padding: 40px 24px 48px; }
 .closing-card { padding: 64px 32px; border: 1px solid var(--border); border-radius: var(--radius-card); background: linear-gradient(180deg, #1A1A30, #10101F); text-align: center; box-shadow: var(--shadow-hard); }
 .closing-card h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; margin-bottom: 12px; }
-.closing-card h2 em { font-family: "Bricolage Grotesque", "DM Sans", sans-serif; font-style: normal; font-weight: 700; background: var(--aurora); background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
+.closing-card h2 em { font-family: var(--font-display); font-style: normal; font-weight: 700; background: var(--aurora); background-size: 200% auto; animation: gradientShift 6s ease-in-out infinite alternate; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; color: transparent; }
 .closing-card p { max-width: 480px; margin: 0 auto 28px; color: var(--text-2); font-size: 17px; line-height: 1.55; }
 
 /* ---------- collapsible sidebar ---------- */

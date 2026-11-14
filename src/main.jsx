@@ -516,20 +516,18 @@ function Marquee() {
 }
 
 /* ---------- colour theme (dark / light) ----------
-   Dark (Midnight Purple + Electric Blue) is the default. The choice is
-   saved in localStorage; with no saved choice the system preference
-   decides (light system -> light mode). The inline script in index.html
-   applies the same logic before React loads, so there is no flash.
-   Only an explicit toggle writes to localStorage — a first visit that
-   follows the system setting does not lock it in. */
+   Light is the default. The choice is saved in localStorage; with no
+   saved choice the site opens light, regardless of the system
+   preference. The inline script in index.html applies the same logic
+   before React loads, so there is no flash. Only an explicit toggle
+   writes to localStorage. */
 const THEME_KEY = "saylient-theme";
 function readTheme() {
   try {
     const saved = window.localStorage.getItem(THEME_KEY);
     if (saved === "light" || saved === "dark") return saved;
-  } catch (_) { /* storage unavailable: fall through to system */ }
-  if (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
-  return "dark";
+  } catch (_) { /* storage unavailable: fall through to the default */ }
+  return "light";
 }
 function applyTheme(theme, save) {
   document.documentElement.setAttribute("data-theme", theme);
@@ -572,20 +570,30 @@ function Landing({ go, user, theme, onToggleTheme }) {
   return <div className="landing">
     <PublicNav go={go} user={user} theme={theme} onToggleTheme={onToggleTheme} />
     <main>
+      {/* Minimal first viewport: just the name, one tagline, one CTA.
+          The analyzer console lives in its own section below the hero,
+          so the first screen stays clean. */}
       <section className="hero shell">
         <div className="hero-mesh" aria-hidden="true"><i /><i /><i /></div>
         <div className="hero-dots" aria-hidden="true" />
-        <motion.div className="hero-badge" {...fadeUp(0)}><span className="pulse-dot" /> AI-based freelancer communication assistant</motion.div>
-        <motion.h1 {...fadeUp(0.08)}>Say it so <em>they say yes.</em></motion.h1>
-        <motion.p {...fadeUp(0.16)}>Saylient AI reads the intent, tone and face concerns behind a message — and drafts a reply that still sounds like you.</motion.p>
-        <motion.div className="hero-console" {...fadeUp(0.26)}>
+        <motion.h1 className="hero-name" {...fadeUp(0)}>Saylient <em>AI</em></motion.h1>
+        <motion.p className="hero-tagline" {...fadeUp(0.1)}>Say it so they say yes.</motion.p>
+        <motion.div className="hero-actions" {...fadeUp(0.18)}>
+          <Button onClick={() => go("assistant")} icon={WandSparkles}>Open the assistant</Button>
+        </motion.div>
+      </section>
+
+      {/* Analyzer — moved out of the hero so the first viewport stays
+          minimal. Same console, same tone demo, same behaviour. */}
+      <section id="analyzer" className="analyzer-section shell" aria-label="Try the analyzer">
+        <motion.div className="hero-console" {...fadeUp(0)}>
           <HeroAnalysisWindow go={go} user={user} />
           <div className="hero-tone">
             <div className="hero-tone-head"><span>Refine the tone</span><p>Tap an underlined phrase, then pick a tone — the drafts are real engine output.</p></div>
             <PhraseRewriteDemo go={go} user={user} />
           </div>
         </motion.div>
-        <motion.div className="hero-note" {...fadeUp(0.36)}><ShieldCheck size={14} /> Nothing is ever sent automatically. You always review before you send.</motion.div>
+        <motion.div className="hero-note" {...fadeUp(0.1)}><ShieldCheck size={14} /> Nothing is ever sent automatically. You always review before you send.</motion.div>
       </section>
 
       <Marquee />
@@ -1078,7 +1086,9 @@ function TheoryPage({ go }) {
     ["Off Record", "Hints instead of asking directly. Best when the risk of a direct request is too high."],
     ["Avoidance", "Says nothing, or delays. Sometimes the kindest and safest move."],
   ];
-  return <><PageHeader eyebrow="Learn the framework" title="Politeness theory" text="The science of being understood — Brown and Levinson's Politeness Theory (1987)."><Button onClick={() => go("assistant")} icon={Sparkles}>Try it in the assistant</Button></PageHeader>
+  /* .theory-page gives the long-form body text its Times New Roman
+     reading face (see styles.css) — the one serif spot on the site. */
+  return <div className="theory-page"><PageHeader eyebrow="Learn the framework" title="Politeness theory" text="The science of being understood — Brown and Levinson's Politeness Theory (1987)."><Button onClick={() => go("assistant")} icon={Sparkles}>Try it in the assistant</Button></PageHeader>
     <div className="template-grid" style={{ marginBottom: 15 }}>
       <motion.article className="panel template-item" {...fadeUp(0)}><div className="template-top"><span>01</span></div><h3>Positive face</h3><p>The desire to feel appreciated, valued and included.</p></motion.article>
       <motion.article className="panel template-item" {...fadeUp(0.08)}><div className="template-top"><span>02</span></div><h3>Negative face</h3><p>The desire for autonomy — freedom from pressure and imposition.</p></motion.article>
@@ -1086,7 +1096,7 @@ function TheoryPage({ go }) {
     </div>
     <motion.section className="panel" {...fadeUp(0)}><div className="panel-heading"><div><h3>Five strategies</h3><p>Saylient AI recommends one of these for every message it analyzes.</p></div></div>
       <div className="history-list" style={{ marginTop: 15 }}>{strategies.map(([title, text], i) => <motion.article className="panel history-item" key={title} {...fadeUp(0.08 + i * 0.06)}><div><h3>{title}</h3><p>{text}</p></div></motion.article>)}</div>
-      <p className="model-note" style={{ marginTop: 16 }}>Saylient AI never claims to know what the recipient truly feels. It looks at what the message does — and what it might do.</p></motion.section></>;
+      <p className="model-note" style={{ marginTop: 16 }}>Saylient AI never claims to know what the recipient truly feels. It looks at what the message does — and what it might do.</p></motion.section></div>;
 }
 
 function SettingsPage({ user, go, onSignOut }) {
