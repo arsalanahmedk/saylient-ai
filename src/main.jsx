@@ -1081,6 +1081,8 @@ function TemplatesPage({ go }) {
 }
 
 function TheoryPage({ go }) {
+  const reduce = useReducedMotion();
+  const fadeUp = (delay) => (reduce ? {} : { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-60px" }, transition: { duration: 0.5, delay, ease: "easeOut" } });
   const strategies = [
     ["Bald on Record", "Direct and clear. Best when the message is urgent, the relationship is close, or the imposition is low."],
     ["Positive Politeness", "Shows appreciation and shared ground. Best when you want the other person to feel valued and included."],
@@ -1090,13 +1092,13 @@ function TheoryPage({ go }) {
   ];
   return <><PageHeader eyebrow="Learn the framework" title="Politeness theory" text="The science of being understood — Brown and Levinson's Politeness Theory (1987)."><Button onClick={() => go("assistant")} icon={Sparkles}>Try it in the assistant</Button></PageHeader>
     <div className="template-grid" style={{ marginBottom: 15 }}>
-      <article className="panel template-item"><div className="template-top"><span>01</span></div><h3>Positive face</h3><p>The desire to feel appreciated, valued and included.</p></article>
-      <article className="panel template-item"><div className="template-top"><span>02</span></div><h3>Negative face</h3><p>The desire for autonomy — freedom from pressure and imposition.</p></article>
-      <article className="panel template-item"><div className="template-top"><span>03</span></div><h3>Face-threatening acts</h3><p>Messages that can challenge either need — a request, a criticism, a deadline.</p></article>
+      <motion.article className="panel template-item" {...fadeUp(0)}><div className="template-top"><span>01</span></div><h3>Positive face</h3><p>The desire to feel appreciated, valued and included.</p></motion.article>
+      <motion.article className="panel template-item" {...fadeUp(0.08)}><div className="template-top"><span>02</span></div><h3>Negative face</h3><p>The desire for autonomy — freedom from pressure and imposition.</p></motion.article>
+      <motion.article className="panel template-item" {...fadeUp(0.16)}><div className="template-top"><span>03</span></div><h3>Face-threatening acts</h3><p>Messages that can challenge either need — a request, a criticism, a deadline.</p></motion.article>
     </div>
-    <section className="panel"><div className="panel-heading"><div><h3>Five strategies</h3><p>Saylient AI recommends one of these for every message it analyzes.</p></div></div>
-      <div className="history-list" style={{ marginTop: 15 }}>{strategies.map(([title, text]) => <article className="panel history-item" key={title}><div><h3>{title}</h3><p>{text}</p></div></article>)}</div>
-      <p className="model-note" style={{ marginTop: 16 }}>Saylient AI never claims to know what the recipient truly feels. It looks at what the message does — and what it might do.</p></section></>;
+    <motion.section className="panel" {...fadeUp(0)}><div className="panel-heading"><div><h3>Five strategies</h3><p>Saylient AI recommends one of these for every message it analyzes.</p></div></div>
+      <div className="history-list" style={{ marginTop: 15 }}>{strategies.map(([title, text], i) => <motion.article className="panel history-item" key={title} {...fadeUp(0.08 + i * 0.06)}><div><h3>{title}</h3><p>{text}</p></div></motion.article>)}</div>
+      <p className="model-note" style={{ marginTop: 16 }}>Saylient AI never claims to know what the recipient truly feels. It looks at what the message does — and what it might do.</p></motion.section></>;
 }
 
 function SettingsPage({ user, go, onSignOut }) {
