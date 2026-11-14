@@ -400,7 +400,7 @@ function HalftoneFooter({ go }) {
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
       context.clearRect(0, 0, rect.width, rect.height);
       const gap = Math.max(5, Math.min(8, rect.width / 180));
-      const fontSize = Math.min(rect.width * 0.34, rect.height * 1.05);
+      const fontSize = Math.min(rect.width * 0.34, rect.height * 1.05, rect.width / 4.9);
       const mask = document.createElement("canvas");
       mask.width = rect.width;
       mask.height = rect.height;
