@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Courier+Prime:wght@400;700&display=swap");
+/* Times New Roman throughout — system font, no webfont import. */
 
 :root {
   /* Midnight Purple + Electric Blue (2026-11-14 — the user's own pick:
@@ -96,14 +96,13 @@
   --radius-card: 20px;
   --radius-inner: 14px;
   --radius-input: 12px;
-  /* Simple fonts only (2026-11-14 redesign): Calibri body, Barlow
-     headings, Barlow ExtraBold (800) for the brand name / wordmark only, Courier
-     Prime (typewriter) for data, labels and code-like bits, Times New
-     Roman for the Theory page long-form text. No decorative faces. */
-  --font-sans: Calibri, "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: "Barlow", Calibri, "Segoe UI", sans-serif;
-  --font-brand: "Barlow", Calibri, "Segoe UI", sans-serif;
-  --font-mono: "Courier Prime", "Courier New", ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* Professional serif throughout (2026-11-17): Times New Roman for
+     body, headings, brand name / wordmark, labels and data. No webfont
+     import — Times New Roman is a system font. */
+  --font-sans: "Times New Roman", Times, serif;
+  --font-display: "Times New Roman", Times, serif;
+  --font-brand: "Times New Roman", Times, serif;
+  --font-mono: "Times New Roman", Times, serif;
   --font-serif: "Times New Roman", Times, serif;
   --ink: #F8FAFC;
   --shadow-hard: 0 1px 2px rgba(0, 0, 0, 0.40), 0 12px 32px rgba(0, 0, 0, 0.35);

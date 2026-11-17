@@ -1,7 +1,7 @@
 /* Saylient AI panel — Midnight Purple + Electric Blue. Simple fonts:
-   Calibri body (system stack — no remote fetch, so it works inside any
-   host page), Barlow ExtraBold (800) for the panel brand name with a Calibri
-   fallback. All colours live in :root as --sai-* variables, so a palette
+   Times New Roman throughout (system font — no remote fetch, so it works inside any
+   host page).
+   All colours live in :root as --sai-* variables, so a palette
    swap is a single edit. (Names are --sai-* prefixed: this stylesheet
    is injected into host pages, so its variables must not collide with
    theirs.) */
@@ -53,12 +53,12 @@
   background: var(--sai-bg); color: var(--sai-text);
   border: 1px solid var(--sai-border); border-radius: 16px;
   padding: 20px; box-shadow: 0 16px 48px var(--sai-shadow);
-  font: 13px Calibri, "Segoe UI", -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  font: 13px "Times New Roman", Times, serif;
 }
 #saylient-ai-panel * { box-sizing: border-box; }
 #saylient-ai-panel .sai-head {
   display: flex; justify-content: space-between; align-items: center;
-  font-family: "Barlow", Calibri, "Segoe UI", sans-serif;
+  font-family: "Times New Roman", Times, serif;
   font-size: 19px; font-weight: 800;
 }
 /* Small logo mark inline with the "saylient.ai" panel title. */

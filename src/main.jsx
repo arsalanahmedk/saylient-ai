@@ -40,12 +40,12 @@ const DEMO_PRESETS = [
   {
     label: "Set a boundary",
     goal: "Set a boundary",
-    message: "The extra revisions are outside the agreed scope, so I would like to treat them as a separate task.",
+    message: "The extra revisions are outside the agreed scope — I'd like to treat them as a separate task.",
     result: {
       intent: { label: "set_boundary", confidence: 0.87 },
       tone: { label: "neutral", confidence: 0.3 },
       strategy: { label: "negative_politeness", rationale: "No rule strongly favours a direct response, so the response hedges and respects the recipient's autonomy." },
-      draft: "Hi,\n\nThat change is outside the agreed scope, so I'd like to treat it as a separate task. I'm happy to schedule it once we've agreed on it.\n\nPlease let me know what works for you.",
+      draft: "Hi,\n\nThat change is outside the agreed scope — I'd like to treat it as a separate task.",
       model_version: "prototype-0.1",
     },
   },
@@ -57,19 +57,19 @@ const DEMO_PRESETS = [
       intent: { label: "negotiate_deadline", confidence: 0.83 },
       tone: { label: "direct", confidence: 0.57 },
       strategy: { label: "negative_politeness", rationale: "Payment and deadline pressure constrain the recipient's time, so the response hedges and leaves room to respond." },
-      draft: "Hi,\n\nWould it be possible to move the deadline to Friday? I want to make sure the quality stays high.\n\nPlease let me know what works for you.",
+      draft: "Hi,\n\nCould we move the deadline to Friday? I want to keep the quality high.",
       model_version: "prototype-0.1",
     },
   },
   {
     label: "Chase a payment",
     goal: "Request payment",
-    message: "Hi, I wanted to check in on invoice #1048 — it has been overdue for two weeks. Could you let me know when the payment will be sent?",
+    message: "Hi, checking in on invoice #1048 — two weeks overdue. When will it be paid?",
     result: {
       intent: { label: "request_payment", confidence: 0.87 },
       tone: { label: "diplomatic", confidence: 0.64 },
       strategy: { label: "negative_politeness", rationale: "Payment and deadline pressure constrain the recipient's time, so the response hedges and leaves room to respond." },
-      draft: "Hi,\n\nI wanted to check in on invoice #1048. Could you let me know when the payment will be sent?\n\nThank you — please let me know once the payment is on its way.",
+      draft: "Hi,\n\nChecking in on invoice #1048 — could you let me know when the payment will be sent?",
       model_version: "prototype-0.1",
     },
   },
@@ -167,16 +167,16 @@ const REWRITE_DEMO = {
   message: "You still haven't paid invoice #1048. It has been two weeks. Send the payment now.",
   goal: "Request payment",
   phrases: [
-    { text: "still haven't paid", note: "An accusation. The rewrite turns it into a check-in." },
-    { text: "Send the payment now.", note: "A demand. The rewrite turns it into a question." },
+    { text: "still haven't paid", note: "Reads as an accusation." },
+    { text: "Send the payment now.", note: "Reads as a demand." },
   ],
   intent: { label: "request_payment", confidence: 0.85 },
   tone: { label: "direct", confidence: 0.47 },
   strategy: { label: "negative_politeness" },
   variants: [
-    { label: "Formal", tone: "Professional", directness: "balanced", note: "Polite, business-like", draft: "Hello,\n\nI wanted to check in on invoice #1048. Could you let me know when the payment will be sent?\n\nThank you — please let me know once the payment is on its way." },
-    { label: "Casual", tone: "Friendly", directness: "balanced", note: "Warm, easy-going", draft: "Hi there,\n\nI wanted to check in on invoice #1048. Could you let me know when the payment will be sent?\n\nThank you — please let me know once the payment is on its way." },
-    { label: "Shorten", tone: "Assertive", directness: "direct", note: "Short and to the point", draft: "Hi,\n\nI'm following up on invoice #1048 — could you let me know when the payment will be sent?" },
+    { label: "Formal", tone: "Professional", directness: "balanced", note: "Business-like", draft: "Hello,\n\nI wanted to check in on invoice #1048. Could you let me know when the payment will be sent?" },
+    { label: "Casual", tone: "Friendly", directness: "balanced", note: "Warm", draft: "Hi there,\n\nI wanted to check in on invoice #1048 — could you let me know when the payment will be sent?" },
+    { label: "Shorten", tone: "Assertive", directness: "direct", note: "Short", draft: "Hi,\n\nFollowing up on invoice #1048 — when will the payment be sent?" },
   ],
 };
 
@@ -219,8 +219,8 @@ function PhraseRewriteDemo({ go, user }) {
 
   return <div className="rewrite-demo">
     <div className="rewrite-demo-head">
-      <span className="rewrite-demo-label"><WandSparkles size={14} /> Try it — tap an underlined phrase</span>
-      <span className="rewrite-demo-note">{user ? "Pick a tone for a live rewrite" : "Demo — pick a tone, see it rewrite"}</span>
+      <span className="rewrite-demo-label"><WandSparkles size={14} /> Tap an underlined phrase</span>
+      <span className="rewrite-demo-note">{user ? "Live rewrite" : "Demo"}</span>
     </div>
     <p className="rewrite-demo-message">“{parts}”</p>
     <p className="rewrite-phrase-note"><b>“{demo.phrases[activePhrase].text}”</b> — {demo.phrases[activePhrase].note}</p>
@@ -236,12 +236,12 @@ function PhraseRewriteDemo({ go, user }) {
         return <button key={v.label} type="button" className="rewrite-card" onClick={() => runLive(v)}>
           <span className="rewrite-card-tone">{v.label}<small>{v.note}</small></span>
           <span className="rewrite-card-draft">{busy ? "Running live analysis…" : live || v.draft}</span>
-          <span className="rewrite-card-foot">{live ? "Live analysis" : user ? "Tap for a live rewrite" : "Demo reply — edit it your way"}</span>
+          <span className="rewrite-card-foot">{live ? "Live" : user ? "Tap for live" : "Demo"}</span>
         </button>;
       })}
     </div>
     {liveError && <div className="form-error">{liveError}</div>}
-    <p className="rewrite-demo-cta">Want the full breakdown — intent, face concerns, strategy? <button className="link-button" onClick={() => go("assistant")}>Open the assistant <ArrowRight size={13} /></button></p>
+    <p className="rewrite-demo-cta"><button className="link-button" onClick={() => go("assistant")}>Full breakdown <ArrowRight size={13} /></button></p>
   </div>;
 }
 
@@ -280,11 +280,11 @@ function HowItWorks({ go }) {
   const reduce = useReducedMotion();
   const demo = DEMO_PRESETS[2];
   return <section id="how" className="how-section shell">
-    <div className="center-heading"><div className="eyebrow">How it works</div><h2>From thought <em>to send.</em></h2><p>Communication theory, turned into practical help you can use in seconds.</p></div>
+    <div className="center-heading"><div className="eyebrow">How it works</div><h2>From thought <em>to send.</em></h2><p>Theory, made practical.</p></div>
     <div className="how-bento">
-      <motion.article className="how-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, delay: 0, ease: "easeOut" }}><span className="how-num">01</span><h3>Analyze the message</h3><p>Paste a message and see intent, tone and face concerns — before you reply.</p><div className="how-visual"><p className="how-quote">“{demo.message}”</p><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><span className="how-note">Live demo — try it in the analyzer</span></div></motion.article>
-      <motion.article className="how-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}><span className="how-num">02</span><h3>Get a draft reply</h3><p>An editable draft in your words, with tone options — formal, casual or short.</p><div className="how-visual"><p className="hero-draft">{demo.result.draft}</p><span className="how-note">Demo draft — pick a tone to rewrite it</span></div></motion.article>
-      <motion.article className="how-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, delay: 0.2, ease: "easeOut" }}><span className="how-num">03</span><h3>Use it anywhere</h3><p>The extension brings the same analysis into the places you already write — and every analysis is saved to your history.</p><div className="how-visual">{DEMO_PRESETS.map(p => <div className="how-row" key={p.label}><div className="conversation-icon"><MessageSquare size={16} /></div><div className="conversation-name"><strong>{prettyLabel(p.result.intent.label)}</strong><span>{p.message}</span></div><span className="score-pill"><span /> {Math.round(p.result.intent.confidence * 100)}%</span></div>)}<span className="how-note">Your recent analyses, as they appear in the workspace.</span></div></motion.article>
+      <motion.article className="how-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, delay: 0, ease: "easeOut" }}><span className="how-num">01</span><h3>Analyze the message</h3><p>Paste a message — see intent, tone, and risks.</p><div className="how-visual"><p className="how-quote">“{demo.message}”</p><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div></div></motion.article>
+      <motion.article className="how-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, delay: 0.1, ease: "easeOut" }}><span className="how-num">02</span><h3>Get a draft reply</h3><p>An editable draft — formal, casual, or short.</p><div className="how-visual"><p className="hero-draft">{demo.result.draft}</p></div></motion.article>
+      <motion.article className="how-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.55, delay: 0.2, ease: "easeOut" }}><span className="how-num">03</span><h3>Use it anywhere</h3><p>The same analysis, where you already write.</p><div className="how-visual">{DEMO_PRESETS.slice(0, 2).map(p => <div className="how-row" key={p.label}><div className="conversation-icon"><MessageSquare size={16} /></div><div className="conversation-name"><strong>{prettyLabel(p.result.intent.label)}</strong><span>{p.message}</span></div><span className="score-pill"><span /> {Math.round(p.result.intent.confidence * 100)}%</span></div>)}</div></motion.article>
     </div>
     <div className="center-heading" style={{ marginTop: 32 }}><Button onClick={() => go("assistant")} icon={WandSparkles}>Try the assistant</Button></div>
   </section>;
@@ -308,7 +308,7 @@ function ActivityTab({ go, user }) {
     return undefined;
   }, [user]);
   if (!user) {
-    return <div className="tab-note"><p>Sign in and your real activity timeline appears here — every analysis you run, newest first.</p>
+    return <div className="tab-note"><p>Sign in to see your real timeline.</p>
       <ol className="activity-timeline">{DEMO_PRESETS.map(p => <li key={p.label}><span className="timeline-dot" /><div><strong>{prettyLabel(p.result.intent.label)}</strong><span>{p.message}</span><small>Sample analysis</small></div></li>)}</ol></div>;
   }
   if (error) return <div className="form-error">{error}</div>;
@@ -322,15 +322,15 @@ function FeatureTabs({ go, user }) {
   const [tab, setTab] = useState(0);
   const demo = DEMO_PRESETS[2];
   return <section id="features" className="tabs-section shell">
-    <div className="center-heading"><div className="eyebrow">The communication studio</div><h2>One calm layer between<br /><em>thinking and sending.</em></h2><p>From a quick follow-up to a difficult boundary, get context-aware guidance before you hit send.</p></div>
+    <div className="center-heading"><div className="eyebrow">The communication studio</div><h2>One calm layer between<br /><em>thinking and sending.</em></h2><p>Context-aware guidance before you hit send.</p></div>
     <div className="tabs-nav" role="tablist">{FEATURE_TABS.map((label, i) => <button key={label} role="tab" aria-selected={tab === i} className={tab === i ? "active" : ""} onClick={() => setTab(i)}>{label}</button>)}</div>
     <div className="tab-panel">
       <motion.div key={tab} initial={reduce ? false : { opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, ease: "easeOut" }}>
-      {tab === 0 && <div className="tab-grid"><div><h3>See what a message really asks for.</h3><p>The engine reads intent, tone and social dynamics without guessing what anyone feels — and tells you how sure it is.</p><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><span className="how-note">Live demo — open the analyzer to try it</span><div style={{ marginTop: 18 }}><Button onClick={() => go("assistant")} icon={WandSparkles}>Open the analyzer</Button></div></div><div className="tab-frame"><ScoreRing value={0.87} /><span className="how-note">Intent confidence · boundary preset</span></div></div>}
-      {tab === 1 && <div><h3>Three ways to say the same thing.</h3><p>Tap an underlined phrase, pick a tone — the drafts are real engine output.</p><div style={{ marginTop: 18 }}><PhraseRewriteDemo go={go} user={user} /></div></div>}
-      {tab === 2 && <div className="tab-grid"><div><h3>Wherever you write.</h3><p>The extension brings live analysis into the conversations you already have — every chat: WhatsApp, Instagram, Messenger, Telegram, LinkedIn, X, Discord, and more. Nothing is monitored or sent on its own.</p><div className="extension-actions" style={{ marginTop: 18 }}><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a><Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button></div></div><BeamDiagram /></div>}
-      {tab === 3 && <div className="tab-grid"><div><h3>Practice in a safe conversation.</h3><p>A local demo chat where you can try a draft before it matters — nothing leaves the page.</p><div style={{ marginTop: 18 }}><Button onClick={() => go("demo-chat")} icon={Globe2}>Open the demo chat</Button></div></div><div className="tab-frame tab-chat"><div className="demo-message"><span className="demo-author">Alex</span><p>Hi! I wanted to check whether the homepage concepts will be ready today.</p></div><div className="demo-message freelancer"><span className="demo-author">You</span><p>Hi Alex, I am putting the final details together now.</p></div><span className="how-note">From the local demo chat — no account needed.</span></div></div>}
-      {tab === 4 && <div><h3>Your work, in order.</h3><p>Every analysis is saved to your account — search it, reopen it, delete it.</p><div style={{ marginTop: 18 }}><ActivityTab go={go} user={user} /></div></div>}
+      {tab === 0 && <div className="tab-grid"><div><h3>See what a message really asks for.</h3><p>Intent, tone, and social dynamics — with a confidence score.</p><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><div style={{ marginTop: 18 }}><Button onClick={() => go("assistant")} icon={WandSparkles}>Open the analyzer</Button></div></div><div className="tab-frame"><ScoreRing value={0.87} /><span className="how-note">Intent confidence · boundary preset</span></div></div>}
+      {tab === 1 && <div><h3>Three ways to say the same thing.</h3><p>Tap a phrase, pick a tone.</p><div style={{ marginTop: 18 }}><PhraseRewriteDemo go={go} user={user} /></div></div>}
+      {tab === 2 && <div className="tab-grid"><div><h3>Wherever you write.</h3><p>Live analysis in the chats you already use — WhatsApp, Instagram, LinkedIn, and more.</p><div className="extension-actions" style={{ marginTop: 18 }}><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a><Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button></div></div><BeamDiagram /></div>}
+      {tab === 3 && <div className="tab-grid"><div><h3>Practice in a safe conversation.</h3><p>Try a draft before it matters — nothing leaves the page.</p><div style={{ marginTop: 18 }}><Button onClick={() => go("demo-chat")} icon={Globe2}>Open the demo chat</Button></div></div><div className="tab-frame tab-chat"><div className="demo-message"><span className="demo-author">Alex</span><p>Hi! I wanted to check whether the homepage concepts will be ready today.</p></div><div className="demo-message freelancer"><span className="demo-author">You</span><p>Hi Alex, I am putting the final details together now.</p></div></div></div>}
+      {tab === 4 && <div><h3>Your work, in order.</h3><p>Saved to your account — search, reopen, delete.</p><div style={{ marginTop: 18 }}><ActivityTab go={go} user={user} /></div></div>}
       </motion.div>
     </div>
   </section>;
@@ -350,7 +350,7 @@ function DashboardPreview({ go }) {
   }, []);
   const avgConf = stats?.avg_intent_confidence == null ? null : Math.round(stats.avg_intent_confidence * 100);
   return <section className="preview-section shell">
-    <div className="section-heading"><div><div className="eyebrow">Your workspace at a glance</div><h2>Real numbers, <em>your account.</em></h2></div><p>Nothing here is a mockup — these are your actual analyses, live from your account.</p></div>
+    <div className="section-heading"><div><div className="eyebrow">Your workspace at a glance</div><h2>Real numbers, <em>your account.</em></h2></div><p>Your actual analyses, live from your account.</p></div>
     {error && <div className="form-error">{error}</div>}
     <div className="stats-grid">
       <Stat title="Messages analyzed" value={stats?.total ?? 0} change={`${stats?.this_week ?? 0} this week`} icon={MessageSquare} color="accent" />
@@ -493,7 +493,7 @@ function HeroAnalysisWindow({ go, user }) {
           </div>
           {isDemo && <button className="link-button" onClick={() => go("login")}>Sign in to analyze your own messages <ArrowRight size={13} /></button>}
         </div>}
-        {!shown && !running && <div className="analyzer-empty"><div className="empty-spark"><LogoMark /></div><h3>Your analysis appears here.</h3><p>Paste a message and run the analyzer — intent, tone, strategy and a draft you can edit.</p></div>}
+        {!shown && !running && <div className="analyzer-empty"><div className="empty-spark"><LogoMark /></div><h3>Your analysis appears here.</h3><p>Paste a message — get intent, tone, strategy, and a draft.</p></div>}
       </div>
     </div>
   </div>;
@@ -561,11 +561,11 @@ function Landing({ go, user, theme, onToggleTheme }) {
     transition: { duration: 0.65, delay, ease: "easeOut" },
   });
   const strategies = [
-    ["Bald on Record", "Direct and clear. Best when the message is urgent, the relationship is close, or the imposition is low."],
-    ["Positive Politeness", "Shows appreciation and shared ground. Best when you want the other person to feel valued and included."],
-    ["Negative Politeness", "Hedges and respects autonomy. Best when the imposition is high or the relationship is distant."],
-    ["Off Record", "Hints instead of asking directly. Best when the risk of a direct request is too high."],
-    ["Avoidance", "Says nothing, or delays. Sometimes the kindest and safest move."],
+    ["Bald on Record", "Direct and clear — for urgent or low-stakes messages."],
+    ["Positive Politeness", "Appreciation and shared ground."],
+    ["Negative Politeness", "Hedges, respects autonomy."],
+    ["Off Record", "Hints instead of asking."],
+    ["Avoidance", "Sometimes saying nothing is kindest."],
   ];
   return <div className="landing">
     <PublicNav go={go} user={user} theme={theme} onToggleTheme={onToggleTheme} />
@@ -589,7 +589,7 @@ function Landing({ go, user, theme, onToggleTheme }) {
         <motion.div className="hero-console" {...fadeUp(0)}>
           <HeroAnalysisWindow go={go} user={user} />
           <div className="hero-tone">
-            <div className="hero-tone-head"><span>Refine the tone</span><p>Tap an underlined phrase, then pick a tone — the drafts are real engine output.</p></div>
+            <div className="hero-tone-head"><span>Refine the tone</span><p>Tap a phrase, pick a tone.</p></div>
             <PhraseRewriteDemo go={go} user={user} />
           </div>
         </motion.div>
@@ -605,7 +605,7 @@ function Landing({ go, user, theme, onToggleTheme }) {
       {user && <DashboardPreview go={go} />}
 
       <section id="theory" className="theory-strip shell">
-        <div className="center-heading"><div className="eyebrow">Grounded in research</div><h2>The science of <em>being understood.</em></h2><p>Built on Brown and Levinson's Politeness Theory (1987) — five strategies, one reason each.</p></div>
+        <div className="center-heading"><div className="eyebrow">Grounded in research</div><h2>The science of <em>being understood.</em></h2><p>Brown and Levinson's Politeness Theory (1987) — five strategies.</p></div>
         <div className="strategy-strip">
           {strategies.map(([title, text], i) => <motion.article className="strategy-chip" key={title} initial={reduce ? false : { opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-60px" }} transition={{ duration: 0.5, delay: i * 0.07, ease: "easeOut" }}><span>{String(i + 1).padStart(2, "0")}</span><strong>{title}</strong><p>{text}</p></motion.article>)}
         </div>
@@ -619,7 +619,7 @@ function Landing({ go, user, theme, onToggleTheme }) {
         </div>
         <div className="extension-grid">
           <BeamDiagram />
-          <div className="extension-copy"><p>Click the Saylient logo button on any page, sign in once, and get a live analysis of the text on your screen — intent, strategy, and a draft you can insert. Nothing is monitored or sent on its own.</p>
+          <div className="extension-copy"><p>Click the Saylient button on any page — intent, strategy, and a draft you can insert.</p>
             <div className="extension-actions">
               <a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a>
               <Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button>
@@ -635,7 +635,7 @@ function Landing({ go, user, theme, onToggleTheme }) {
         <motion.div className="closing-card" initial={reduce ? false : { opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-80px" }} transition={{ duration: 0.6, ease: "easeOut" }}>
           <div className="eyebrow">Ready when you are</div>
           <h2>Your next message <em>starts here.</em></h2>
-          <p>One analysis is all it takes to stop second-guessing the send button.</p>
+          <p>Stop second-guessing the send button.</p>
           <Button onClick={() => go("assistant")} icon={WandSparkles}>Open the assistant</Button>
         </motion.div>
       </section>
@@ -1080,11 +1080,11 @@ function TheoryPage({ go }) {
   const reduce = useReducedMotion();
   const fadeUp = (delay) => (reduce ? {} : { initial: { opacity: 0, y: 24 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-60px" }, transition: { duration: 0.5, delay, ease: "easeOut" } });
   const strategies = [
-    ["Bald on Record", "Direct and clear. Best when the message is urgent, the relationship is close, or the imposition is low."],
-    ["Positive Politeness", "Shows appreciation and shared ground. Best when you want the other person to feel valued and included."],
-    ["Negative Politeness", "Hedges and respects autonomy. Best when the imposition is high or the relationship is distant."],
-    ["Off Record", "Hints instead of asking directly. Best when the risk of a direct request is too high."],
-    ["Avoidance", "Says nothing, or delays. Sometimes the kindest and safest move."],
+    ["Bald on Record", "Direct and clear — for urgent or low-stakes messages."],
+    ["Positive Politeness", "Appreciation and shared ground."],
+    ["Negative Politeness", "Hedges, respects autonomy."],
+    ["Off Record", "Hints instead of asking."],
+    ["Avoidance", "Sometimes saying nothing is kindest."],
   ];
   /* .theory-page gives the long-form body text its Times New Roman
      reading face (see styles.css) — the one serif spot on the site. */
