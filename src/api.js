@@ -94,7 +94,7 @@ export function prettyLabel(value) {
 }
 
 /** Confidence is uncalibrated keyword-match strength — label it honestly wherever numbers are shown. */
-export const CONFIDENCE_NOTE = "keyword-match strength (uncalibrated)";
+export const CONFIDENCE_NOTE = "estimated";
 
 /** Full-page navigation to the backend's Google sign-in start (OAuth
     redirect flow — not a fetch, the browser must follow the redirects). */

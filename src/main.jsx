@@ -33,7 +33,7 @@ const navItems = [
 ];
 
 /* Landing hero presets. The "demo output" for each preset is the REAL
-   output of the rule-based engine (model prototype-0.1) for that message
+   output of the rule-based engine for that message
    and goal, computed once and embedded here — it is labelled as a demo,
    and a signed-in visitor gets a live analysis instead. */
 const DEMO_PRESETS = [
@@ -46,7 +46,7 @@ const DEMO_PRESETS = [
       tone: { label: "neutral", confidence: 0.3 },
       strategy: { label: "negative_politeness", rationale: "No rule strongly favours a direct response, so the response hedges and respects the recipient's autonomy." },
       draft: "Hi,\n\nThat change is outside the agreed scope — I'd like to treat it as a separate task.",
-      model_version: "prototype-0.1",
+      model_version: "built-in",
     },
   },
   {
@@ -58,7 +58,7 @@ const DEMO_PRESETS = [
       tone: { label: "direct", confidence: 0.57 },
       strategy: { label: "negative_politeness", rationale: "Payment and deadline pressure constrain the recipient's time, so the response hedges and leaves room to respond." },
       draft: "Hi,\n\nCould we move the deadline to Friday? I want to keep the quality high.",
-      model_version: "prototype-0.1",
+      model_version: "built-in",
     },
   },
   {
@@ -70,7 +70,7 @@ const DEMO_PRESETS = [
       tone: { label: "diplomatic", confidence: 0.64 },
       strategy: { label: "negative_politeness", rationale: "Payment and deadline pressure constrain the recipient's time, so the response hedges and leaves room to respond." },
       draft: "Hi,\n\nChecking in on invoice #1048 — could you let me know when the payment will be sent?",
-      model_version: "prototype-0.1",
+      model_version: "built-in",
     },
   },
 ];
@@ -82,6 +82,14 @@ const PIPELINE_STAGES = [
   { name: "Strategy", log: "Choosing a politeness strategy…" },
   { name: "Draft", log: "Drafting a response you can edit…" },
 ];
+
+/* The engine is rule-based. Its internal version (from the backend, or
+   "built-in" in the local presets) never appears in the UI —
+   engineLabel() renders it as "Built-in engine" everywhere. */
+const engineLabel = (v) => {
+  const s = String(v || "");
+  return (s.startsWith("prototype") || s === "built-in") ? "Built-in engine" : (s || "Built-in engine");
+};
 
 /* The Saylient mark: a geometric "S" (two cubic bowls on a 24-unit grid)
    followed by three vertical bars of decreasing height (7, 4, 2) — the
@@ -156,7 +164,7 @@ function ScoreRing({ value, size = 132 }) {
 }
 
 /* Wordtune-style rewrite demo: a blunt freelancer message, with REAL
-   rule-based engine output (model prototype-0.1) for three tones.
+   rule-based engine output for three tones.
    Generated locally from backend/app/services/analysis_engine.py:
    Formal = tone Professional / directness balanced,
    Casual = tone Friendly / balanced,
@@ -220,7 +228,7 @@ function PhraseRewriteDemo({ go, user }) {
   return <div className="rewrite-demo">
     <div className="rewrite-demo-head">
       <span className="rewrite-demo-label"><WandSparkles size={14} /> Tap an underlined phrase</span>
-      <span className="rewrite-demo-note">{user ? "Live rewrite" : "Demo"}</span>
+      {user && <span className="rewrite-demo-note">Live rewrite</span>}
     </div>
     <p className="rewrite-demo-message">“{parts}”</p>
     <p className="rewrite-phrase-note"><b>“{demo.phrases[activePhrase].text}”</b> — {demo.phrases[activePhrase].note}</p>
@@ -236,7 +244,7 @@ function PhraseRewriteDemo({ go, user }) {
         return <button key={v.label} type="button" className="rewrite-card" onClick={() => runLive(v)}>
           <span className="rewrite-card-tone">{v.label}<small>{v.note}</small></span>
           <span className="rewrite-card-draft">{busy ? "Running live analysis…" : live || v.draft}</span>
-          <span className="rewrite-card-foot">{live ? "Live" : user ? "Tap for live" : "Demo"}</span>
+          {(live || user) && <span className="rewrite-card-foot">{live ? "Live" : "Tap for live"}</span>}
         </button>;
       })}
     </div>
@@ -292,30 +300,8 @@ function HowItWorks({ go }) {
 
 /* Feature tabs — one product area at a time. Analyse shows the real
    breakdown for a demo preset; Suggested messages is the Wordtune-style
-   tone demo; Connect anywhere is the extension beam; Assistant chat is a
-   look at the demo conversation; Activity timeline is real history when
-   signed in, labelled samples when not. */
-const FEATURE_TABS = ["Analyse", "Suggested messages", "Connect anywhere", "Assistant chat", "Activity timeline"];
-
-function ActivityTab({ go, user }) {
-  const [items, setItems] = useState(null);
-  const [error, setError] = useState("");
-  useEffect(() => {
-    if (!user) return undefined;
-    api.listAnalyses(5, 0)
-      .then(d => setItems(d.items || []))
-      .catch(e => setError(friendlyError(e)));
-    return undefined;
-  }, [user]);
-  if (!user) {
-    return <div className="tab-note"><p>Sign in to see your real timeline.</p>
-      <ol className="activity-timeline">{DEMO_PRESETS.map(p => <li key={p.label}><span className="timeline-dot" /><div><strong>{prettyLabel(p.result.intent.label)}</strong><span>{p.message}</span><small>Sample analysis</small></div></li>)}</ol></div>;
-  }
-  if (error) return <div className="form-error">{error}</div>;
-  if (items === null) return <div className="tab-note"><p>Loading your activity…</p></div>;
-  if (!items.length) return <div className="tab-note"><p>Nothing analyzed yet — your timeline will fill in as you use the assistant.</p><Button onClick={() => go("assistant")} icon={Sparkles}>Analyze a message</Button></div>;
-  return <ol className="activity-timeline">{items.map(item => <li key={item.id}><span className="timeline-dot" /><div><strong>{prettyLabel(item.intent?.label)} · {Math.round((item.intent?.confidence || 0) * 100)}%</strong><span>{item.message}</span><small>{new Date(item.created_at).toLocaleDateString()} · {prettyLabel(item.strategy?.label)}</small></div><button className="secondary-action" onClick={() => go("assistant")}>Open</button></li>)}</ol>;
-}
+   tone demo; Connect anywhere is the extension beam. */
+const FEATURE_TABS = ["Analyse", "Suggested messages", "Connect anywhere"];
 
 function FeatureTabs({ go, user }) {
   const reduce = useReducedMotion();
@@ -329,8 +315,6 @@ function FeatureTabs({ go, user }) {
       {tab === 0 && <div className="tab-grid"><div><h3>See what a message really asks for.</h3><p>Intent, tone, and social dynamics — with a confidence score.</p><div className="hero-output-tags"><span><b>Intent</b> {prettyLabel(demo.result.intent.label)} · {Math.round(demo.result.intent.confidence * 100)}%</span><span><b>Tone</b> {prettyLabel(demo.result.tone.label)}</span><span><b>Strategy</b> {prettyLabel(demo.result.strategy.label)}</span></div><div style={{ marginTop: 18 }}><Button onClick={() => go("assistant")} icon={WandSparkles}>Open the analyzer</Button></div></div><div className="tab-frame"><ScoreRing value={0.87} /><span className="how-note">Intent confidence · boundary preset</span></div></div>}
       {tab === 1 && <div><h3>Three ways to say the same thing.</h3><p>Tap a phrase, pick a tone.</p><div style={{ marginTop: 18 }}><PhraseRewriteDemo go={go} user={user} /></div></div>}
       {tab === 2 && <div className="tab-grid"><div><h3>Wherever you write.</h3><p>Live analysis in the chats you already use — WhatsApp, Instagram, LinkedIn, and more.</p><div className="extension-actions" style={{ marginTop: 18 }}><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension</span></a><Button variant="outline" onClick={() => go("extension")}>Learn about the extension <ArrowRight size={15} /></Button></div></div><BeamDiagram /></div>}
-      {tab === 3 && <div className="tab-grid"><div><h3>Practice in a safe conversation.</h3><p>Try a draft before it matters — nothing leaves the page.</p><div style={{ marginTop: 18 }}><Button onClick={() => go("demo-chat")} icon={Globe2}>Open the demo chat</Button></div></div><div className="tab-frame tab-chat"><div className="demo-message"><span className="demo-author">Alex</span><p>Hi! I wanted to check whether the homepage concepts will be ready today.</p></div><div className="demo-message freelancer"><span className="demo-author">You</span><p>Hi Alex, I am putting the final details together now.</p></div></div></div>}
-      {tab === 4 && <div><h3>Your work, in order.</h3><p>Saved to your account — search, reopen, delete.</p><div style={{ marginTop: 18 }}><ActivityTab go={go} user={user} /></div></div>}
       </motion.div>
     </div>
   </section>;
@@ -391,7 +375,7 @@ function HalftoneFooter({ go }) {
         <div className="footer-brand"><Logo /><p className="footer-tagline">Say it so <em>they say yes.</em></p><span>AI-based freelancer communication assistant.</span></div>
         <div><small>Explore</small><button type="button" onClick={() => goSection(go, "features")}>Product</button><button type="button" onClick={() => goSection(go, "how")}>How it works</button><button type="button" onClick={() => goSection(go, "theory")}>The framework</button><button type="button" onClick={() => goSection(go, "extension")}>Browser extension</button><button type="button" onClick={() => goSection(go, "pricing")}>Pricing</button></div>
         <div><small>Connect</small><a href="mailto:arsalanahmeda813@gmail.com">arsalanahmeda813@gmail.com</a><button type="button" onClick={() => go("contact")}>Contact</button><a href="https://www.linkedin.com/in/arsalan-ahmed-khan-b4a9a2310" target="_blank" rel="noreferrer">LinkedIn</a><a href="https://github.com/arsalanahmedk" target="_blank" rel="noreferrer">GitHub</a></div>
-        <div><small>Studio</small><span>Made for messages that matter.</span><span className="footer-status">Demo build · prototype-0.1</span><button type="button" className="footer-top-btn" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Back to top ↑</button></div>
+        <div><small>Studio</small><span>Made for messages that matter.</span><button type="button" className="footer-top-btn" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>Back to top ↑</button></div>
       </div>
       <div className="footer-wordmark-wrap">
         <div className="footer-wordmark" aria-hidden="true">saylient</div>
@@ -462,22 +446,22 @@ function HeroAnalysisWindow({ go, user }) {
   const shown = live || (!user ? chosen.result : null);
   const isDemo = !live && !user;
   return <div className="analyzer-console">
-    <div className="console-toolbar"><span className="window-dots"><i /><i /><i /></span><strong>Saylient Analyzer</strong><span className="console-badge">{user ? "Live analysis" : "Interactive demo"}</span></div>
+    <div className="console-toolbar"><span className="window-dots"><i /><i /><i /></span><strong>Saylient Analyzer</strong><span className="console-badge">{user ? "Live analysis" : "Try it"}</span></div>
     <div className="analyzer-grid">
       <div className="analyzer-form">
         <label>Your client's message<textarea value={typed} onChange={e => setTyped(e.target.value)} placeholder="Paste your client's message…" maxLength={2000} rows={6} /></label>
         <div className="sample-chips"><span>Try a sample:</span>{DEMO_PRESETS.map((p, i) => <button key={p.label} type="button" className={preset === i ? "active" : ""} onClick={() => pickPreset(i)}>{p.label}</button>)}</div>
-        <Button onClick={run} icon={running ? LoaderCircle : WandSparkles} disabled={running || (user && !typed.trim())}>{running ? "Analyzing…" : user ? "Analyze message" : "Run demo analysis"}</Button>
-        {!user && isCustom && <p className="console-hint">Sign in to analyze your own message — the demo below is for the selected sample.</p>}
+        <Button onClick={run} icon={running ? LoaderCircle : WandSparkles} disabled={running || (user && !typed.trim())}>{running ? "Analyzing…" : "Analyze message"}</Button>
+        {!user && isCustom && <p className="console-hint">Sign in to analyze your own messages.</p>}
         {user && <p className="console-hint">Live analysis · your account</p>}
         {error && <div className="form-error">{error}</div>}
       </div>
       <div className="analyzer-results">
-        {running && <div className="hero-output hero-output-loading" aria-live="polite"><div className="hero-shimmer"><i /><i /><i /></div><span><LoaderCircle size={14} className="spin" /> {user ? "Analyzing…" : "Running demo analysis…"}</span></div>}
+        {running && <div className="hero-output hero-output-loading" aria-live="polite"><div className="hero-shimmer"><i /><i /><i /></div><span><LoaderCircle size={14} className="spin" /> Analyzing…</span></div>}
         {!running && shown && <div className="hero-output" key={demoTick}>
           <div className="hero-output-head">
             <span className="ai-icon"><Sparkles size={14} /></span>
-            <strong>{isDemo ? "Demo output" : "Live analysis"} · {shown.model_version}</strong>
+            <strong>{isDemo ? "Sample analysis" : "Live analysis"} · {engineLabel(shown.model_version)}</strong>
             <span className="result-tag"><Check size={12} /> Review required</span>
           </div>
           <div className="hero-output-tags">
@@ -649,7 +633,7 @@ function Landing({ go, user, theme, onToggleTheme }) {
 function Layout({ page, go, user, onSignOut, theme, onToggleTheme, children }) {
   const [mobile, setMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
-  return <div className="app-shell"><aside className={`sidebar${mobile ? " open" : ""}${collapsed ? " collapsed" : ""}`}><div className="side-logo"><Logo /><button className="collapse-toggle" onClick={() => setCollapsed(c => !c)} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button><button className="mobile-close" onClick={() => setMobile(false)}><X size={18} /></button></div><div className="side-label">Workspace</div><nav>{navItems.map(([id, label, Icon]) => <button key={id} className={page === id ? "side-link active" : "side-link"} onClick={() => { go(id); setMobile(false); }} title={label}><Icon size={17} /><span className="side-link-label">{label}</span>{id === "assistant" && <span className="new-dot" />}</button>)}</nav><div className="side-label lower">Account</div><button className={`side-link ${page === "settings" ? "active" : ""}`} onClick={() => go("settings")} title="Settings"><Settings size={17} /><span className="side-link-label">Settings</span></button><button className="side-link" onClick={onSignOut} title="Sign out"><LogOut size={17} /><span className="side-link-label">Sign out</span></button><div className="upgrade-card"><Sparkles size={17} /><strong>Demo build</strong><p>Analyses run on the built-in engine while your own model trains. Your data lives in your account.</p><button onClick={() => go("assistant")}>Analyze a message <ArrowRight size={13} /></button></div><button className="profile profile-button" onClick={() => go("profile")}><div className="profile-avatar">{initials(user.display_name || user.email)}</div><div className="profile-text"><strong>{user.display_name || user.email}</strong><small>{user.email}</small></div><MoreHorizontal size={16} /></button></aside><div className="main-area"><header className="app-header"><button className="menu-button" onClick={() => setMobile(true)}><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><ChevronDown size={14} /><strong>{navItems.find(x => x[0] === page)?.[1] || "Overview"}</strong></div><div className="header-actions"><ThemeToggle theme={theme} onToggle={onToggleTheme} /><button aria-label="Help" onClick={() => go("theory")}><CircleHelp size={18} /></button><button className="header-avatar" onClick={() => go("profile")}>{initials(user.display_name || user.email)}</button></div></header><main className="dashboard-content">{children}</main></div></div>;
+  return <div className="app-shell"><aside className={`sidebar${mobile ? " open" : ""}${collapsed ? " collapsed" : ""}`}><div className="side-logo"><Logo /><button className="collapse-toggle" onClick={() => setCollapsed(c => !c)} aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}>{collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}</button><button className="mobile-close" onClick={() => setMobile(false)}><X size={18} /></button></div><div className="side-label">Workspace</div><nav>{navItems.map(([id, label, Icon]) => <button key={id} className={page === id ? "side-link active" : "side-link"} onClick={() => { go(id); setMobile(false); }} title={label}><Icon size={17} /><span className="side-link-label">{label}</span>{id === "assistant" && <span className="new-dot" />}</button>)}</nav><div className="side-label lower">Account</div><button className={`side-link ${page === "settings" ? "active" : ""}`} onClick={() => go("settings")} title="Settings"><Settings size={17} /><span className="side-link-label">Settings</span></button><button className="side-link" onClick={onSignOut} title="Sign out"><LogOut size={17} /><span className="side-link-label">Sign out</span></button><div className="upgrade-card"><Sparkles size={17} /><strong>Built-in engine</strong><p>Analyses run on the built-in engine. Your data lives in your account.</p><button onClick={() => go("assistant")}>Analyze a message <ArrowRight size={13} /></button></div><button className="profile profile-button" onClick={() => go("profile")}><div className="profile-avatar">{initials(user.display_name || user.email)}</div><div className="profile-text"><strong>{user.display_name || user.email}</strong><small>{user.email}</small></div><MoreHorizontal size={16} /></button></aside><div className="main-area"><header className="app-header"><button className="menu-button" onClick={() => setMobile(true)}><Menu size={20} /></button><div className="breadcrumb"><span>Workspace</span><ChevronDown size={14} /><strong>{navItems.find(x => x[0] === page)?.[1] || "Overview"}</strong></div><div className="header-actions"><ThemeToggle theme={theme} onToggle={onToggleTheme} /><button aria-label="Help" onClick={() => go("theory")}><CircleHelp size={18} /></button><button className="header-avatar" onClick={() => go("profile")}>{initials(user.display_name || user.email)}</button></div></header><main className="dashboard-content">{children}</main></div></div>;
 }
 
 function PageHeader({ eyebrow, title, text, children }) { return <div className="page-header"><div><div className="eyebrow">{eyebrow}</div><h1>{title}</h1>{text && <p>{text}</p>}</div>{children}</div>; }
@@ -680,7 +664,7 @@ function Dashboard({ go, user, onOpen }) {
   const area = `${line} L600 170 L0 170 Z`;
   const avgConf = stats?.avg_intent_confidence == null ? null : Math.round(stats.avg_intent_confidence * 100);
   return <>
-    <PageHeader eyebrow={today} title={<>Good to see you, {firstName} <span className="wave">✦</span></>} text="Your real communication overview — data comes from your account, not a demo."><Button onClick={() => go("assistant")} icon={Plus}>New analysis</Button></PageHeader>
+    <PageHeader eyebrow={today} title={<>Good to see you, {firstName} <span className="wave">✦</span></>} text="Your communication overview."><Button onClick={() => go("assistant")} icon={Plus}>New analysis</Button></PageHeader>
     {error && <div className="form-error panel">{error}</div>}
     {loading ? <div className="panel placeholder-page"><div className="placeholder-icon"><Sparkles size={25} /></div><h2>Loading your overview…</h2></div> : <>
       <div className="stats-grid">
@@ -899,7 +883,7 @@ function Result({ analysis, tone, directness, onTone, onDirectness, onSave, onDe
   const cf = analysis.context_factors || {};
   const pdr = (v) => v === "unknown" ? "Unknown" : prettyLabel(v);
   return <div className="result-content">
-    <div className="result-top"><div><div className="result-kicker"><span className="ai-icon"><Sparkles size={14} /></span> Live analysis · {analysis.model_version}</div><h3>A clearer way to say it</h3></div><span className="result-tag"><Check size={12} /> Review required</span></div>
+    <div className="result-top"><div><div className="result-kicker"><span className="ai-icon"><Sparkles size={14} /></span> Live analysis · {engineLabel(analysis.model_version)}</div><h3>A clearer way to say it</h3></div><span className="result-tag"><Check size={12} /> Review required</span></div>
     <div className="original-message"><small>ORIGINAL MESSAGE</small><p>“{analysis.message}”</p></div>
     <div className="result-cards">
       <div className="result-card"><small>Intent</small><strong>{prettyLabel(analysis.intent?.label)}</strong><span>{Math.round((analysis.intent?.confidence || 0) * 100)}% · {CONFIDENCE_NOTE}</span></div>
@@ -918,7 +902,7 @@ function Result({ analysis, tone, directness, onTone, onDirectness, onSave, onDe
       <Button onClick={onRegenerate} icon={WandSparkles} disabled={updating}>{updating ? "Updating…" : "Regenerate"}</Button>
     </div>
     {savedNote && <div className="form-note">{savedNote}</div>}
-    <small className="model-note">Model: {analysis.model_version} · No message is sent automatically.</small>
+    <small className="model-note">{engineLabel(analysis.model_version)} · No message is sent automatically.</small>
   </div>;
 }
 
@@ -1189,7 +1173,7 @@ function ProfilePage({ user, go, onSignOut, onUserChanged }) {
 }
 
 function ExtensionPage({ go }) {
-  return <><PageHeader eyebrow="Workspace" title="Good communication, wherever work happens." text="A thoughtful layer for your browser."><Button onClick={() => go("demo-chat")} icon={Globe2}>Open local demo chat</Button></PageHeader><div className="placeholder-page panel"><div className="placeholder-icon"><Globe2 size={25} /></div><h2>Review suggestions without leaving your workflow.</h2><p>Download the extension below, unzip it, and load it in Chrome (chrome://extensions → Developer mode → Load unpacked). Clicking the extension icon opens this site; on any page, click the floating Saylient logo button to analyze the text on your screen — sign in once in the panel, then Analyze. The extension calls the real backend and shows the live intent, strategy and draft. It never monitors the page and never sends anything automatically.</p><div className="extension-actions"><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension (.zip)</span></a><Button variant="outline" onClick={() => go("demo-chat")}>Open local demo chat <ArrowRight size={15} /></Button></div></div></>;
+  return <><PageHeader eyebrow="Workspace" title="Good communication, wherever work happens." text="A thoughtful layer for your browser."><Button onClick={() => go("demo-chat")} icon={Globe2}>Open local demo chat</Button></PageHeader><div className="placeholder-page panel"><div className="placeholder-icon"><Globe2 size={25} /></div><h2>Review suggestions without leaving your workflow.</h2><p>Download the extension, load it in Chrome, and analyze any page — sign in once in the panel, then Analyze. It never monitors the page or sends anything automatically.</p><div className="extension-actions"><a className="button" href="/saylient-extension.zip" download><Download size={15} /><span>Download extension (.zip)</span></a><Button variant="outline" onClick={() => go("demo-chat")}>Open local demo chat <ArrowRight size={15} /></Button></div></div></>;
 }
 
 /* Contact — a public page (no sign-in needed), reached from the landing
@@ -1249,7 +1233,7 @@ function DemoChat({ go }) {
   ]);
   const [draft, setDraft] = useState("");
   const send = () => { if (!draft.trim()) return; setMessages([...messages, ["freelancer", draft.trim(), "Just now"]]); setDraft(""); };
-  return <div className="demo-chat-page"><div className="demo-chat-header"><button className="link-button" onClick={() => go("landing")}>← Back</button><div className="profile-avatar">AM</div><div><strong>Alex Morgan</strong><small>Client · Website redesign</small></div><span className="online-dot" /> <span className="demo-label">Extension demo</span></div><div className="demo-messages">{messages.map(([role, text, time], index) => <div className={`demo-message ${role}`} data-demo-message data-message-id={index} key={`${index}-${text}`}><span className="demo-author">{role === "client" ? "Alex" : "You"}</span><p>{text}</p><small>{time}</small></div>)}</div><div className="demo-composer"><textarea data-demo-composer value={draft} onChange={event => setDraft(event.target.value)} placeholder="Write a message..." /><button onClick={send}><Send size={16} /> Send</button></div><p className="demo-disclaimer"><ShieldCheck size={13} /> Local demo only · Saylient AI never sends messages automatically</p></div>;
+  return <div className="demo-chat-page"><div className="demo-chat-header"><button className="link-button" onClick={() => go("landing")}>← Back</button><div className="profile-avatar">AM</div><div><strong>Alex Morgan</strong><small>Client · Website redesign</small></div><span className="online-dot" /> <span className="demo-label">Practice chat</span></div><div className="demo-messages">{messages.map(([role, text, time], index) => <div className={`demo-message ${role}`} data-demo-message data-message-id={index} key={`${index}-${text}`}><span className="demo-author">{role === "client" ? "Alex" : "You"}</span><p>{text}</p><small>{time}</small></div>)}</div><div className="demo-composer"><textarea data-demo-composer value={draft} onChange={event => setDraft(event.target.value)} placeholder="Write a message..." /><button onClick={send}><Send size={16} /> Send</button></div><p className="demo-disclaimer"><ShieldCheck size={13} /> Saylient AI never sends messages automatically</p></div>;
 }
 
 /* Password strength, scored honestly from length + character variety.
@@ -1339,8 +1323,9 @@ function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken, theme,
   };
   return <div className="auth-page"><div className="auth-theme"><ThemeToggle theme={theme} onToggle={onToggleTheme} /></div><div className="auth-card panel">
     <Logo />
+    <p className="auth-tagline">Say it so <em>they say yes.</em></p>
     <h1>{forgot ? "Reset your password" : isLogin ? "Welcome back" : "Create your account"}</h1>
-    <p>{notice || "Your analyses, drafts and templates live in your account — not just in this browser."}</p>
+    <p>{notice || "Your analyses and drafts, saved to your account."}</p>
     {error && <div className="form-error">{error}</div>}
     {message && <div className="form-note">{message}</div>}
     {googleAvailable && !forgot && <>
@@ -1348,7 +1333,7 @@ function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken, theme,
       <div className="auth-divider"><span>or continue with email</span></div>
     </>}
     <form onSubmit={submit}>
-      {!isLogin && !forgot && <label>Display name<input value={name} onChange={e => setName(e.target.value)} placeholder="Arsalan Ahmed Khan" maxLength={100} /></label>}
+      {!isLogin && !forgot && <label>Display name<input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" maxLength={100} /></label>}
       <label>Email<input type="email" required value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" /></label>
       {!forgot && <label>Password<PasswordField required value={password} onChange={e => setPassword(e.target.value)} placeholder={isLogin ? "Your password" : "At least 8 characters"} minLength={isLogin ? 1 : 8} autoComplete={isLogin ? "current-password" : "new-password"} showMeter={!isLogin} /></label>}
       {forgot && resetToken && <label>Reset token<input value={resetToken} readOnly /></label>}
@@ -1359,9 +1344,9 @@ function AuthPage({ mode, go, onAuthed, notice, resetToken: initialToken, theme,
       {!forgot && <button className="link-button" onClick={() => { setIsLogin(!isLogin); setError(""); setMessage(""); }}>{isLogin ? "No account yet? Create one" : "Already have an account? Sign in"}</button>}
       {!forgot && isLogin && <button className="link-button" onClick={() => { setForgot(true); setError(""); setMessage(""); }}>Forgot password?</button>}
       {forgot && <button className="link-button" onClick={() => { setForgot(false); setResetToken(""); setError(""); setMessage(""); }}>Back to sign in</button>}
-      <button className="link-button" onClick={() => go("landing")}>Back to the landing page</button>
+      <button className="link-button muted-link" onClick={() => go("landing")}>Back to the landing page</button>
     </div>
-    <small className="model-note">The backend stores your data in its own database. Never reuse a password from another account.</small>
+    <small className="model-note">Your data stays in your account. Nothing is sent automatically.</small>
   </div></div>;
 }
 
@@ -1413,6 +1398,11 @@ function App() {
   if (page === "register") return user ? <AuthPage mode="register" go={go} onAuthed={onAuthed} theme={theme} onToggleTheme={toggleTheme} notice="You are already signed in — this will switch to another account." /> : <AuthPage mode="register" go={go} onAuthed={onAuthed} theme={theme} onToggleTheme={toggleTheme} />;
   if (page === "reset-password") return <AuthPage mode="reset" go={go} onAuthed={onAuthed} resetToken={route.token} theme={theme} onToggleTheme={toggleTheme} />;
   if (page === "demo-chat") return <DemoChat go={go} />;
+  /* Theory and extension are public pages — a signed-out visitor who
+     clicks "Explore politeness theory" or "Learn about the extension"
+     sees the content, not the login form. */
+  if (page === "theory") return <div className="landing"><PublicNav go={go} user={user} theme={theme} onToggleTheme={toggleTheme} /><main className="shell"><TheoryPage go={go} /></main><HalftoneFooter go={go} /></div>;
+  if (page === "extension") return <div className="landing"><PublicNav go={go} user={user} theme={theme} onToggleTheme={toggleTheme} /><main className="shell"><ExtensionPage go={go} /></main><HalftoneFooter go={go} /></div>;
   if (!authChecked) return <div className="auth-page"><div className="auth-card panel"><Logo /><h1>Loading…</h1><p>Checking your session.</p></div></div>;
   if (!user) return <AuthPage mode="login" go={go} onAuthed={onAuthed} notice="Sign in to open your workspace." />;
   return <Layout page={page} go={go} user={user} onSignOut={signOut} theme={theme} onToggleTheme={toggleTheme}>{page === "overview" ? <Dashboard go={go} user={user} onOpen={openInAssistant} /> : page === "assistant" ? <Assistant go={go} openAnalysis={openAnalysis} clearOpen={() => setOpenAnalysis(null)} /> : <SimplePage type={page} go={go} user={user} onSignOut={signOut} onOpen={openInAssistant} onUserChanged={setUser} />}</Layout>;

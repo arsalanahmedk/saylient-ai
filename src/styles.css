@@ -974,9 +974,12 @@ section[id] { scroll-margin-top: 120px; }
 .placeholder-page p { max-width: 390px; margin-bottom: 20px; color: var(--text-2); font-size: 13px; line-height: 1.6; }
 
 /* ---------- auth ---------- */
-.auth-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; background: var(--bg); }
-.auth-card { width: 100%; max-width: 430px; padding: 32px; }
-.auth-card .logo { margin-bottom: 24px; }
+.auth-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 24px; background: radial-gradient(640px 320px at 15% 0%, rgba(139, 92, 246, 0.16), transparent 70%), radial-gradient(640px 320px at 90% 100%, rgba(59, 130, 246, 0.16), transparent 70%), var(--bg); }
+.auth-card { width: 100%; max-width: 430px; padding: 32px; position: relative; overflow: hidden; }
+.auth-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #8B5CF6, #3B82F6); }
+.auth-card .logo { margin-bottom: 10px; }
+.auth-tagline { color: var(--text-2); font-size: 15px; margin: 0 0 22px; }
+.auth-tagline em { font-style: normal; color: var(--accent-text); font-weight: 700; }
 .auth-card h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 8px; }
 .auth-card > p { color: var(--text-2); font-size: 13px; line-height: 1.55; margin-bottom: 24px; }
 .auth-card form { display: flex; flex-direction: column; gap: 16px; }
@@ -984,7 +987,8 @@ section[id] { scroll-margin-top: 120px; }
 .auth-card form label input { width: 100%; min-height: 42px; margin-top: 8px; padding: 9px 12px; border: 1px solid var(--border); border-radius: var(--radius-input); background: var(--input); color: var(--text); font-size: 14px; outline: none; }
 .auth-card form label input:focus { border-color: var(--accent-text); }
 .auth-card form .button, .auth-card form .btn { width: 100%; margin-top: 6px; }
-.auth-links { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 20px; }
+.auth-links { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
+.auth-links .muted-link { color: var(--text-3); font-weight: 400; }
 .auth-card .model-note { display: block; margin-top: 20px; }
 
 /* ---------- demo chat ---------- */
